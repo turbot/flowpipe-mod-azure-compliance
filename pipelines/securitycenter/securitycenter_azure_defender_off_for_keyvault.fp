@@ -1,53 +1,45 @@
 locals {
-  postgres_db_server_log_retention_days_less_than_3_query = <<-EOQ
-		select
-			concat(db.id, ' [', db.resource_group, '/', db.subscription_id, ']') as title,
-			db.id as id,
-			db.name,
-			db.resource_group,
-			db.subscription_id,
-			db._ctx ->> 'connection_name' as cred
-		from
-			azure_postgresql_server as db,
-			jsonb_array_elements(server_configurations) config,
-			azure_subscription as sub
-		where
-			config ->> 'Name' = 'log_retention_days'
-			and (config -> 'ConfigurationProperties' ->> 'value') :: integer <= 3
-			and sub.subscription_id = db.subscription_id;
+  securitycenter_azure_defender_off_for_keyvault_query = <<-EOQ
+    select
+      concat(sc.id, ' [', '/', sc.subscription_id, ']') as title,
+      sc.id as id,
+      sc.name,
+      sc.subscription_id,
+      sc._ctx ->> 'connection_name' as cred
+    from
+      azure_security_center_subscription_pricing as sc,
+      azure_subscription as sub
+    where
+      sc.pricing_tier != 'Standard'
+      and sc.name = 'KeyVaults'
+      and sub.subscription_id = sc.subscription_id;
   EOQ
 }
 
-variable "log_retention_days" {
-  type        = string
-  description = "The number of days logs should be retained"
-  default     = "7"
-}
+trigger "query" "detect_and_correct_securitycenter_azure_defender_off_for_keyvault" {
+  title         = "Detect & correct Security Center Azure Defender off for Key Vault"
+  description   = "Detects Security Center Azure Defender turned off for Key Vault and runs your chosen action."
+  // documentation = file("./securitycenter/docs/detect_and_correct_securitycenter_azure_defender_off_for_keyvault_trigger.md")
+  // tags          = merge(local.securitycenter_common_tags, { class = "unused" })
 
-trigger "query" "detect_and_correct_postgres_db_server_log_retention_days_less_than_3" {
-  title         = "Detect & correct PostgreSQL DB servers with log retention_days less than three"
-  description   = "Detects PostgreSQL database servers with log retention_days less than three and runs your chosen action."
-  // documentation = file("./postgres/docs/detect_and_correct_postgres_db_server_log_retention_days_less_than_3_less_than_3_trigger.md")
-  tags          = merge(local.postgres_common_tags, { class = "unused" })
-
-  enabled  = var.postgres_db_server_log_retention_days_less_than_3_trigger_enabled
-  schedule = var.postgres_db_server_log_retention_days_less_than_3_trigger_schedule
+  enabled  = var.securitycenter_azure_defender_off_for_keyvault_trigger_enabled
+  schedule = var.securitycenter_azure_defender_off_for_keyvault_trigger_schedule
   database = var.database
-  sql      = local.postgres_db_server_log_retention_days_less_than_3_query
+  sql      = local.securitycenter_azure_defender_off_for_keyvault_query
 
   capture "insert" {
-    pipeline = pipeline.correct_postgres_db_server_log_retention_days_less_than_3
+    pipeline = pipeline.correct_securitycenter_azure_defender_off_for_keyvault
     args = {
       items = self.inserted_rows
     }
   }
 }
 
-pipeline "detect_and_correct_postgres_db_server_log_retention_days_less_than_3" {
-  title         = "Detect & correct PostgreSQL DB servers with log retention_days less than three"
-  description   = "Detects PostgreSQL database servers with log retention_days less than three and runs your chosen action."
-  // documentation = file("./postgres/docs/detect_and_correct_postgres_db_server_log_retention_days_less_than_3.md")
-  tags          = merge(local.postgres_common_tags, { class = "unused", type = "featured" })
+pipeline "detect_and_correct_securitycenter_azure_defender_off_for_keyvault" {
+  title         = "Detect & correct Security Center Azure Defender off for Key Vault"
+  description   = "Detects Security Center Azure Defender turned off for Key Vault and runs your chosen action."
+  // documentation = file("./securitycenter/docs/detect_and_correct_securitycenter_azure_defender_off_for_keyvault.md")
+  // tags          = merge(local.securitycenter_common_tags, { class = "unused", type = "featured" })
 
   param "database" {
     type        = string
@@ -76,22 +68,22 @@ pipeline "detect_and_correct_postgres_db_server_log_retention_days_less_than_3" 
   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.postgres_db_server_log_retention_days_less_than_3_default_action
+    default     = var.securitycenter_azure_defender_off_for_keyvault_default_action
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.postgres_db_server_log_retention_days_less_than_3_enabled_actions
+    default     = var.securitycenter_azure_defender_off_for_keyvault_enabled_actions
   }
 
   step "query" "detect" {
     database = param.database
-    sql      = local.postgres_db_server_log_retention_days_less_than_3_query
+    sql      = local.securitycenter_azure_defender_off_for_keyvault_query
   }
 
   step "pipeline" "respond" {
-    pipeline = pipeline.correct_postgres_db_server_log_retention_days_less_than_3
+    pipeline = pipeline.correct_securitycenter_azure_defender_off_for_keyvault
     args = {
       items              = step.query.detect.rows
       notifier           = param.notifier
@@ -103,18 +95,17 @@ pipeline "detect_and_correct_postgres_db_server_log_retention_days_less_than_3" 
   }
 }
 
-pipeline "correct_postgres_db_server_log_retention_days_less_than_3" {
-  title         = "Correct PostgreSQL DB servers with log retention_days less than three"
-  description   = "Runs corrective action on a collection of PostgreSQL database servers with log retention_days less than three."
-  // documentation = file("./postgres/docs/correct_postgres_db_server_log_retention_days_less_than_3.md")
-  tags          = merge(local.postgres_common_tags, { class = "unused" })
+pipeline "correct_securitycenter_azure_defender_off_for_keyvault" {
+  title         = "Correct Security Center Azure Defender off for Key Vault"
+  description   = "Runs corrective action on a collection of subscription with Security Center Azure Defender turned off for Key Vault."
+  // documentation = file("./securitycenter/docs/correct_securitycenter_azure_defender_off_for_keyvault.md")
+  //  tags          = merge(local.securitycenter_common_tags, { class = "unused" })
 
   param "items" {
     type = list(object({
       id              = string
       title           = string
       name            = string
-      resource_group  = string
       subscription_id = string
       cred            = string
     }))
@@ -142,19 +133,19 @@ pipeline "correct_postgres_db_server_log_retention_days_less_than_3" {
   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.postgres_db_server_log_retention_days_less_than_3_default_action
+    default     = var.securitycenter_azure_defender_off_for_keyvault_default_action
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.postgres_db_server_log_retention_days_less_than_3_enabled_actions
+    default     = var.securitycenter_azure_defender_off_for_keyvault_enabled_actions
   }
 
   step "message" "notify_detection_count" {
     if       = var.notification_level == local.level_verbose
     notifier = notifier[param.notifier]
-    text     = "Detected ${length(param.items)} PostgreSQL DB servers with log retention_days less than 3."
+    text     = "Detected Security Center Azure Defender turned off for Key Vault."
   }
 
   step "transform" "items_by_id" {
@@ -164,11 +155,10 @@ pipeline "correct_postgres_db_server_log_retention_days_less_than_3" {
   step "pipeline" "correct_item" {
     for_each        = step.transform.items_by_id.value
     max_concurrency = var.max_concurrency
-    pipeline        = pipeline.correct_one_postgres_db_server_log_retention_days_less_than_3
+    pipeline        = pipeline.correct_one_securitycenter_azure_defender_off_for_keyvault
     args = {
       title              = each.value.title
       name               = each.value.name
-      resource_group     = each.value.resource_group
       subscription_id    = each.value.subscription_id
       cred               = each.value.cred
       notifier           = param.notifier
@@ -180,11 +170,12 @@ pipeline "correct_postgres_db_server_log_retention_days_less_than_3" {
   }
 }
 
-pipeline "correct_one_postgres_db_server_log_retention_days_less_than_3" {
-  title         = "Correct one PostgreSQL DB server with log retention_days less than threef"
-  description   = "Runs corrective action on a single PostgreSQL database server with log retention_days less than three."
-  // documentation = file("./postgres/docs/correct_one_postgres_db_server_log_retention_days_less_than_3.md")
-  tags          = merge(local.postgres_common_tags, { class = "unused" })
+
+pipeline "correct_one_securitycenter_azure_defender_off_for_keyvault" {
+   title         = "Correct one subscription with Security Center Azure Defender turned off for Key Vault"
+   description   = "Runs corrective action on a subscription with Security Center Azure Defender turned off for Key Vault."
+  // documentation = file("./securitycenter/docs/correct_one_securitycenter_azure_defender_off_for_appservice.md")f.md")
+  // tags          = merge(local.securitycenter_common_tags, { class = "unused" })
 
   param "title" {
     type        = string
@@ -193,12 +184,7 @@ pipeline "correct_one_postgres_db_server_log_retention_days_less_than_3" {
 
   param "name" {
     type        = string
-    description = "The name of the PostgreSQL database server."
-  }
-
-  param "resource_group" {
-    type        = string
-    description = local.description_resource_group
+    description = "The name of the security center subscription pricing."
   }
 
   param "subscription_id" {
@@ -233,13 +219,13 @@ pipeline "correct_one_postgres_db_server_log_retention_days_less_than_3" {
    param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.postgres_db_server_log_retention_days_less_than_3_default_action
+    default     = var.securitycenter_azure_defender_off_for_keyvault_default_action
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.postgres_db_server_log_retention_days_less_than_3_enabled_actions
+    default     = var.securitycenter_azure_defender_off_for_keyvault_enabled_actions
   }
 
   step "pipeline" "respond" {
@@ -248,7 +234,7 @@ pipeline "correct_one_postgres_db_server_log_retention_days_less_than_3" {
       notifier           = param.notifier
       notification_level = param.notification_level
       approvers          = param.approvers
-      detect_msg         = "Detected PostgreSQL DB server ${param.title} with log retention_days less than three."
+      detect_msg         = "Detected Security Center Azure Defender turned off for Key Vault."
       default_action     = param.default_action
       enabled_actions    = param.enabled_actions
       actions = {
@@ -260,52 +246,50 @@ pipeline "correct_one_postgres_db_server_log_retention_days_less_than_3" {
           pipeline_args = {
             notifier = param.notifier
             send     = param.notification_level == local.level_verbose
-            text     = "Skipped PostgreSQL DB server ${param.title} with log retention days less than three."
+            text     = "Skipped Security Center Azure Defender turned off for Key Vault."
           }
           success_msg = ""
           error_msg   = ""
         },
-        "update_log_retention_days" = {
-          label        = "Update Log Retention Days"
-          value        = "update_log_retention_days"
+        "enable_keyvault_azure_defender" = {
+          label        = "Enable Key Vault Azure Defender"
+          value        = "enable_keyvault_azure_defender"
           style        = local.style_alert
-          pipeline_ref = local.azure_pipeline_set_postgres_server_configuration
+          pipeline_ref = local.azure_pipeline_create_security_pricing
           pipeline_args = {
-            server_name       = param.name
-            resource_group    = param.resource_group
+            resource_type     = "KeyVaults"
             subscription_id   = param.subscription_id
             cred              = param.cred
-            config_name       = "log_retention_days"
-            config_value      = var.log_retention_days
+            tier              = "Standard"
           }
-          success_msg = "Updated log retention days for PostgreSQL DB server ${param.title}."
-          error_msg   = "Error updating log retention days for PostgreSQL DB server ${param.title}."
+          success_msg = "Enabled Security Center Azure Defender for Key Vault."
+          error_msg   = "Error enabling Security Center Azure Defender for Key Vault ."
         }
       }
     }
   }
 }
 
-variable "postgres_db_server_log_retention_days_less_than_3_trigger_enabled" {
+variable "securitycenter_azure_defender_off_for_keyvault_trigger_enabled" {
   type        = bool
   default     = false
   description = "If true, the trigger is enabled."
 }
 
-variable "postgres_db_server_log_retention_days_less_than_3_trigger_schedule" {
+variable "securitycenter_azure_defender_off_for_keyvault_trigger_schedule" {
   type        = string
   default     = "15m"
   description = "The schedule on which to run the trigger if enabled."
 }
 
-variable "postgres_db_server_log_retention_days_less_than_3_default_action" {
+variable "securitycenter_azure_defender_off_for_keyvault_default_action" {
   type        = string
   description = "The default action to use for the detected item, used if no input is provided."
-  default     = "notify"
+  default     = "enable_keyvault_azure_defender"
 }
 
-variable "postgres_db_server_log_retention_days_less_than_3_enabled_actions" {
+variable "securitycenter_azure_defender_off_for_keyvault_enabled_actions" {
   type        = list(string)
   description = "The list of enabled actions to provide to approvers for selection."
-  default     = ["skip", "update_log_retention_days"]
+  default     = ["skip", "enable_keyvault_azure_defender"]
 }

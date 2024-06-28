@@ -41,4 +41,5 @@ locals {
   pipeline_optional_message                             = detect_correct.pipeline.optional_message
 	azure_pipeline_set_postgres_server_configuration      = azure.pipeline.set_postgres_server_configuration
   azure_pipeline_update_postgres_server_ssl_enforcement = azure.pipeline.update_postgres_server_ssl_enforcement
+  azure_pipeline_create_security_pricing                = azure.pipeline.create_security_pricing
 }
