@@ -48,4 +48,5 @@ locals {
   azure_pipeline_update_storage_account_bypass_azure_services   = azure.pipeline.update_storage_account_bypass_azure_services
   azure_pipeline_update_storage_account_https_only              = azure.pipeline.update_storage_account_https_only
   azure_pipeline_update_storage_account_logging                 = azure.pipeline.update_storage_account_logging
+  azure_pipeline_update_storage_account_default_action          = azure.pipeline.update_storage_account_default_action
 }
