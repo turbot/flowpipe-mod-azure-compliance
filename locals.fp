@@ -38,8 +38,14 @@ locals {
 
 // Pipeline References
 locals {
-  pipeline_optional_message                             = detect_correct.pipeline.optional_message
-	azure_pipeline_set_postgres_server_configuration      = azure.pipeline.set_postgres_server_configuration
-  azure_pipeline_update_postgres_server_ssl_enforcement = azure.pipeline.update_postgres_server_ssl_enforcement
-  azure_pipeline_create_security_pricing                = azure.pipeline.create_security_pricing
+  pipeline_optional_message                                     = detect_correct.pipeline.optional_message
+	azure_pipeline_set_postgres_server_configuration              = azure.pipeline.set_postgres_server_configuration
+  azure_pipeline_update_postgres_server_ssl_enforcement         = azure.pipeline.update_postgres_server_ssl_enforcement
+  azure_pipeline_create_security_pricing                        = azure.pipeline.create_security_pricing
+  azure_pipeline_update_storage_account_public_network_access   = azure.pipeline.update_storage_account_public_network_access
+  azure_pipeline_update_storage_account_minimum_tls             = azure.pipeline.update_storage_account_minimum_tls
+  azure_pipeline_update_storage_account_blob_service_properties = azure.pipeline.update_storage_account_blob_service_properties
+  azure_pipeline_update_storage_account_bypass_azure_services   = azure.pipeline.update_storage_account_bypass_azure_services
+  azure_pipeline_update_storage_account_https_only              = azure.pipeline.update_storage_account_https_only
+  azure_pipeline_update_storage_account_logging                 = azure.pipeline.update_storage_account_logging
 }
