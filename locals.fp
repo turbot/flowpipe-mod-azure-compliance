@@ -49,4 +49,8 @@ locals {
   azure_pipeline_update_storage_account_https_only              = azure.pipeline.update_storage_account_https_only
   azure_pipeline_update_storage_account_logging                 = azure.pipeline.update_storage_account_logging
   azure_pipeline_update_storage_account_default_action          = azure.pipeline.update_storage_account_default_action
+  azure_pipeline_update_appservice_webapp_auth                  = azure.pipeline.update_appservice_webapp_auth
+  azure_pipeline_set_config_appservice_webapp                   = azure.pipeline.set_config_appservice_webapp
+  azure_pipeline_update_appservice_webapp                       = azure.pipeline.update_appservice_webapp
+  azure_pipeline_assign_appservice_webapp_identity              = azure.pipeline.assign_appservice_webapp_identity
 }
