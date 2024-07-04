@@ -56,4 +56,5 @@ locals {
   azure_pipeline_delete_sql_server_firewall_rule                = azure.pipeline.delete_sql_server_firewall_rule
   azure_pipeline_set_sql_db_tde                                 = azure.pipeline.set_sql_db_tde
   azure_pipeline_update_azure_key_vault_purge_protection        = azure.pipeline.update_azure_key_vault_purge_protection
+  azure_pipeline_delete_postgres_server_firewall_rule           = azure.pipeline.delete_postgres_server_firewall_rule
 }
