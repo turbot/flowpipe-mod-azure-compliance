@@ -60,4 +60,5 @@ locals {
   azure_pipeline_delete_network_nsg_rule                        = azure.pipeline.delete_network_nsg_rule
   azure_pipeline_set_key_vault_key_attributes                   = azure.pipeline.set_key_vault_key_attributes
   azure_pipeline_set_key_vault_secret_attributes                = azure.pipeline.set_key_vault_secret_attributes
+  azure_pipeline_delete_iam_role                                = azure.pipeline.delete_iam_role
 }
