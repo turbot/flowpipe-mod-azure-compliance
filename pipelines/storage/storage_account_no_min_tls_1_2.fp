@@ -19,7 +19,6 @@ locals {
 trigger "query" "detect_and_correct_storage_account_no_min_tls_1_2" {
   title         = "Detect & correct Storage Accounts with minimum TLS version less than 1.2"
   description   = "Detects Storage Accounts with minimum TLS version less than 1.2 and runs your chosen action."
-  // documentation = file("./storage/docs/detect_and_correct_storage_account_no_min_tls_1_2_trigger.md")
   tags          = merge(local.storage_common_tags, { class = "unused" })
 
   enabled  = var.storage_account_no_min_tls_1_2_trigger_enabled
@@ -38,7 +37,6 @@ trigger "query" "detect_and_correct_storage_account_no_min_tls_1_2" {
 pipeline "detect_and_correct_storage_account_no_min_tls_1_2" {
   title         = "Detect & correct Storage Accounts with minimum TLS version less than 1.2"
   description   = "Detects Storage Accounts with minimum TLS version less than 1.2 and runs your chosen action."
-  // documentation = file("./storage/docs/detect_and_correct_storage_account_no_min_tls_1_2.md")
   tags          = merge(local.storage_common_tags, { class = "unused", type = "featured" })
 
   param "database" {
@@ -98,7 +96,6 @@ pipeline "detect_and_correct_storage_account_no_min_tls_1_2" {
 pipeline "correct_storage_account_no_min_tls_1_2" {
   title         = "Correct Storage Accounts with minimum TLS version less than 1.2"
   description   = "Runs corrective action on a collection of Storage Accounts with minimum TLS version less than 1.2."
-  // documentation = file("./storage/docs/correct_storage_account_no_min_tls_1_2.md")
   tags          = merge(local.storage_common_tags, { class = "unused" })
 
   param "items" {
@@ -175,7 +172,6 @@ pipeline "correct_storage_account_no_min_tls_1_2" {
 pipeline "correct_one_storage_account_no_min_tls_1_2" {
   title         = "Correct one Storage Account with minimum TLS version less than 1.2"
   description   = "Runs corrective action on a single Storage Account with minimum TLS version less than 1.2."
-  // documentation = file("./storage/docs/correct_one_storage_account_no_min_tls_1_2.md")
   tags          = merge(local.storage_common_tags, { class = "unused" })
 
   param "title" {

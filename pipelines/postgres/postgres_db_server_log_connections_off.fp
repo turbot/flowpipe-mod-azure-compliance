@@ -21,7 +21,6 @@ locals {
 trigger "query" "detect_and_correct_postgres_db_server_log_connections_off" {
   title         = "Detect & correct PostgreSQL DB servers with logging connections off"
   description   = "Detects PostgreSQL database servers with logging connections disabled and runs your chosen action."
-  // documentation = file("./postgres/docs/detect_and_correct_postgres_db_server_log_connections_off_trigger.md")
   tags          = merge(local.postgres_common_tags, { class = "unused" })
 
   enabled  = var.postgres_db_server_log_connections_off_trigger_enabled
@@ -40,7 +39,6 @@ trigger "query" "detect_and_correct_postgres_db_server_log_connections_off" {
 pipeline "detect_and_correct_postgres_db_server_log_connections_off" {
   title         = "Detect & correct PostgreSQL DB servers with logging connections off"
   description   = "Detects PostgreSQL database servers with logging connections disabled and runs your chosen action."
-  // documentation = file("./postgres/docs/detect_and_correct_postgres_db_server_log_connections_off.md")
   tags          = merge(local.postgres_common_tags, { class = "unused", type = "featured" })
 
   param "database" {
@@ -100,7 +98,6 @@ pipeline "detect_and_correct_postgres_db_server_log_connections_off" {
 pipeline "correct_postgres_db_server_log_connections_off" {
   title         = "Correct PostgreSQL DB servers with logging connections off"
   description   = "Runs corrective action on a collection of PostgreSQL database servers with logging connections disabled."
-  // documentation = file("./postgres/docs/correct_postgres_db_server_log_connections_off.md")
   tags          = merge(local.postgres_common_tags, { class = "unused" })
 
   param "items" {
@@ -177,7 +174,6 @@ pipeline "correct_postgres_db_server_log_connections_off" {
 pipeline "correct_one_postgres_db_server_log_connections_off" {
   title         = "Correct one PostgreSQL DB server with logging connections off"
   description   = "Runs corrective action on a single PostgreSQL database server with logging connections disabled."
-  // documentation = file("./postgres/docs/correct_one_postgres_db_server_log_connections_off.md")
   tags          = merge(local.postgres_common_tags, { class = "unused" })
 
   param "title" {

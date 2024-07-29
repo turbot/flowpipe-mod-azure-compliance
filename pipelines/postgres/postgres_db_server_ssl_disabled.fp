@@ -19,7 +19,6 @@ locals {
 trigger "query" "detect_and_correct_postgres_db_server_ssl_disabled" {
   title         = "Detect & correct PostgreSQL DB servers with SSL disabled"
   description   = "Detects PostgreSQL database servers with SSL disabled and runs your chosen action."
-  // documentation = file("./postgres/docs/detect_and_correct_postgres_db_server_ssl_disabled_trigger.md")
   tags          = merge(local.postgres_common_tags, { class = "unused" })
 
   enabled  = var.postgres_db_server_ssl_disabled_trigger_enabled
@@ -38,7 +37,6 @@ trigger "query" "detect_and_correct_postgres_db_server_ssl_disabled" {
 pipeline "detect_and_correct_postgres_db_server_ssl_disabled" {
   title         = "Detect & correct PostgreSQL DB servers with SSL disabled"
   description   = "Detects PostgreSQL database servers with SSL disabled and runs your chosen action."
-  // documentation = file("./postgres/docs/detect_and_correct_postgres_db_server_ssl_disabled.md")
   tags          = merge(local.postgres_common_tags, { class = "unused", type = "featured" })
 
   param "database" {
@@ -98,7 +96,6 @@ pipeline "detect_and_correct_postgres_db_server_ssl_disabled" {
 pipeline "correct_postgres_db_server_ssl_disabled" {
   title         = "Correct PostgreSQL DB servers with SSL disabled"
   description   = "Runs corrective action on a collection of PostgreSQL database servers with SSL disabled."
-  // documentation = file("./postgres/docs/correct_postgres_db_server_ssl_disabled.md")
   tags          = merge(local.postgres_common_tags, { class = "unused" })
 
   param "items" {
@@ -175,7 +172,6 @@ pipeline "correct_postgres_db_server_ssl_disabled" {
 pipeline "correct_one_postgres_db_server_ssl_disabled" {
   title         = "Correct one PostgreSQL DB server with SSL disabled"
   description   = "Runs corrective action on a single PostgreSQL database server with SSL disabled."
-  // documentation = file("./postgres/docs/correct_one_postgres_db_server_ssl_disabled.md")
   tags          = merge(local.postgres_common_tags, { class = "unused" })
 
   param "title" {

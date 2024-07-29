@@ -19,7 +19,6 @@ locals {
 trigger "query" "detect_and_correct_securitycenter_azure_defender_off_for_sqlservervm" {
   title         = "Detect & correct Security Center Azure Defender off for SQL servers on machines"
   description   = "Detects Security Center Azure Defender turned off for SQL servers on machines and runs your chosen action."
-  // documentation = file("./securitycenter/docs/detect_and_correct_securitycenter_azure_defender_off_for_sqlservervm_trigger.md")
   // tags          = merge(local.securitycenter_common_tags, { class = "unused" })
 
   enabled  = var.securitycenter_azure_defender_off_for_sqlservervm_trigger_enabled
@@ -38,7 +37,6 @@ trigger "query" "detect_and_correct_securitycenter_azure_defender_off_for_sqlser
 pipeline "detect_and_correct_securitycenter_azure_defender_off_for_sqlservervm" {
   title         = "Detect & correct Security Center Azure Defender off for SQL servers on machines"
   description   = "Detects Security Center Azure Defender turned off for SQL servers on machines and runs your chosen action."
-  // documentation = file("./securitycenter/docs/detect_and_correct_securitycenter_azure_defender_off_for_sqlservervm.md")
   // tags          = merge(local.securitycenter_common_tags, { class = "unused", type = "featured" })
 
   param "database" {
@@ -98,7 +96,6 @@ pipeline "detect_and_correct_securitycenter_azure_defender_off_for_sqlservervm" 
 pipeline "correct_securitycenter_azure_defender_off_for_sqlservervm" {
   title         = "Correct Security Center Azure Defender off for SQL servers on machines"
   description   = "Runs corrective action on a collection of subscription with Security Center Azure Defender turned off for SQL servers on machines."
-  // documentation = file("./securitycenter/docs/correct_securitycenter_azure_defender_off_for_sqlservervm.md")
   //  tags          = merge(local.securitycenter_common_tags, { class = "unused" })
 
   param "items" {
@@ -170,11 +167,9 @@ pipeline "correct_securitycenter_azure_defender_off_for_sqlservervm" {
   }
 }
 
-
 pipeline "correct_one_securitycenter_azure_defender_off_for_sqlservervm" {
-   title         = "Correct one subscription with Security Center Azure Defender turned off for SQL servers on machines"
-   description   = "Runs corrective action on a subscription with Security Center Azure Defender turned off for SQL servers on machines."
-  // documentation = file("./securitycenter/docs/correct_one_securitycenter_azure_defender_off_for_appservice.md")f.md")
+  title         = "Correct one subscription with Security Center Azure Defender turned off for SQL servers on machines"
+  description   = "Runs corrective action on a subscription with Security Center Azure Defender turned off for SQL servers on machines."
   // tags          = merge(local.securitycenter_common_tags, { class = "unused" })
 
   param "title" {

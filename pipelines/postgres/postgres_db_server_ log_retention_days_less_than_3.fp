@@ -27,7 +27,6 @@ variable "log_retention_days" {
 trigger "query" "detect_and_correct_postgres_db_server_log_retention_days_less_than_3" {
   title         = "Detect & correct PostgreSQL DB servers with log retention_days less than three"
   description   = "Detects PostgreSQL database servers with log retention_days less than three and runs your chosen action."
-  // documentation = file("./postgres/docs/detect_and_correct_postgres_db_server_log_retention_days_less_than_3_less_than_3_trigger.md")
   tags          = merge(local.postgres_common_tags, { class = "unused" })
 
   enabled  = var.postgres_db_server_log_retention_days_less_than_3_trigger_enabled
@@ -46,7 +45,6 @@ trigger "query" "detect_and_correct_postgres_db_server_log_retention_days_less_t
 pipeline "detect_and_correct_postgres_db_server_log_retention_days_less_than_3" {
   title         = "Detect & correct PostgreSQL DB servers with log retention_days less than three"
   description   = "Detects PostgreSQL database servers with log retention_days less than three and runs your chosen action."
-  // documentation = file("./postgres/docs/detect_and_correct_postgres_db_server_log_retention_days_less_than_3.md")
   tags          = merge(local.postgres_common_tags, { class = "unused", type = "featured" })
 
   param "database" {
@@ -106,7 +104,6 @@ pipeline "detect_and_correct_postgres_db_server_log_retention_days_less_than_3" 
 pipeline "correct_postgres_db_server_log_retention_days_less_than_3" {
   title         = "Correct PostgreSQL DB servers with log retention_days less than three"
   description   = "Runs corrective action on a collection of PostgreSQL database servers with log retention_days less than three."
-  // documentation = file("./postgres/docs/correct_postgres_db_server_log_retention_days_less_than_3.md")
   tags          = merge(local.postgres_common_tags, { class = "unused" })
 
   param "items" {
@@ -183,7 +180,6 @@ pipeline "correct_postgres_db_server_log_retention_days_less_than_3" {
 pipeline "correct_one_postgres_db_server_log_retention_days_less_than_3" {
   title         = "Correct one PostgreSQL DB server with log retention_days less than threef"
   description   = "Runs corrective action on a single PostgreSQL database server with log retention_days less than three."
-  // documentation = file("./postgres/docs/correct_one_postgres_db_server_log_retention_days_less_than_3.md")
   tags          = merge(local.postgres_common_tags, { class = "unused" })
 
   param "title" {

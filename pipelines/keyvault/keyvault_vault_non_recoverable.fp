@@ -19,7 +19,6 @@ locals {
 trigger "query" "detect_and_correct_keyvault_vault_non_recoverable" {
   title         = "Detect & correct non-recoverable Key Vaults"
   description   = "Detects non-recoverable Key Vaults and runs your chosen action."
-  // documentation = file("./keyvault/docs/detect_and_correct_keyvault_vault_non_recoverable_trigger.md")
   tags          = merge(local.keyvault_common_tags, { class = "security" })
 
   enabled  = var.keyvault_vault_non_recoverable_trigger_enabled
@@ -38,7 +37,6 @@ trigger "query" "detect_and_correct_keyvault_vault_non_recoverable" {
 pipeline "detect_and_correct_keyvault_vault_non_recoverable" {
   title         = "Detect & correct non-recoverable Key Vaults"
   description   = "Detects non-recoverable Key Vaults and runs your chosen action."
-  // documentation = file("./keyvault/docs/detect_and_correct_keyvault_vault_non_recoverable.md")
   tags          = merge(local.keyvault_common_tags, { class = "security", type = "featured" })
 
   param "database" {
@@ -98,7 +96,6 @@ pipeline "detect_and_correct_keyvault_vault_non_recoverable" {
 pipeline "correct_keyvault_vault_non_recoverable" {
   title         = "Correct non-recoverable Key Vaults"
   description   = "Runs corrective action on a collection of non-recoverable Key Vaults."
-  // documentation = file("./keyvault/docs/correct_keyvault_vault_non_recoverable.md")
   tags          = merge(local.keyvault_common_tags, { class = "security" })
 
   param "items" {
@@ -175,7 +172,6 @@ pipeline "correct_keyvault_vault_non_recoverable" {
 pipeline "correct_one_keyvault_vault_non_recoverable" {
   title         = "Correct one non-recoverable Key Vault"
   description   = "Runs corrective action on a single non-recoverable Key Vault."
-  // documentation = file("./keyvault/docs/correct_one_keyvault_vault_non_recoverable.md")
   tags          = merge(local.keyvault_common_tags, { class = "security" })
 
   param "title" {

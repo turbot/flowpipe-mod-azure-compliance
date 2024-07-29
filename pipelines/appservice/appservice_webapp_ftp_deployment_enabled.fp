@@ -19,7 +19,6 @@ locals {
 trigger "query" "detect_and_correct_appservice_webapp_ftp_deployment_enabled" {
   title         = "Detect & correct App Services with FTP deployment enabled"
   description   = "Detects App Services with FTP deployment enabled and runs your chosen action."
-  // documentation = file("./appservice/docs/detect_and_correct_appservice_webapp_ftp_deployment_enabled_trigger.md")
   tags          = merge(local.appservice_common_tags, { class = "unused" })
 
   enabled  = var.appservice_webapp_ftp_deployment_enabled_trigger_enabled
@@ -38,7 +37,6 @@ trigger "query" "detect_and_correct_appservice_webapp_ftp_deployment_enabled" {
 pipeline "detect_and_correct_appservice_webapp_ftp_deployment_enabled" {
   title         = "Detect & correct App Services with FTP deployment enabled"
   description   = "Detects App Services with FTP deployment enabled and runs your chosen action."
-  // documentation = file("./appservice/docs/detect_and_correct_appservice_webapp_ftp_deployment_enabled.md")
   tags          = merge(local.appservice_common_tags, { class = "unused", type = "featured" })
 
   param "database" {
@@ -98,7 +96,6 @@ pipeline "detect_and_correct_appservice_webapp_ftp_deployment_enabled" {
 pipeline "correct_appservice_webapp_ftp_deployment_enabled" {
   title         = "Correct App Services with FTP deployment enabled"
   description   = "Runs corrective action on a collection of App Services with FTP deployment enabled."
-  // documentation = file("./appservice/docs/correct_appservice_webapp_ftp_deployment_enabled.md")
   tags          = merge(local.appservice_common_tags, { class = "unused" })
 
   param "items" {
@@ -175,7 +172,6 @@ pipeline "correct_appservice_webapp_ftp_deployment_enabled" {
 pipeline "correct_one_appservice_webapp_ftp_deployment_enabled" {
   title         = "Correct one App Service with FTP deployment enabled"
   description   = "Runs corrective action on a single App Service with FTP deployment enabled."
-  // documentation = file("./appservice/docs/correct_one_appservice_webapp_ftp_deployment_enabled.md")
   tags          = merge(local.appservice_common_tags, { class = "unused" })
 
   param "title" {

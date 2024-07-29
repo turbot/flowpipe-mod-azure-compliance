@@ -19,7 +19,6 @@ locals {
 trigger "query" "detect_and_correct_appservice_webapp_not_using_https" {
   title         = "Detect & correct App Services not using HTTPS"
   description   = "Detects App Services not using HTTPS and runs your chosen action."
-  // documentation = file("./appservice/docs/detect_and_correct_appservice_webapp_not_using_https_trigger.md")
   tags          = merge(local.appservice_common_tags, { class = "unused" })
 
   enabled  = var.appservice_webapp_not_using_https_trigger_enabled
@@ -38,7 +37,6 @@ trigger "query" "detect_and_correct_appservice_webapp_not_using_https" {
 pipeline "detect_and_correct_appservice_webapp_not_using_https" {
   title         = "Detect & correct App Services not using HTTPS"
   description   = "Detects App Services not using HTTPS and runs your chosen action."
-  // documentation = file("./appservice/docs/detect_and_correct_appservice_webapp_not_using_https.md")
   tags          = merge(local.appservice_common_tags, { class = "unused", type = "featured" })
 
   param "database" {
@@ -98,7 +96,6 @@ pipeline "detect_and_correct_appservice_webapp_not_using_https" {
 pipeline "correct_appservice_webapp_not_using_https" {
   title         = "Correct App Services not using HTTPS"
   description   = "Runs corrective action on a collection of App Services not using HTTPS."
-  // documentation = file("./appservice/docs/correct_appservice_webapp_not_using_https.md")
   tags          = merge(local.appservice_common_tags, { class = "unused" })
 
   param "items" {
@@ -175,7 +172,6 @@ pipeline "correct_appservice_webapp_not_using_https" {
 pipeline "correct_one_appservice_webapp_not_using_https" {
   title         = "Correct one App Service not using HTTPS"
   description   = "Runs corrective action on a single App Service not using HTTPS."
-  // documentation = file("./appservice/docs/correct_one_appservice_webapp_not_using_https.md")
   tags          = merge(local.appservice_common_tags, { class = "unused" })
 
   param "title" {

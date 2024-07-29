@@ -25,7 +25,6 @@ locals {
 trigger "query" "detect_and_correct_sql_database_allow_internet_access" {
   title         = "Detect & correct SQL Databases allowing internet access"
   description   = "Detects SQL Databases allowing internet access and runs your chosen action."
-  // documentation = file("./sql/docs/detect_and_correct_sql_database_allow_internet_access_trigger.md")
   tags          = merge(local.sql_common_tags, { class = "security" })
 
   enabled  = var.sql_database_allow_internet_access_trigger_enabled
@@ -44,7 +43,6 @@ trigger "query" "detect_and_correct_sql_database_allow_internet_access" {
 pipeline "detect_and_correct_sql_database_allow_internet_access" {
   title         = "Detect & correct SQL Databases allowing internet access"
   description   = "Detects SQL Databases allowing internet access and runs your chosen action."
-  // documentation = file("./sql/docs/detect_and_correct_sql_database_allow_internet_access.md")
   tags          = merge(local.sql_common_tags, { class = "security", type = "featured" })
 
   param "database" {
@@ -104,7 +102,6 @@ pipeline "detect_and_correct_sql_database_allow_internet_access" {
 pipeline "correct_sql_database_allow_internet_access" {
   title         = "Correct SQL Databases allowing internet access"
   description   = "Runs corrective action on a collection of SQL Databases allowing internet access."
-  // documentation = file("./sql/docs/correct_sql_database_allow_internet_access.md")
   tags          = merge(local.sql_common_tags, { class = "security" })
 
   param "items" {
@@ -183,7 +180,6 @@ pipeline "correct_sql_database_allow_internet_access" {
 pipeline "correct_one_sql_database_allow_internet_access" {
   title         = "Correct one SQL Database allowing internet access"
   description   = "Runs corrective action on a single SQL Database allowing internet access."
-  // documentation = file("./sql/docs/correct_one_sql_database_allow_internet_access.md")
   tags          = merge(local.sql_common_tags, { class = "security" })
 
   param "title" {

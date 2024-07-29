@@ -19,7 +19,6 @@ locals {
 trigger "query" "detect_and_correct_storage_account_default_network_access_rule_allowed" {
   title         = "Detect & correct Storage Accounts with default network access rule set to Allow"
   description   = "Detects Storage Accounts with default network access rule set to Allow and runs your chosen action."
-  // documentation = file("./storage/docs/detect_and_correct_storage_account_default_network_access_rule_allowed_trigger.md")
   tags          = merge(local.storage_common_tags, { class = "unused" })
 
   enabled  = var.storage_account_default_network_access_rule_allowed_trigger_enabled
@@ -38,7 +37,6 @@ trigger "query" "detect_and_correct_storage_account_default_network_access_rule_
 pipeline "detect_and_correct_storage_account_default_network_access_rule_allowed" {
   title         = "Detect & correct Storage Accounts with default network access rule set to Allow"
   description   = "Detects Storage Accounts with default network access rule set to Allow and runs your chosen action."
-  // documentation = file("./storage/docs/detect_and_correct_storage_account_default_network_access_rule_allowed.md")
   tags          = merge(local.storage_common_tags, { class = "unused", type = "featured" })
 
   param "database" {
@@ -98,7 +96,6 @@ pipeline "detect_and_correct_storage_account_default_network_access_rule_allowed
 pipeline "correct_storage_account_default_network_access_rule_allowed" {
   title         = "Correct Storage Accounts with default network access rule set to Allow"
   description   = "Runs corrective action on a collection of Storage Accounts with default network access rule set to Allow."
-  // documentation = file("./storage/docs/correct_storage_account_default_network_access_rule_allowed.md")
   tags          = merge(local.storage_common_tags, { class = "unused" })
 
   param "items" {
@@ -175,7 +172,6 @@ pipeline "correct_storage_account_default_network_access_rule_allowed" {
 pipeline "correct_one_storage_account_default_network_access_rule_allowed" {
   title         = "Correct one Storage Account with default network access rule set to Allow"
   description   = "Runs corrective action on a single Storage Account with default network access rule set to Allow."
-  // documentation = file("./storage/docs/correct_one_storage_account_default_network_access_rule_allowed.md")
   tags          = merge(local.storage_common_tags, { class = "unused" })
 
   param "title" {

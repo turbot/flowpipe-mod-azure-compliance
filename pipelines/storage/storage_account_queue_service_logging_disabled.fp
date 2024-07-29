@@ -22,7 +22,6 @@ locals {
 trigger "query" "detect_and_correct_storage_account_queue_service_logging_disabled" {
   title         = "Detect & correct Storage Accounts with queue service logging disabled"
   description   = "Detects Storage Accounts with queue service logging disabled and runs your chosen action."
-  // documentation = file("./storage/docs/detect_and_correct_storage_account_queue_service_logging_disabled_trigger.md")
   tags          = merge(local.storage_common_tags, { class = "unused" })
 
   enabled  = var.storage_account_queue_service_logging_disabled_trigger_enabled
@@ -41,7 +40,6 @@ trigger "query" "detect_and_correct_storage_account_queue_service_logging_disabl
 pipeline "detect_and_correct_storage_account_queue_service_logging_disabled" {
   title         = "Detect & correct Storage Accounts with queue service logging disabled"
   description   = "Detects Storage Accounts with queue service logging disabled and runs your chosen action."
-  // documentation = file("./storage/docs/detect_and_correct_storage_account_queue_service_logging_disabled.md")
   tags          = merge(local.storage_common_tags, { class = "unused", type = "featured" })
 
   param "database" {
@@ -101,7 +99,6 @@ pipeline "detect_and_correct_storage_account_queue_service_logging_disabled" {
 pipeline "correct_storage_account_queue_service_logging_disabled" {
   title         = "Correct Storage Accounts with queue service logging disabled"
   description   = "Runs corrective action on a collection of Storage Accounts with queue service logging disabled."
-  // documentation = file("./storage/docs/correct_storage_account_queue_service_logging_disabled.md")
   tags          = merge(local.storage_common_tags, { class = "unused" })
 
   param "items" {
@@ -176,7 +173,6 @@ pipeline "correct_storage_account_queue_service_logging_disabled" {
 pipeline "correct_one_storage_account_queue_service_logging_disabled" {
   title         = "Correct one Storage Account with queue service logging disabled"
   description   = "Runs corrective action on a single Storage Account with queue service logging disabled."
-  // documentation = file("./storage/docs/correct_one_storage_account_queue_service_logging_disabled.md")
   tags          = merge(local.storage_common_tags, { class = "unused" })
 
   param "title" {

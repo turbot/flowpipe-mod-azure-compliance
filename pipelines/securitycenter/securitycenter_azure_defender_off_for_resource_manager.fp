@@ -19,7 +19,6 @@ locals {
 trigger "query" "detect_and_correct_securitycenter_azure_defender_off_for_resource_manager" {
   title         = "Detect & correct Security Center Azure Defender off for Resource Manager"
   description   = "Detects Security Center Azure Defender turned off for Resource Manager and runs your chosen action."
-  // documentation = file("./securitycenter/docs/detect_and_correct_securitycenter_azure_defender_off_for_resource_manager_trigger.md")
   // tags          = merge(local.securitycenter_common_tags, { class = "unused" })
 
   enabled  = var.securitycenter_azure_defender_off_for_resource_manager_trigger_enabled
@@ -38,7 +37,6 @@ trigger "query" "detect_and_correct_securitycenter_azure_defender_off_for_resour
 pipeline "detect_and_correct_securitycenter_azure_defender_off_for_resource_manager" {
   title         = "Detect & correct Security Center Azure Defender off for Resource Manager"
   description   = "Detects Security Center Azure Defender turned off for Resource Manager and runs your chosen action."
-  // documentation = file("./securitycenter/docs/detect_and_correct_securitycenter_azure_defender_off_for_resource_manager.md")
   // tags          = merge(local.securitycenter_common_tags, { class = "unused", type = "featured" })
 
   param "database" {
@@ -98,7 +96,6 @@ pipeline "detect_and_correct_securitycenter_azure_defender_off_for_resource_mana
 pipeline "correct_securitycenter_azure_defender_off_for_resource_manager" {
   title         = "Correct Security Center Azure Defender off for Resource Manager"
   description   = "Runs corrective action on a collection of subscription with Security Center Azure Defender turned off for Resource Manager."
-  // documentation = file("./securitycenter/docs/correct_securitycenter_azure_defender_off_for_resource_manager.md")
   //  tags          = merge(local.securitycenter_common_tags, { class = "unused" })
 
   param "items" {
@@ -172,9 +169,8 @@ pipeline "correct_securitycenter_azure_defender_off_for_resource_manager" {
 
 
 pipeline "correct_one_securitycenter_azure_defender_off_for_resource_manager" {
-   title         = "Correct one subscription with Security Center Azure Defender turned off for Resource Manager"
-   description   = "Runs corrective action on a subscription with Security Center Azure Defender turned off for Resource Manager."
-  // documentation = file("./securitycenter/docs/correct_one_securitycenter_azure_defender_off_for_appservice.md")f.md")
+  title         = "Correct one subscription with Security Center Azure Defender turned off for Resource Manager"
+  description   = "Runs corrective action on a subscription with Security Center Azure Defender turned off for Resource Manager."
   // tags          = merge(local.securitycenter_common_tags, { class = "unused" })
 
   param "title" {

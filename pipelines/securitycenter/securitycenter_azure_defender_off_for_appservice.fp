@@ -19,7 +19,6 @@ locals {
 trigger "query" "detect_and_correct_securitycenter_azure_defender_off_for_appservice" {
   title         = "Detect & correct Security Center Azure Defender off for App Service"
   description   = "Detects Security Center Azure Defender turned off for App Services and runs your chosen action."
-  // documentation = file("./securitycenter/docs/detect_and_correct_securitycenter_azure_defender_off_for_appservice_trigger.md")
   // tags          = merge(local.securitycenter_common_tags, { class = "unused" })
 
   enabled  = var.securitycenter_azure_defender_off_for_appservice_trigger_enabled
@@ -38,7 +37,6 @@ trigger "query" "detect_and_correct_securitycenter_azure_defender_off_for_appser
 pipeline "detect_and_correct_securitycenter_azure_defender_off_for_appservice" {
   title         = "Detect & correct Security Center Azure Defender off for App Services"
   description   = "Detects Security Center Azure Defender turned off for App Services and runs your chosen action."
-  // documentation = file("./securitycenter/docs/detect_and_correct_securitycenter_azure_defender_off_for_appservice.md")
   // tags          = merge(local.securitycenter_common_tags, { class = "unused", type = "featured" })
 
   param "database" {
@@ -98,7 +96,6 @@ pipeline "detect_and_correct_securitycenter_azure_defender_off_for_appservice" {
 pipeline "correct_securitycenter_azure_defender_off_for_appservice" {
   title         = "Correct Security Center Azure Defender off for App Service"
   description   = "Runs corrective action on a collection of subscription with Security Center Azure Defender turned off for App Service."
-  // documentation = file("./securitycenter/docs/correct_securitycenter_azure_defender_off_for_appservice.md")
   //  tags          = merge(local.securitycenter_common_tags, { class = "unused" })
 
   param "items" {
@@ -172,8 +169,7 @@ pipeline "correct_securitycenter_azure_defender_off_for_appservice" {
 
 pipeline "correct_one_securitycenter_azure_defender_off_for_appservice" {
   title         = "Correct one subscription with Azure Defender turned off for App Service"
-   description   = "Runs corrective action on a subscription with Azure Defender turned off for App Services."
-  // documentation = file("./securitycenter/docs/correct_one_securitycenter_azure_defender_off_for_appservice.md")
+  description   = "Runs corrective action on a subscription with Azure Defender turned off for App Services."
   // tags          = merge(local.securitycenter_common_tags, { class = "unused" })
 
   param "title" {

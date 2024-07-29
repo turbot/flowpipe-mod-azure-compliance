@@ -21,7 +21,6 @@ locals {
 trigger "query" "detect_and_correct_sql_db_transparent_data_encryption_disabled" {
   title         = "Detect & correct SQL Databases with Transparent Data Encryption disabled"
   description   = "Detects SQL Databases with Transparent Data Encryption disabled and runs your chosen action."
-  // documentation = file("./sql/docs/detect_and_correct_sql_db_transparent_data_encryption_disabled_trigger.md")
   tags          = merge(local.sql_common_tags, { class = "security" })
 
   enabled  = var.sql_db_transparent_data_encryption_disabled_trigger_enabled
@@ -40,7 +39,6 @@ trigger "query" "detect_and_correct_sql_db_transparent_data_encryption_disabled"
 pipeline "detect_and_correct_sql_db_transparent_data_encryption_disabled" {
   title         = "Detect & correct SQL Databases with Transparent Data Encryption disabled"
   description   = "Detects SQL Databases with Transparent Data Encryption disabled and runs your chosen action."
-  // documentation = file("./sql/docs/detect_and_correct_sql_db_transparent_data_encryption_disabled.md")
   tags          = merge(local.sql_common_tags, { class = "security", type = "featured" })
 
   param "database" {
@@ -100,7 +98,6 @@ pipeline "detect_and_correct_sql_db_transparent_data_encryption_disabled" {
 pipeline "correct_sql_db_transparent_data_encryption_disabled" {
   title         = "Correct SQL Databases with Transparent Data Encryption disabled"
   description   = "Runs corrective action on a collection of SQL Databases with Transparent Data Encryption disabled."
-  // documentation = file("./sql/docs/correct_sql_db_transparent_data_encryption_disabled.md")
   tags          = merge(local.sql_common_tags, { class = "security" })
 
   param "items" {
@@ -179,7 +176,6 @@ pipeline "correct_sql_db_transparent_data_encryption_disabled" {
 pipeline "correct_one_sql_db_transparent_data_encryption_disabled" {
   title         = "Correct one SQL Database with Transparent Data Encryption disabled"
   description   = "Runs corrective action on a single SQL Database with Transparent Data Encryption disabled."
-  // documentation = file("./sql/docs/correct_one_sql_db_transparent_data_encryption_disabled.md")
   tags          = merge(local.sql_common_tags, { class = "security" })
 
   param "title" {

@@ -69,7 +69,6 @@ locals {
 trigger "query" "detect_and_correct_monitor_log_without_activity_log_alert_for_create_update_nsg" {
   title         = "Detect & correct Monitor Logs without activity log alert for create and update NSG"
   description   = "Detects Monitor Logs without an activity log alert for create and update NSG and runs your chosen action."
-  // documentation = file("./monitor/docs/detect_and_correct_monitor_log_without_activity_log_alert_for_create_update_nsg_trigger.md")
   tags          = merge(local.monitor_common_tags, { class = "security" })
 
   enabled  = var.monitor_log_without_activity_log_alert_for_create_update_nsg_trigger_enabled
@@ -88,7 +87,6 @@ trigger "query" "detect_and_correct_monitor_log_without_activity_log_alert_for_c
 pipeline "detect_and_correct_monitor_log_without_activity_log_alert_for_create_update_nsg" {
   title         = "Detect & correct Monitor Logs without activity log alert for create and update NSG"
   description   = "Detects Monitor Logs without an activity log alert for create and update NSG and runs your chosen action."
-  // documentation = file("./monitor/docs/detect_and_correct_monitor_log_without_activity_log_alert_for_create_update_nsg.md")
   tags          = merge(local.monitor_common_tags, { class = "security", type = "featured" })
 
   param "database" {
@@ -148,7 +146,6 @@ pipeline "detect_and_correct_monitor_log_without_activity_log_alert_for_create_u
 pipeline "correct_monitor_log_without_activity_log_alert_for_create_update_nsg" {
   title         = "Correct Monitor Logs without activity log alert for create and update NSG"
   description   = "Runs corrective action on a collection of Monitor Logs without activity log alert for create and update NSG."
-  // documentation = file("./monitor/docs/correct_monitor_log_without_activity_log_alert_for_create_update_nsg.md")
   tags          = merge(local.monitor_common_tags, { class = "security" })
 
   param "items" {
@@ -225,7 +222,6 @@ pipeline "correct_monitor_log_without_activity_log_alert_for_create_update_nsg" 
 pipeline "correct_one_monitor_log_without_activity_log_alert_for_create_update_nsg" {
   title         = "Correct one Monitor Log without activity log alert for create and update NSG"
   description   = "Runs corrective action on a single Monitor Log without activity log alert for create and update NSG."
-  // documentation = file("./monitor/docs/correct_one_monitor_log_without_activity_log_alert_for_create_update_nsg.md")
   tags          = merge(local.monitor_common_tags, { class = "security" })
 
   param "title" {

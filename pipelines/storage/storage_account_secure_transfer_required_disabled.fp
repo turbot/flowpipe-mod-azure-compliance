@@ -18,7 +18,6 @@ locals {
 trigger "query" "detect_and_correct_storage_account_secure_transfer_required_disabled" {
   title         = "Detect & correct Storage Accounts with secure transfer required disabled"
   description   = "Detects Storage Accounts with secure transfer required disabled and runs your chosen action."
-  // documentation = file("./storage/docs/detect_and_correct_storage_account_secure_transfer_required_disabled_trigger.md")
   tags          = merge(local.storage_common_tags, { class = "unused" })
 
   enabled  = var.storage_account_secure_transfer_required_disabled_trigger_enabled
@@ -97,7 +96,6 @@ pipeline "detect_and_correct_storage_account_secure_transfer_required_disabled" 
 pipeline "correct_storage_account_secure_transfer_required_disabled" {
   title         = "Correct Storage Accounts with secure transfer required disabled"
   description   = "Runs corrective action on a collection of Storage Accounts with secure transfer required disabled."
-  // documentation = file("./storage/docs/correct_storage_account_secure_transfer_required_disabled.md")
   tags          = merge(local.storage_common_tags, { class = "unused" })
 
   param "items" {
@@ -174,7 +172,6 @@ pipeline "correct_storage_account_secure_transfer_required_disabled" {
 pipeline "correct_one_storage_account_secure_transfer_required_disabled" {
   title         = "Correct one Storage Account with secure transfer required disabled"
   description   = "Runs corrective action on a single Storage Account with secure transfer required disabled."
-  // documentation = file("./storage/docs/correct_one_storage_account_secure_transfer_required_disabled.md")
   tags          = merge(local.storage_common_tags, { class = "unused" })
 
   param "title" {

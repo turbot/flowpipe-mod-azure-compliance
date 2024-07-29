@@ -19,7 +19,6 @@ locals {
 trigger "query" "detect_and_correct_appservice_webapp_authentication_disabled" {
   title         = "Detect & correct App Services with web app authentication disabled"
   description   = "Detects App Services with web app authentication disabled and runs your chosen action."
-  // documentation = file("./appservice/docs/detect_and_correct_appservice_webapp_authentication_disabled_trigger.md")
   tags          = merge(local.appservice_common_tags, { class = "unused" })
 
   enabled  = var.appservice_webapp_authentication_disabled_trigger_enabled
@@ -38,7 +37,6 @@ trigger "query" "detect_and_correct_appservice_webapp_authentication_disabled" {
 pipeline "detect_and_correct_appservice_webapp_authentication_disabled" {
   title         = "Detect & correct App Services with web app authentication disabled"
   description   = "Detects App Services with web app authentication disabled and runs your chosen action."
-  // documentation = file("./appservice/docs/detect_and_correct_appservice_webapp_authentication_disabled.md")
   tags          = merge(local.appservice_common_tags, { class = "unused", type = "featured" })
 
   param "database" {
@@ -98,7 +96,6 @@ pipeline "detect_and_correct_appservice_webapp_authentication_disabled" {
 pipeline "correct_appservice_webapp_authentication_disabled" {
   title         = "Correct App Services with web app authentication disabled"
   description   = "Runs corrective action on a collection of App Services with web app authentication disabled."
-  // documentation = file("./appservice/docs/correct_appservice_webapp_authentication_disabled.md")
   tags          = merge(local.appservice_common_tags, { class = "unused" })
 
   param "items" {
@@ -175,7 +172,6 @@ pipeline "correct_appservice_webapp_authentication_disabled" {
 pipeline "correct_one_appservice_webapp_authentication_disabled" {
   title         = "Correct one App Service with web app authentication disabled"
   description   = "Runs corrective action on a single App Service with web app authentication disabled."
-  // documentation = file("./appservice/docs/correct_one_appservice_webapp_authentication_disabled.md")
   tags          = merge(local.appservice_common_tags, { class = "unused" })
 
   param "title" {

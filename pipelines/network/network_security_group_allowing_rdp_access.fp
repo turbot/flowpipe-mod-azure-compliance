@@ -46,7 +46,6 @@ locals {
 trigger "query" "detect_and_correct_network_security_group_allowing_rdp_access" {
   title         = "Detect & correct NSGs allowing RDP access"
   description   = "Detects NSGs allowing RDP access and runs your chosen action."
-  // documentation = file("./network/docs/detect_and_correct_network_security_group_allowing_rdp_access_trigger.md")
   tags          = merge(local.network_common_tags, { class = "security" })
 
   enabled  = var.network_security_group_allowing_rdp_access_trigger_enabled
@@ -65,7 +64,6 @@ trigger "query" "detect_and_correct_network_security_group_allowing_rdp_access" 
 pipeline "detect_and_correct_network_security_group_allowing_rdp_access" {
   title         = "Detect & correct NSGs allowing RDP access"
   description   = "Detects NSGs allowing RDP access and runs your chosen action."
-  // documentation = file("./network/docs/detect_and_correct_network_security_group_allowing_rdp_access.md")
   tags          = merge(local.network_common_tags, { class = "security", type = "featured" })
 
   param "database" {
@@ -125,7 +123,6 @@ pipeline "detect_and_correct_network_security_group_allowing_rdp_access" {
 pipeline "correct_network_security_group_allowing_rdp_access" {
   title         = "Correct NSGs allowing RDP access"
   description   = "Runs corrective action on a collection of NSGs allowing RDP access."
-  // documentation = file("./network/docs/correct_network_security_group_allowing_rdp_access.md")
   tags          = merge(local.network_common_tags, { class = "security" })
 
   param "items" {
@@ -204,7 +201,6 @@ pipeline "correct_network_security_group_allowing_rdp_access" {
 pipeline "correct_one_network_security_group_allowing_rdp_access" {
   title         = "Correct one NSG allowing RDP access"
   description   = "Runs corrective action on a single NSG allowing RDP access."
-  // documentation = file("./network/docs/correct_one_network_security_group_allowing_rdp_access.md")
   tags          = merge(local.network_common_tags, { class = "security" })
 
   param "title" {

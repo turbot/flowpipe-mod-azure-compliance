@@ -19,7 +19,6 @@ locals {
 trigger "query" "detect_and_correct_appservice_webapp_not_using_latest_http_version" {
   title         = "Detect & correct App Services not using the latest HTTP version"
   description   = "Detects App Services not using the latest HTTP version and runs your chosen action."
-  // documentation = file("./appservice/docs/detect_and_correct_appservice_webapp_not_using_latest_http_version_trigger.md")
   tags          = merge(local.appservice_common_tags, { class = "unused" })
 
   enabled  = var.appservice_webapp_not_using_latest_http_version_trigger_enabled
@@ -38,7 +37,6 @@ trigger "query" "detect_and_correct_appservice_webapp_not_using_latest_http_vers
 pipeline "detect_and_correct_appservice_webapp_not_using_latest_http_version" {
   title         = "Detect & correct App Services not using the latest HTTP version"
   description   = "Detects App Services not using the latest HTTP version and runs your chosen action."
-  // documentation = file("./appservice/docs/detect_and_correct_appservice_webapp_not_using_latest_http_version.md")
   tags          = merge(local.appservice_common_tags, { class = "unused", type = "featured" })
 
   param "database" {
@@ -98,7 +96,6 @@ pipeline "detect_and_correct_appservice_webapp_not_using_latest_http_version" {
 pipeline "correct_appservice_webapp_not_using_latest_http_version" {
   title         = "Correct App Services not using the latest HTTP version"
   description   = "Runs corrective action on a collection of App Services not using the latest HTTP version."
-  // documentation = file("./appservice/docs/correct_appservice_webapp_not_using_latest_http_version.md")
   tags          = merge(local.appservice_common_tags, { class = "unused" })
 
   param "items" {
@@ -175,7 +172,6 @@ pipeline "correct_appservice_webapp_not_using_latest_http_version" {
 pipeline "correct_one_appservice_webapp_not_using_latest_http_version" {
   title         = "Correct one App Service not using the latest HTTP version"
   description   = "Runs corrective action on a single App Service not using the latest HTTP version."
-  // documentation = file("./appservice/docs/correct_one_appservice_webapp_not_using_latest_http_version.md")
   tags          = merge(local.appservice_common_tags, { class = "unused" })
 
   param "title" {

@@ -69,7 +69,6 @@ locals {
 trigger "query" "detect_and_correct_monitor_log_without_activity_log_alert_for_delete_public_ip_address" {
   title         = "Detect & correct Monitor Logs without activity log alert for delete public IP address"
   description   = "Detects Monitor Logs without an activity log alert for delete public IP address and runs your chosen action."
-  // documentation = file("./monitor/docs/detect_and_correct_monitor_log_without_activity_log_alert_for_delete_public_ip_address_trigger.md")
   tags          = merge(local.monitor_common_tags, { class = "security" })
 
   enabled  = var.monitor_log_without_activity_log_alert_for_delete_public_ip_address_trigger_enabled
@@ -88,7 +87,6 @@ trigger "query" "detect_and_correct_monitor_log_without_activity_log_alert_for_d
 pipeline "detect_and_correct_monitor_log_without_activity_log_alert_for_delete_public_ip_address" {
   title         = "Detect & correct Monitor Logs without activity log alert for delete public IP address"
   description   = "Detects Monitor Logs without an activity log alert for delete public IP address and runs your chosen action."
-  // documentation = file("./monitor/docs/detect_and_correct_monitor_log_without_activity_log_alert_for_delete_public_ip_address.md")
   tags          = merge(local.monitor_common_tags, { class = "security", type = "featured" })
 
   param "database" {
@@ -148,7 +146,6 @@ pipeline "detect_and_correct_monitor_log_without_activity_log_alert_for_delete_p
 pipeline "correct_monitor_log_without_activity_log_alert_for_delete_public_ip_address" {
   title         = "Correct Monitor Logs without activity log alert for delete public IP address"
   description   = "Runs corrective action on a collection of Monitor Logs without activity log alert for delete public IP address."
-  // documentation = file("./monitor/docs/correct_monitor_log_without_activity_log_alert_for_delete_public_ip_address.md")
   tags          = merge(local.monitor_common_tags, { class = "security" })
 
   param "items" {
@@ -225,7 +222,6 @@ pipeline "correct_monitor_log_without_activity_log_alert_for_delete_public_ip_ad
 pipeline "correct_one_monitor_log_without_activity_log_alert_for_delete_public_ip_address" {
   title         = "Correct one Monitor Log without activity log alert for delete public IP address"
   description   = "Runs corrective action on a single Monitor Log without activity log alert for delete public IP address."
-  // documentation = file("./monitor/docs/correct_one_monitor_log_without_activity_log_alert_for_delete_public_ip_address.md")
   tags          = merge(local.monitor_common_tags, { class = "security" })
 
   param "title" {

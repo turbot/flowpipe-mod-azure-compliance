@@ -19,7 +19,6 @@ locals {
 trigger "query" "detect_and_correct_securitycenter_azure_defender_off_for_dns" {
   title         = "Detect & correct Security Center Azure Defender off for Dns"
   description   = "Detects Security Center Azure Defender turned off for Dns and runs your chosen action."
-  // documentation = file("./securitycenter/docs/detect_and_correct_securitycenter_azure_defender_off_for_dns_trigger.md")
   // tags          = merge(local.securitycenter_common_tags, { class = "unused" })
 
   enabled  = var.securitycenter_azure_defender_off_for_dns_trigger_enabled
@@ -38,7 +37,6 @@ trigger "query" "detect_and_correct_securitycenter_azure_defender_off_for_dns" {
 pipeline "detect_and_correct_securitycenter_azure_defender_off_for_dns" {
   title         = "Detect & correct Security Center Azure Defender off for Dns"
   description   = "Detects Security Center Azure Defender turned off for Dns and runs your chosen action."
-  // documentation = file("./securitycenter/docs/detect_and_correct_securitycenter_azure_defender_off_for_dns.md")
   // tags          = merge(local.securitycenter_common_tags, { class = "unused", type = "featured" })
 
   param "database" {
@@ -98,7 +96,6 @@ pipeline "detect_and_correct_securitycenter_azure_defender_off_for_dns" {
 pipeline "correct_securitycenter_azure_defender_off_for_dns" {
   title         = "Correct Security Center Azure Defender off for Dns"
   description   = "Runs corrective action on a collection of subscription with Security Center Azure Defender turned off for Dns."
-  // documentation = file("./securitycenter/docs/correct_securitycenter_azure_defender_off_for_dns.md")
   //  tags          = merge(local.securitycenter_common_tags, { class = "unused" })
 
   param "items" {
@@ -172,9 +169,8 @@ pipeline "correct_securitycenter_azure_defender_off_for_dns" {
 
 
 pipeline "correct_one_securitycenter_azure_defender_off_for_dns" {
-   title         = "Correct one subscription with Security Center Azure Defender turned off for Dns"
-   description   = "Runs corrective action on a subscription with Security Center Azure Defender turned off for Dns."
-  // documentation = file("./securitycenter/docs/correct_one_securitycenter_azure_defender_off_for_appservice.md")f.md")
+  title         = "Correct one subscription with Security Center Azure Defender turned off for Dns"
+  description   = "Runs corrective action on a subscription with Security Center Azure Defender turned off for Dns."
   // tags          = merge(local.securitycenter_common_tags, { class = "unused" })
 
   param "title" {
