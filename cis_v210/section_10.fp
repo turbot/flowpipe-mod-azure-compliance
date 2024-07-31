@@ -10,7 +10,7 @@ locals {
 
 variable "cis_v210_10_enabled_controls" {
   type        = list(string)
-  description = "List of CIS v2.1.0 section 2 controls to enable"
+  description = "List of CIS v2.1.0 section 10 controls to enable"
   default     = [
     "cis_v210_10_1"
   ]

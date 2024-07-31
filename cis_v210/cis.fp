@@ -1,20 +1,26 @@
 locals {
   cis_v210_common_tags = merge(local.aws_compliance_common_tags, {
     cis         = "true"
-    cis_version = "v3.0.0"
+    cis_version = "v2.1.0"
   })
   cis_v210_control_mapping = {
-    cis_v210_1 = { pipeline = pipeline.cis_v210_1 }
-    cis_v210_2 = { pipeline = pipeline.cis_v210_2 }
-    cis_v210_3 = { pipeline = pipeline.cis_v210_3 }
-    cis_v210_5 = { pipeline = pipeline.cis_v210_5 }
+    cis_v210_1  = { pipeline = pipeline.cis_v210_1 }
+    cis_v210_2  = { pipeline = pipeline.cis_v210_2 }
+    cis_v210_3  = { pipeline = pipeline.cis_v210_3 }
+    cis_v210_4  = { pipeline = pipeline.cis_v210_4 }
+    cis_v210_5  = { pipeline = pipeline.cis_v210_5 }
+    cis_v210_6  = { pipeline = pipeline.cis_v210_6 }
+    cis_v210_7  = { pipeline = pipeline.cis_v210_7 }
+    cis_v210_8  = { pipeline = pipeline.cis_v210_8 }
+    cis_v210_9  = { pipeline = pipeline.cis_v210_9 }
+    cis_v210_10 = { pipeline = pipeline.cis_v210_10 }
   }
 }
 
 variable "cis_v210_enabled_controls" {
   type        = list(string)
-  description = "List of CIS v3.0.0 controls to enable"
-  default     = ["cis_v210_1", "cis_v210_2", "cis_v210_3", "cis_v210_5"]
+  description = "List of CIS v2.1.0 controls to enable"
+  default     = ["cis_v210_1", "cis_v210_2", "cis_v210_3", "cis_v210_4", "cis_v210_5", "cis_v210_6", "cis_v210_7", "cis_v210_8", "cis_v210_9", "cis_v210_10",]
 }
 
 pipeline "cis_v210" {

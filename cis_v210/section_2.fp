@@ -93,8 +93,8 @@ pipeline "cis_v210_2" {
     if       = (length(param.approvers) > 0)
     notifier = notifier[param.notifier]
     type     = "button"
-    subject  = "Request to run CIS v3.0.0 Section 2: Microsoft Defender?"
-    prompt   = "Do you wish to run CIS v3.0.0 Section 2: Microsoft Defender?"
+    subject  = "Request to run CIS v2.1.0 Section 2: Microsoft Defender?"
+    prompt   = "Do you wish to run CIS v2.1.0 Section 2: Microsoft Defender?"
     options  = [
       {value = "no", label = "No", style = local.style_alert},
       {value = "yes", label = "Yes", style = local.style_ok}

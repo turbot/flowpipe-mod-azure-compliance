@@ -43,7 +43,7 @@ variable "cis_v210_5_enabled_controls" {
 
 
 pipeline "cis_v210_5" {
-  title         = "6 Networking"
+  title         = "5 Logging and Monitoring"
   documentation = file("./cis_v210/docs/cis_v210_5.md")
 
   param "database" {

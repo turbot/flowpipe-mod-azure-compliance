@@ -3,34 +3,46 @@ locals {
   //   cis_section_id = "1"
   // })
   cis_v210_1_control_mapping = {
-    cis_v210_1_1  = {pipeline = pipeline.manual_control, additional_args = {message = "CIS v3.0.0 1.1 is a manual control."}}
-    cis_v210_1_2  = {pipeline = pipeline.detect_and_correct_accounts_without_alternate_contact_security_registered, additional_args = {}}
-    cis_v210_1_3  = {pipeline = pipeline.manual_control, additional_args = {message = "CIS v3.0.0 1.3 is a manual control."}}
-    cis_v210_1_4  = {pipeline = pipeline.detect_and_delete_iam_root_access_keys, additional_args = {}}
-    cis_v210_1_5  = {pipeline = pipeline.manual_control, additional_args = {message = "CIS v3.0.0 1.5 is a manual control."}}
-    cis_v210_1_6  = {pipeline = pipeline.manual_control, additional_args = {message = "CIS v3.0.0 1.6 is a manual control."}}
-    cis_v210_1_7  = {pipeline = pipeline.manual_control, additional_args = {message = "CIS v3.0.0 1.7 is a manual control."}}
-    cis_v210_1_8  = {pipeline = pipeline.detect_and_correct_iam_account_password_policy_no_min_length_14, additional_args = {}}
-    cis_v210_1_9  = {pipeline = pipeline.detect_and_correct_iam_account_password_policy_no_policy_reuse_24, additional_args = {}}
-    cis_v210_1_10 = {pipeline = pipeline.manual_control, additional_args = {message = "CIS v3.0.0 1.10 is a manual control."}}
-    cis_v210_1_11 = {pipeline = pipeline.manual_control, additional_args = {message = "CIS v3.0.0 1.11 is a manual control."}}
-    cis_v210_1_12 = {pipeline = pipeline.detect_and_deactivate_iam_user_unused_credentials_45, additional_args = {}}
-    cis_v210_1_13 = {pipeline = pipeline.detect_and_delete_extra_iam_user_active_keys, additional_args = {}}
-    cis_v210_1_14 = {pipeline = pipeline.detect_and_deactivate_iam_user_unused_credentials_90, additional_args = {}}
-    cis_v210_1_15 = {pipeline = pipeline.detect_and_delete_iam_user_inline_policies, additional_args = {}}
-    cis_v210_1_16 = {pipeline = pipeline.detect_and_detach_iam_entities_with_policy_star_star, additional_args = {}}
-    cis_v210_1_17 = {pipeline = pipeline.manual_control, additional_args = {message = "CIS v3.0.0 1.17 is a manual control."}}
-    cis_v210_1_18 = {pipeline = pipeline.manual_control, additional_args = {message = "CIS v3.0.0 1.18 is a manual control."}}
-    cis_v210_1_19 = {pipeline = pipeline.manual_control, additional_args = {message = "CIS v3.0.0 1.19 is a manual control."}}
-    cis_v210_1_20 = {pipeline = pipeline.detect_and_enable_iam_accessanalyzer_analyzer_disabled, additional_args = {}}
-    cis_v210_1_21 = {pipeline = pipeline.manual_control, additional_args = {message = "CIS v3.0.0 1.21 is a manual control."}}
-    cis_v210_1_22 = {pipeline = pipeline.detect_and_detach_iam_entities_with_cloudshell_fullaccess_policy, additional_args = {}}
+    cis_v210_1_1_1  = {pipeline = pipeline.manual_control, additional_args = {message = "CIS v2.1.0 1.1.1 is a manual control."}}
+    cis_v210_1_1_2  = {pipeline = pipeline.manual_control, additional_args = {message = "CIS v2.1.0 1.1.2 is a manual control."}}
+    cis_v210_1_1_3  = {pipeline = pipeline.manual_control, additional_args = {message = "CIS v2.1.0 1.1.3 is a manual control."}}
+    cis_v210_1_1_4  = {pipeline = pipeline.manual_control, additional_args = {message = "CIS v2.1.0 1.1.4 is a manual control."}}
+    cis_v210_1_2_1  = {pipeline = pipeline.manual_control, additional_args = {message = "CIS v2.1.0 1.2.1 is a manual control."}}
+    cis_v210_1_2_2  = {pipeline = pipeline.manual_control, additional_args = {message = "CIS v2.1.0 1.2.2 is a manual control."}}
+    cis_v210_1_2_3  = {pipeline = pipeline.manual_control, additional_args = {message = "CIS v2.1.0 1.2.3 is a manual control."}}
+    cis_v210_1_2_4  = {pipeline = pipeline.manual_control, additional_args = {message = "CIS v2.1.0 1.2.4 is a manual control."}}
+    cis_v210_1_2_5  = {pipeline = pipeline.manual_control, additional_args = {message = "CIS v2.1.0 1.2.5 is a manual control."}}
+    cis_v210_1_2_6 = {pipeline = pipeline.manual_control, additional_args = {message = "CIS v2.1.0 1.2.6 is a manual control."}}
+    cis_v210_1_2_7 = {pipeline = pipeline.manual_control, additional_args = {message = "CIS v2.1.0 1.2.7 is a manual control."}}
+    cis_v210_1_3 = {pipeline = pipeline.manual_control, additional_args = {message = "CIS v2.1.0 1.3 is a manual control."}}
+    cis_v210_1_4 = {pipeline = pipeline.manual_control, additional_args = {message = "CIS v2.1.0 1.4 is a manual control."}}
+    cis_v210_1_5 = {pipeline = pipeline.manual_control, additional_args = {message = "CIS v2.1.0 1.5 is a manual control."}}
+    cis_v210_1_6 = {pipeline = pipeline.manual_control, additional_args = {message = "CIS v2.1.0 1.6 is a manual control."}}
+    cis_v210_1_7 = {pipeline = pipeline.manual_control, additional_args = {message = "CIS v2.1.0 1.7 is a manual control."}}
+    cis_v210_1_8 = {pipeline = pipeline.manual_control, additional_args = {message = "CIS v2.1.0 1.8 is a manual control."}}
+    cis_v210_1_9 = {pipeline = pipeline.manual_control, additional_args = {message = "CIS v2.1.0 1.9 is a manual control."}}
+    cis_v210_1_10 = {pipeline = pipeline.manual_control, additional_args = {message = "CIS v2.1.0 1.10 is a manual control."}}
+    cis_v210_1_11 = {pipeline = pipeline.manual_control, additional_args = {message = "CIS v2.1.0 1.11 is a manual control."}}
+    cis_v210_1_12 = {pipeline = pipeline.manual_control, additional_args = {message = "CIS v2.1.0 1.12 is a manual control."}}
+    cis_v210_1_13 = {pipeline = pipeline.manual_control, additional_args = {message = "CIS v2.1.0 1.13 is a manual control."}}
+    cis_v210_1_14 = {pipeline = pipeline.manual_control, additional_args = {message = "CIS v2.1.0 1.14 is a manual control."}}
+    cis_v210_1_15 = {pipeline = pipeline.manual_control, additional_args = {message = "CIS v2.1.0 1.15 is a manual control."}}
+    cis_v210_1_16 = {pipeline = pipeline.manual_control, additional_args = {message = "CIS v2.1.0 1.16 is a manual control."}}
+    cis_v210_1_17 = {pipeline = pipeline.manual_control, additional_args = {message = "CIS v2.1.0 1.17 is a manual control."}}
+    cis_v210_1_18 = {pipeline = pipeline.manual_control, additional_args = {message = "CIS v2.1.0 1.18 is a manual control."}}
+    cis_v210_1_19 = {pipeline = pipeline.manual_control, additional_args = {message = "CIS v2.1.0 1.19 is a manual control."}}
+    cis_v210_1_20 = {pipeline = pipeline.manual_control, additional_args = {message = "CIS v2.1.0 1.20 is a manual control."}}
+    cis_v210_1_21 = {pipeline = pipeline.manual_control, additional_args = {message = "CIS v2.1.0 1.21 is a manual control."}}
+    cis_v210_1_22 = {pipeline = pipeline.manual_control, additional_args = {message = "CIS v2.1.0 1.22 is a manual control."}}
+    cis_v210_1_23 = {pipeline = pipeline.manual_control, additional_args = {message = "CIS v2.1.0 1.23 is a manual control."}}
+    cis_v210_1_24 = {pipeline = pipeline.manual_control, additional_args = {message = "CIS v2.1.0 1.24 is a manual control."}}
+    cis_v210_1_25 = {pipeline = pipeline.manual_control, additional_args = {message = "CIS v2.1.0 1.25 is a manual control."}}
   }
 }
 
 variable "cis_v210_1_enabled_controls" {
   type        = list(string)
-  description = "List of CIS v3.0.0 section 1 controls to enable"
+  description = "List of CIS v2.1.0 section 1 controls to enable"
   default     = [
     "cis_v210_1_2",
     "cis_v210_1_4",
@@ -78,8 +90,8 @@ pipeline "cis_v210_1" {
     if       = (length(param.approvers) > 0)
     notifier = notifier[param.notifier]
     type     = "button"
-    subject  = "Request to run CIS v3.0.0 Section 1: Identity and Access Management?"
-    prompt   = "Do you wish to run CIS v3.0.0 Section 1: Identity and Access Management?"
+    subject  = "Request to run CIS v2.1.0 Section 1: Identity and Access Management?"
+    prompt   = "Do you wish to run CIS v2.1.0 Section 1: Identity and Access Management?"
     options  = [
       {value = "no", label = "No", style = local.style_alert},
       {value = "yes", label = "Yes", style = local.style_ok}
@@ -93,7 +105,7 @@ pipeline "cis_v210_1" {
   step "message" "cis_v210_1" {
     if       = (step.transform.input_value.value == "yes")
     notifier = notifier[param.notifier]
-    text     = "Running CIS v3.0.0 Section 1: Identity and Access Management"
+    text     = "Running CIS v2.1.0 Section 1: Identity and Access Management"
   }
 
   step "pipeline" "cis_v210_1" {

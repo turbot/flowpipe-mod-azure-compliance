@@ -26,7 +26,7 @@ locals {
 
 variable "cis_v210_3_enabled_controls" {
   type        = list(string)
-  description = "List of CIS v2.1.0 section 2 controls to enable"
+  description = "List of CIS v2.1.0 section 3 controls to enable"
   default     = [
     "cis_v210_3_1_1",
     "cis_v210_3_1_2",
@@ -81,8 +81,8 @@ pipeline "cis_v210_3" {
     if       = (length(param.approvers) > 0)
     notifier = notifier[param.notifier]
     type     = "button"
-    subject  = "Request to run CIS v3.0.0 Section 3: Storage Accounts?"
-    prompt   = "Do you wish to run CIS v3.0.0 Section 3: Storage Accounts?"
+    subject  = "Request to run CIS v2.1.0 Section 3: Storage Accounts?"
+    prompt   = "Do you wish to run CIS v2.1.0 Section 3: Storage Accounts?"
     options  = [
       {value = "no", label = "No", style = local.style_alert},
       {value = "yes", label = "Yes", style = local.style_ok}
@@ -96,7 +96,7 @@ pipeline "cis_v210_3" {
   step "message" "cis_v210_3" {
     if       = (step.transform.input_value.value == "yes")
     notifier = notifier[param.notifier]
-    text     = "Running CIS v3.0.0 Section 3: Storage Accounts"
+    text     = "Running CIS v2.1.0 Section 3: Storage Accounts"
   }
 
   step "pipeline" "cis_v210_3" {
