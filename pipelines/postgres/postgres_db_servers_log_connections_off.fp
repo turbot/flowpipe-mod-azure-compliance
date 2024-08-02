@@ -1,77 +1,44 @@
 locals {
-  postgres_db_server_allow_access_to_azure_services_enabled_query = <<-EOQ
-    with postgres_db_with_allow_access_to_azure_services as (
-      select
-        id
-      from
-        azure_postgresql_server,
-        jsonb_array_elements(firewall_rules) as r
-      where
-        r -> 'FirewallRuleProperties' ->> 'endIpAddress' = '0.0.0.0'
-        and r -> 'FirewallRuleProperties' ->> 'startIpAddress' = '0.0.0.0'
-    )
-    select
-      concat(db.id, ' [', db.resource_group, '/', db.subscription_id, ']') as title,
-      db.id as id,
-      db.name,
-      db.resource_group,
-      db.subscription_id,
-      db._ctx ->> 'connection_name' as cred
-    from
-      azure_postgresql_server as db,
-      postgres_db_with_allow_access_to_azure_services as a,
-      azure_subscription as sub
-    where
-      a.id is not null
-      and sub.subscription_id = db.subscription_id;
+  postgres_db_servers_log_connections_off_query = <<-EOQ
+		select
+			concat(db.id, ' [', db.resource_group, '/', db.subscription_id, ']') as title,
+			db.id as id,
+			db.name,
+			db.resource_group,
+			db.subscription_id,
+			db._ctx ->> 'connection_name' as cred
+		from
+			azure_postgresql_server as db,
+			jsonb_array_elements(server_configurations) config,
+			azure_subscription as sub
+		where
+			config ->> 'Name' = 'log_connections'
+			and lower(config -> 'ConfigurationProperties' ->> 'value') != 'on'
+			and sub.subscription_id = db.subscription_id;
   EOQ
 }
 
-variable "postgres_db_server_allow_access_to_azure_services_enabled_trigger_enabled" {
-  type        = bool
-  default     = false
-  description = "If true, the trigger is enabled."
-}
-
-variable "postgres_db_server_allow_access_to_azure_services_enabled_trigger_schedule" {
-  type        = string
-  default     = "15m"
-  description = "The schedule on which to run the trigger if enabled."
-}
-
-variable "postgres_db_server_allow_access_to_azure_services_enabled_default_action" {
-  type        = string
-  description = "The default action to use for the detected item, used if no input is provided."
-  default     = "notify"
-}
-
-variable "postgres_db_server_allow_access_to_azure_services_enabled_enabled_actions" {
-  type        = list(string)
-  description = "The list of enabled actions to provide to approvers for selection."
-  default     = ["skip", "delete_firewall_rule"]
-}
-
-trigger "query" "detect_and_correct_postgres_db_server_allow_access_to_azure_services_enabled" {
-  title         = "Detect & correct PostgreSQL DB servers allowing access to Azure services"
-  description   = "Detects PostgreSQL database servers allowing access to Azure services and runs your chosen action."
+trigger "query" "detect_and_correct_postgres_db_servers_log_connections_off" {
+  title         = "Detect & correct PostgreSQL DB servers with logging connections off"
+  description   = "Detects PostgreSQL database servers with logging connections disabled and runs your chosen action."
   tags          = merge(local.postgres_common_tags, { class = "unused" })
 
-  enabled  = var.postgres_db_server_allow_access_to_azure_services_enabled_trigger_enabled
-  schedule = var.postgres_db_server_allow_access_to_azure_services_enabled_trigger_schedule
+  enabled  = var.postgres_db_servers_log_connections_off_trigger_enabled
+  schedule = var.postgres_db_servers_log_connections_off_trigger_schedule
   database = var.database
-  sql      = local.postgres_db_server_allow_access_to_azure_services_enabled_query
+  sql      = local.postgres_db_servers_log_connections_off_query
 
   capture "insert" {
-    pipeline = pipeline.correct_postgres_db_server_allow_access_to_azure_services_enabled
+    pipeline = pipeline.correct_postgres_db_servers_log_connections_off
     args = {
       items = self.inserted_rows
     }
   }
 }
 
-pipeline "detect_and_correct_postgres_db_server_allow_access_to_azure_services_enabled" {
-  title         = "Detect & correct PostgreSQL DB servers allowing access to Azure services"
-  description   = "Detects PostgreSQL database servers allowing access to Azure services and runs your chosen action."
+pipeline "detect_and_correct_postgres_db_servers_log_connections_off" {
+  title         = "Detect & correct PostgreSQL DB servers with logging connections off"
+  description   = "Detects PostgreSQL database servers with logging connections disabled and runs your chosen action."
   tags          = merge(local.postgres_common_tags, { class = "unused", type = "featured" })
 
   param "database" {
@@ -101,22 +68,22 @@ pipeline "detect_and_correct_postgres_db_server_allow_access_to_azure_services_e
   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.postgres_db_server_allow_access_to_azure_services_enabled_default_action
+    default     = var.postgres_db_servers_log_connections_off_default_action
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.postgres_db_server_allow_access_to_azure_services_enabled_enabled_actions
+    default     = var.postgres_db_servers_log_connections_off_enabled_actions
   }
 
   step "query" "detect" {
     database = param.database
-    sql      = local.postgres_db_server_allow_access_to_azure_services_enabled_query
+    sql      = local.postgres_db_servers_log_connections_off_query
   }
 
   step "pipeline" "respond" {
-    pipeline = pipeline.correct_postgres_db_server_allow_access_to_azure_services_enabled
+    pipeline = pipeline.correct_postgres_db_servers_log_connections_off
     args = {
       items              = step.query.detect.rows
       notifier           = param.notifier
@@ -128,9 +95,9 @@ pipeline "detect_and_correct_postgres_db_server_allow_access_to_azure_services_e
   }
 }
 
-pipeline "correct_postgres_db_server_allow_access_to_azure_services_enabled" {
-  title         = "Correct PostgreSQL DB servers allowing access to Azure services"
-  description   = "Runs corrective action on a collection of PostgreSQL database servers allowing access to Azure services."
+pipeline "correct_postgres_db_servers_log_connections_off" {
+  title         = "Correct PostgreSQL DB servers with logging connections off"
+  description   = "Runs corrective action on a collection of PostgreSQL database servers with logging connections disabled."
   tags          = merge(local.postgres_common_tags, { class = "unused" })
 
   param "items" {
@@ -166,19 +133,19 @@ pipeline "correct_postgres_db_server_allow_access_to_azure_services_enabled" {
   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.postgres_db_server_allow_access_to_azure_services_enabled_default_action
+    default     = var.postgres_db_servers_log_connections_off_default_action
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.postgres_db_server_allow_access_to_azure_services_enabled_enabled_actions
+    default     = var.postgres_db_servers_log_connections_off_enabled_actions
   }
 
   step "message" "notify_detection_count" {
     if       = var.notification_level == local.level_verbose
     notifier = notifier[param.notifier]
-    text     = "Detected ${length(param.items)} PostgreSQL DB servers allowing access to Azure services."
+    text     = "Detected ${length(param.items)} PostgreSQL DB servers with logging connections disabled."
   }
 
   step "transform" "items_by_id" {
@@ -188,7 +155,7 @@ pipeline "correct_postgres_db_server_allow_access_to_azure_services_enabled" {
   step "pipeline" "correct_item" {
     for_each        = step.transform.items_by_id.value
     max_concurrency = var.max_concurrency
-    pipeline        = pipeline.correct_one_postgres_db_server_allow_access_to_azure_services_enabled
+    pipeline        = pipeline.correct_one_postgres_db_servers_log_connections_off
     args = {
       title              = each.value.title
       name               = each.value.name
@@ -204,9 +171,9 @@ pipeline "correct_postgres_db_server_allow_access_to_azure_services_enabled" {
   }
 }
 
-pipeline "correct_one_postgres_db_server_allow_access_to_azure_services_enabled" {
-  title         = "Correct one PostgreSQL DB server allowing access to Azure services"
-  description   = "Runs corrective action on a single PostgreSQL database server allowing access to Azure services."
+pipeline "correct_one_postgres_db_servers_log_connections_off" {
+  title         = "Correct one PostgreSQL DB server with logging connections off"
+  description   = "Runs corrective action on a single PostgreSQL database server with logging connections disabled."
   tags          = merge(local.postgres_common_tags, { class = "unused" })
 
   param "title" {
@@ -253,16 +220,16 @@ pipeline "correct_one_postgres_db_server_allow_access_to_azure_services_enabled"
     default     = var.approvers
   }
 
-  param "default_action" {
+   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.postgres_db_server_allow_access_to_azure_services_enabled_default_action
+    default     = var.postgres_db_servers_log_connections_off_default_action
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.postgres_db_server_allow_access_to_azure_services_enabled_enabled_actions
+    default     = var.postgres_db_servers_log_connections_off_enabled_actions
   }
 
   step "pipeline" "respond" {
@@ -271,7 +238,7 @@ pipeline "correct_one_postgres_db_server_allow_access_to_azure_services_enabled"
       notifier           = param.notifier
       notification_level = param.notification_level
       approvers          = param.approvers
-      detect_msg         = "Detected PostgreSQL DB server ${param.title} allowing access to Azure services."
+      detect_msg         = "Detected PostgreSQL DB server ${param.title} with logging connections disabled."
       default_action     = param.default_action
       enabled_actions    = param.enabled_actions
       actions = {
@@ -283,27 +250,52 @@ pipeline "correct_one_postgres_db_server_allow_access_to_azure_services_enabled"
           pipeline_args = {
             notifier = param.notifier
             send     = param.notification_level == local.level_verbose
-            text     = "Skipped PostgreSQL DB server ${param.title} allowing access to Azure services."
+            text     = "Skipped PostgreSQL DB server ${param.title} with logging connections disabled."
           }
           success_msg = ""
           error_msg   = ""
         },
-        "delete_firewall_rule" = {
-          label        = "Delete Firewall Rule"
-          value        = "delete_firewall_rule"
+        "enable_logging_connections" = {
+          label        = "Enable Logging Connections"
+          value        = "enable_logging_connections"
           style        = local.style_alert
-          pipeline_ref = local.azure_pipeline_delete_postgres_server_firewall_rule
+          pipeline_ref = local.azure_pipeline_set_postgres_server_configuration
           pipeline_args = {
-            resource_group     = param.resource_group
-            subscription_id    = param.subscription_id
-            server_name        = param.name
-            cred               = param.cred
-            firewall_rule_name = "AllowAllWindowsAzureIps"
+            server_name       = param.name
+            resource_group    = param.resource_group
+            subscription_id   = param.subscription_id
+            cred              = param.cred
+            config_name       = "log_connections"
+            config_value      = "on"
           }
-          success_msg = "Deleted firewall rule allowing access to Azure services for PostgreSQL DB server ${param.title}."
-          error_msg   = "Error deleting firewall rule allowing access to Azure services for PostgreSQL DB server ${param.title}."
+          success_msg = "Enabled logging connections for PostgreSQL DB server ${param.title}."
+          error_msg   = "Error enabling logging connections for PostgreSQL DB server ${param.title}."
         }
       }
     }
   }
+}
+
+variable "postgres_db_servers_log_connections_off_trigger_enabled" {
+  type        = bool
+  default     = false
+  description = "If true, the trigger is enabled."
+}
+
+variable "postgres_db_servers_log_connections_off_trigger_schedule" {
+  type        = string
+  default     = "15m"
+  description = "The schedule on which to run the trigger if enabled."
+}
+
+variable "postgres_db_servers_log_connections_off_default_action" {
+  type        = string
+  description = "The default action to use for the detected item, used if no input is provided."
+  default     = "enable_logging_connections"
+}
+
+variable "postgres_db_servers_log_connections_off_enabled_actions" {
+  type        = list(string)
+  description = "The list of enabled actions to provide to approvers for selection."
+  default     = ["skip", "enable_logging_connections"]
 }

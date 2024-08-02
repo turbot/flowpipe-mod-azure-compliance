@@ -1,5 +1,5 @@
 locals {
-  postgres_db_server_log_retention_days_less_than_3_query = <<-EOQ
+  postgres_db_servers_connection_throttling_off_query = <<-EOQ
 		select
 			concat(db.id, ' [', db.resource_group, '/', db.subscription_id, ']') as title,
 			db.id as id,
@@ -12,39 +12,33 @@ locals {
 			jsonb_array_elements(server_configurations) config,
 			azure_subscription as sub
 		where
-			config ->> 'Name' = 'log_retention_days'
-			and (config -> 'ConfigurationProperties' ->> 'value') :: integer <= 3
+			config ->> 'Name' = 'connection_throttling'
+			and lower(config -> 'ConfigurationProperties' ->> 'value') != 'on'
 			and sub.subscription_id = db.subscription_id;
   EOQ
 }
 
-variable "log_retention_days" {
-  type        = string
-  description = "The number of days logs should be retained"
-  default     = "7"
-}
-
-trigger "query" "detect_and_correct_postgres_db_server_log_retention_days_less_than_3" {
-  title         = "Detect & correct PostgreSQL DB servers with log retention_days less than three"
-  description   = "Detects PostgreSQL database servers with log retention_days less than three and runs your chosen action."
+trigger "query" "detect_and_correct_postgres_db_servers_connection_throttling_off" {
+  title         = "Detect & correct PostgreSQL DB servers with connection throttling off"
+  description   = "Detects PostgreSQL database servers with connection throttling disabled and runs your chosen action."
   tags          = merge(local.postgres_common_tags, { class = "unused" })
 
-  enabled  = var.postgres_db_server_log_retention_days_less_than_3_trigger_enabled
-  schedule = var.postgres_db_server_log_retention_days_less_than_3_trigger_schedule
+  enabled  = var.postgres_db_servers_connection_throttling_off_trigger_enabled
+  schedule = var.postgres_db_servers_connection_throttling_off_trigger_schedule
   database = var.database
-  sql      = local.postgres_db_server_log_retention_days_less_than_3_query
+  sql      = local.postgres_db_servers_connection_throttling_off_query
 
   capture "insert" {
-    pipeline = pipeline.correct_postgres_db_server_log_retention_days_less_than_3
+    pipeline = pipeline.correct_postgres_db_servers_connection_throttling_off
     args = {
       items = self.inserted_rows
     }
   }
 }
 
-pipeline "detect_and_correct_postgres_db_server_log_retention_days_less_than_3" {
-  title         = "Detect & correct PostgreSQL DB servers with log retention_days less than three"
-  description   = "Detects PostgreSQL database servers with log retention_days less than three and runs your chosen action."
+pipeline "detect_and_correct_postgres_db_servers_connection_throttling_off" {
+  title         = "Detect & correct PostgreSQL DB servers with connection throttling off"
+  description   = "Detects PostgreSQL database servers with connection throttling disabled and runs your chosen action."
   tags          = merge(local.postgres_common_tags, { class = "unused", type = "featured" })
 
   param "database" {
@@ -74,22 +68,22 @@ pipeline "detect_and_correct_postgres_db_server_log_retention_days_less_than_3" 
   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.postgres_db_server_log_retention_days_less_than_3_default_action
+    default     = var.postgres_db_servers_connection_throttling_off_default_action
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.postgres_db_server_log_retention_days_less_than_3_enabled_actions
+    default     = var.postgres_db_servers_connection_throttling_off_enabled_actions
   }
 
   step "query" "detect" {
     database = param.database
-    sql      = local.postgres_db_server_log_retention_days_less_than_3_query
+    sql      = local.postgres_db_servers_connection_throttling_off_query
   }
 
   step "pipeline" "respond" {
-    pipeline = pipeline.correct_postgres_db_server_log_retention_days_less_than_3
+    pipeline = pipeline.correct_postgres_db_servers_connection_throttling_off
     args = {
       items              = step.query.detect.rows
       notifier           = param.notifier
@@ -101,9 +95,9 @@ pipeline "detect_and_correct_postgres_db_server_log_retention_days_less_than_3" 
   }
 }
 
-pipeline "correct_postgres_db_server_log_retention_days_less_than_3" {
-  title         = "Correct PostgreSQL DB servers with log retention_days less than three"
-  description   = "Runs corrective action on a collection of PostgreSQL database servers with log retention_days less than three."
+pipeline "correct_postgres_db_servers_connection_throttling_off" {
+  title         = "Correct PostgreSQL DB servers with connection throttling off"
+  description   = "Runs corrective action on a collection of PostgreSQL database servers with connection throttling disabled."
   tags          = merge(local.postgres_common_tags, { class = "unused" })
 
   param "items" {
@@ -139,19 +133,19 @@ pipeline "correct_postgres_db_server_log_retention_days_less_than_3" {
   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.postgres_db_server_log_retention_days_less_than_3_default_action
+    default     = var.postgres_db_servers_connection_throttling_off_default_action
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.postgres_db_server_log_retention_days_less_than_3_enabled_actions
+    default     = var.postgres_db_servers_connection_throttling_off_enabled_actions
   }
 
   step "message" "notify_detection_count" {
     if       = var.notification_level == local.level_verbose
     notifier = notifier[param.notifier]
-    text     = "Detected ${length(param.items)} PostgreSQL DB servers with log retention_days less than 3."
+    text     = "Detected ${length(param.items)} PostgreSQL DB servers with connection throttling disabled."
   }
 
   step "transform" "items_by_id" {
@@ -161,7 +155,7 @@ pipeline "correct_postgres_db_server_log_retention_days_less_than_3" {
   step "pipeline" "correct_item" {
     for_each        = step.transform.items_by_id.value
     max_concurrency = var.max_concurrency
-    pipeline        = pipeline.correct_one_postgres_db_server_log_retention_days_less_than_3
+    pipeline        = pipeline.correct_one_postgres_db_servers_connection_throttling_off
     args = {
       title              = each.value.title
       name               = each.value.name
@@ -177,9 +171,9 @@ pipeline "correct_postgres_db_server_log_retention_days_less_than_3" {
   }
 }
 
-pipeline "correct_one_postgres_db_server_log_retention_days_less_than_3" {
-  title         = "Correct one PostgreSQL DB server with log retention_days less than threef"
-  description   = "Runs corrective action on a single PostgreSQL database server with log retention_days less than three."
+pipeline "correct_one_postgres_db_servers_connection_throttling_off" {
+  title         = "Correct one PostgreSQL DB server with connection throttling off"
+  description   = "Runs corrective action on a single PostgreSQL database server with connection throttling disabled."
   tags          = merge(local.postgres_common_tags, { class = "unused" })
 
   param "title" {
@@ -229,13 +223,13 @@ pipeline "correct_one_postgres_db_server_log_retention_days_less_than_3" {
    param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.postgres_db_server_log_retention_days_less_than_3_default_action
+    default     = var.postgres_db_servers_connection_throttling_off_default_action
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.postgres_db_server_log_retention_days_less_than_3_enabled_actions
+    default     = var.postgres_db_servers_connection_throttling_off_enabled_actions
   }
 
   step "pipeline" "respond" {
@@ -244,7 +238,7 @@ pipeline "correct_one_postgres_db_server_log_retention_days_less_than_3" {
       notifier           = param.notifier
       notification_level = param.notification_level
       approvers          = param.approvers
-      detect_msg         = "Detected PostgreSQL DB server ${param.title} with log retention_days less than three."
+      detect_msg         = "Detected PostgreSQL DB server ${param.title} with connection throttling disabled."
       default_action     = param.default_action
       enabled_actions    = param.enabled_actions
       actions = {
@@ -256,14 +250,14 @@ pipeline "correct_one_postgres_db_server_log_retention_days_less_than_3" {
           pipeline_args = {
             notifier = param.notifier
             send     = param.notification_level == local.level_verbose
-            text     = "Skipped PostgreSQL DB server ${param.title} with log retention days less than three."
+            text     = "Skipped PostgreSQL DB server ${param.title} with connection throttling disabled."
           }
           success_msg = ""
           error_msg   = ""
         },
-        "update_log_retention_days" = {
-          label        = "Update Log Retention Days"
-          value        = "update_log_retention_days"
+        "enable_connection_throttling" = {
+          label        = "Enable Connection Throttling"
+          value        = "enable_connection_throttling"
           style        = local.style_alert
           pipeline_ref = local.azure_pipeline_set_postgres_server_configuration
           pipeline_args = {
@@ -271,37 +265,37 @@ pipeline "correct_one_postgres_db_server_log_retention_days_less_than_3" {
             resource_group    = param.resource_group
             subscription_id   = param.subscription_id
             cred              = param.cred
-            config_name       = "log_retention_days"
-            config_value      = var.log_retention_days
+            config_name       = "connection_throttling"
+            config_value      = "on"
           }
-          success_msg = "Updated log retention days for PostgreSQL DB server ${param.title}."
-          error_msg   = "Error updating log retention days for PostgreSQL DB server ${param.title}."
+          success_msg = "Enabled connection throttling for PostgreSQL DB server ${param.title}."
+          error_msg   = "Error enabling connection throttling for PostgreSQL DB server ${param.title}."
         }
       }
     }
   }
 }
 
-variable "postgres_db_server_log_retention_days_less_than_3_trigger_enabled" {
+variable "postgres_db_servers_connection_throttling_off_trigger_enabled" {
   type        = bool
   default     = false
   description = "If true, the trigger is enabled."
 }
 
-variable "postgres_db_server_log_retention_days_less_than_3_trigger_schedule" {
+variable "postgres_db_servers_connection_throttling_off_trigger_schedule" {
   type        = string
   default     = "15m"
   description = "The schedule on which to run the trigger if enabled."
 }
 
-variable "postgres_db_server_log_retention_days_less_than_3_default_action" {
+variable "postgres_db_servers_connection_throttling_off_default_action" {
   type        = string
   description = "The default action to use for the detected item, used if no input is provided."
-  default     = "notify"
+  default     = "enable_connection_throttling"
 }
 
-variable "postgres_db_server_log_retention_days_less_than_3_enabled_actions" {
+variable "postgres_db_servers_connection_throttling_off_enabled_actions" {
   type        = list(string)
   description = "The list of enabled actions to provide to approvers for selection."
-  default     = ["skip", "update_log_retention_days"]
+  default     = ["skip", "enable_connection_throttling"]
 }

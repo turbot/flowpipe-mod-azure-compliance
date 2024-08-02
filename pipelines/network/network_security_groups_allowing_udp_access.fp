@@ -1,5 +1,5 @@
 locals {
-  network_security_group_allowing_udp_access_query = <<-EOQ
+  network_security_groups_allowing_udp_access_query = <<-EOQ
     select
       concat(nsg.id, ' [', nsg.resource_group, '/', nsg.subscription_id, '/', sg ->> 'name', ']') as title,
       sg ->> 'name' as rule_name,
@@ -50,25 +50,25 @@ locals {
   EOQ
 }
 
-trigger "query" "detect_and_correct_network_security_group_allowing_udp_access" {
+trigger "query" "detect_and_correct_network_security_groups_allowing_udp_access" {
   title         = "Detect & correct NSGs allowing UDP access"
   description   = "Detects NSGs allowing UDP access and runs your chosen action."
   tags          = merge(local.network_common_tags, { class = "security" })
 
-  enabled  = var.network_security_group_allowing_udp_access_trigger_enabled
-  schedule = var.network_security_group_allowing_udp_access_trigger_schedule
+  enabled  = var.network_security_groups_allowing_udp_access_trigger_enabled
+  schedule = var.network_security_groups_allowing_udp_access_trigger_schedule
   database = var.database
-  sql      = local.network_security_group_allowing_udp_access_query
+  sql      = local.network_security_groups_allowing_udp_access_query
 
   capture "insert" {
-    pipeline = pipeline.correct_network_security_group_allowing_udp_access
+    pipeline = pipeline.correct_network_security_groups_allowing_udp_access
     args = {
       items = self.inserted_rows
     }
   }
 }
 
-pipeline "detect_and_correct_network_security_group_allowing_udp_access" {
+pipeline "detect_and_correct_network_security_groups_allowing_udp_access" {
   title         = "Detect & correct NSGs allowing UDP access"
   description   = "Detects NSGs allowing UDP access and runs your chosen action."
 
@@ -101,22 +101,22 @@ pipeline "detect_and_correct_network_security_group_allowing_udp_access" {
   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.network_security_group_allowing_udp_access_default_action
+    default     = var.network_security_groups_allowing_udp_access_default_action
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.network_security_group_allowing_udp_access_enabled_actions
+    default     = var.network_security_groups_allowing_udp_access_enabled_actions
   }
 
   step "query" "detect" {
     database = param.database
-    sql      = local.network_security_group_allowing_udp_access_query
+    sql      = local.network_security_groups_allowing_udp_access_query
   }
 
   step "pipeline" "respond" {
-    pipeline = pipeline.correct_network_security_group_allowing_udp_access
+    pipeline = pipeline.correct_network_security_groups_allowing_udp_access
     args = {
       items              = step.query.detect.rows
       notifier           = param.notifier
@@ -128,7 +128,7 @@ pipeline "detect_and_correct_network_security_group_allowing_udp_access" {
   }
 }
 
-pipeline "correct_network_security_group_allowing_udp_access" {
+pipeline "correct_network_security_groups_allowing_udp_access" {
   title         = "Correct NSGs allowing UDP access"
   description   = "Runs corrective action on a collection of NSGs allowing UDP access."
   tags          = merge(local.network_common_tags, { class = "security" })
@@ -167,13 +167,13 @@ pipeline "correct_network_security_group_allowing_udp_access" {
   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.network_security_group_allowing_udp_access_default_action
+    default     = var.network_security_groups_allowing_udp_access_default_action
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.network_security_group_allowing_udp_access_enabled_actions
+    default     = var.network_security_groups_allowing_udp_access_enabled_actions
   }
 
   step "message" "notify_detection_count" {
@@ -189,7 +189,7 @@ pipeline "correct_network_security_group_allowing_udp_access" {
   step "pipeline" "correct_item" {
     for_each        = step.transform.items_by_id.value
     max_concurrency = var.max_concurrency
-    pipeline        = pipeline.correct_one_network_security_group_allowing_udp_access
+    pipeline        = pipeline.correct_one_network_security_groups_allowing_udp_access
     args = {
       title              = each.value.title
       rule_name          = each.value.rule_name
@@ -206,7 +206,7 @@ pipeline "correct_network_security_group_allowing_udp_access" {
   }
 }
 
-pipeline "correct_one_network_security_group_allowing_udp_access" {
+pipeline "correct_one_network_security_groups_allowing_udp_access" {
   title         = "Correct one NSG allowing UDP access"
   description   = "Runs corrective action on a single NSG allowing UDP access."
   tags          = merge(local.network_common_tags, { class = "security" })
@@ -263,13 +263,13 @@ pipeline "correct_one_network_security_group_allowing_udp_access" {
   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.network_security_group_allowing_udp_access_default_action
+    default     = var.network_security_groups_allowing_udp_access_default_action
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.network_security_group_allowing_udp_access_enabled_actions
+    default     = var.network_security_groups_allowing_udp_access_enabled_actions
   }
 
   step "pipeline" "respond" {
@@ -315,25 +315,25 @@ pipeline "correct_one_network_security_group_allowing_udp_access" {
   }
 }
 
-variable "network_security_group_allowing_udp_access_trigger_enabled" {
+variable "network_security_groups_allowing_udp_access_trigger_enabled" {
   type        = bool
   default     = false
   description = "If true, the trigger is enabled."
 }
 
-variable "network_security_group_allowing_udp_access_trigger_schedule" {
+variable "network_security_groups_allowing_udp_access_trigger_schedule" {
   type        = string
   default     = "15m"
   description = "The schedule on which to run the trigger if enabled."
 }
 
-variable "network_security_group_allowing_udp_access_default_action" {
+variable "network_security_groups_allowing_udp_access_default_action" {
   type        = string
   description = "The default action to use for the detected item, used if no input is provided."
   default     = "notify"
 }
 
-variable "network_security_group_allowing_udp_access_enabled_actions" {
+variable "network_security_groups_allowing_udp_access_enabled_actions" {
   type        = list(string)
   description = "The list of enabled actions to provide to approvers for selection."
   default     = ["skip", "delete_udp_nsg_rule"]

@@ -1,43 +1,70 @@
 locals {
-  postgres_db_server_ssl_disabled_query = <<-EOQ
+  network_security_groups_allowing_rdp_access_query = <<-EOQ
     select
-      concat(db.id, ' [', db.resource_group, '/', db.subscription_id, ']') as title,
-      db.id as id,
-      db.name,
-      db.resource_group,
-      db.subscription_id,
-      db._ctx ->> 'connection_name' as cred
-    from
-      azure_postgresql_server as db,
-      azure_subscription as sub
-    where
-      ssl_enforcement = 'Disabled'
-      and sub.subscription_id = db.subscription_id;
+			concat(nsg.id, ' [', nsg.resource_group, '/', nsg.subscription_id, '/', sg ->> 'name', ']') as title,
+			sg ->> 'name' as rule_name,
+			nsg.name as sg_name,
+			nsg.resource_group,
+      nsg.subscription_id,
+      nsg._ctx ->> 'connection_name' as cred
+		from
+			azure_network_security_group nsg,
+			jsonb_array_elements(security_rules) sg,
+			jsonb_array_elements_text(
+				sg -> 'properties' -> 'destinationPortRanges' || (sg -> 'properties' -> 'destinationPortRange') :: jsonb
+			) dport,
+    jsonb_array_elements_text(
+      sg -> 'properties' -> 'sourceAddressPrefixes' || (sg -> 'properties' -> 'sourceAddressPrefix') :: jsonb
+    ) sip
+	where
+    sg -> 'properties' ->> 'access' = 'Allow'
+    and sg -> 'properties' ->> 'direction' = 'Inbound'
+    and (
+      sg -> 'properties' ->> 'protocol' ilike 'TCP'
+      or sg -> 'properties' ->> 'protocol' = '*'
+    )
+    and sip in (
+      '*',
+      '0.0.0.0',
+      '0.0.0.0/0',
+      'Internet',
+      'any',
+      '<nw>/0',
+      '/0'
+    )
+    and (
+      dport in ('3389', '*')
+      or (
+        dport like '%-%'
+        and split_part(dport, '-', 1) :: integer <= 3389
+        and split_part(dport, '-', 2) :: integer >= 3389
+      )
+    )
   EOQ
 }
 
-trigger "query" "detect_and_correct_postgres_db_server_ssl_disabled" {
-  title         = "Detect & correct PostgreSQL DB servers with SSL disabled"
-  description   = "Detects PostgreSQL database servers with SSL disabled and runs your chosen action."
-  tags          = merge(local.postgres_common_tags, { class = "unused" })
+trigger "query" "detect_and_correct_network_security_groups_allowing_rdp_access" {
+  title         = "Detect & correct NSGs allowing RDP access"
+  description   = "Detects NSGs allowing RDP access and runs your chosen action."
+  tags          = merge(local.network_common_tags, { class = "security" })
 
-  enabled  = var.postgres_db_server_ssl_disabled_trigger_enabled
-  schedule = var.postgres_db_server_ssl_disabled_trigger_schedule
+  enabled  = var.network_security_groups_allowing_rdp_access_trigger_enabled
+  schedule = var.network_security_groups_allowing_rdp_access_trigger_schedule
   database = var.database
-  sql      = local.postgres_db_server_ssl_disabled_query
+  sql      = local.network_security_groups_allowing_rdp_access_query
 
   capture "insert" {
-    pipeline = pipeline.correct_postgres_db_server_ssl_disabled
+    pipeline = pipeline.correct_network_security_groups_allowing_rdp_access
     args = {
       items = self.inserted_rows
     }
   }
 }
 
-pipeline "detect_and_correct_postgres_db_server_ssl_disabled" {
-  title         = "Detect & correct PostgreSQL DB servers with SSL disabled"
-  description   = "Detects PostgreSQL database servers with SSL disabled and runs your chosen action."
-  tags          = merge(local.postgres_common_tags, { class = "unused", type = "featured" })
+pipeline "detect_and_correct_network_security_groups_allowing_rdp_access" {
+  title         = "Detect & correct NSGs allowing RDP access"
+  description   = "Detects NSGs allowing RDP access and runs your chosen action."
+  tags          = merge(local.network_common_tags, { class = "security", type = "featured" })
 
   param "database" {
     type        = string
@@ -66,22 +93,22 @@ pipeline "detect_and_correct_postgres_db_server_ssl_disabled" {
   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.postgres_db_server_ssl_disabled_default_action
+    default     = var.network_security_groups_allowing_rdp_access_default_action
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.postgres_db_server_ssl_disabled_enabled_actions
+    default     = var.network_security_groups_allowing_rdp_access_enabled_actions
   }
 
   step "query" "detect" {
     database = param.database
-    sql      = local.postgres_db_server_ssl_disabled_query
+    sql      = local.network_security_groups_allowing_rdp_access_query
   }
 
   step "pipeline" "respond" {
-    pipeline = pipeline.correct_postgres_db_server_ssl_disabled
+    pipeline = pipeline.correct_network_security_groups_allowing_rdp_access
     args = {
       items              = step.query.detect.rows
       notifier           = param.notifier
@@ -93,16 +120,17 @@ pipeline "detect_and_correct_postgres_db_server_ssl_disabled" {
   }
 }
 
-pipeline "correct_postgres_db_server_ssl_disabled" {
-  title         = "Correct PostgreSQL DB servers with SSL disabled"
-  description   = "Runs corrective action on a collection of PostgreSQL database servers with SSL disabled."
-  tags          = merge(local.postgres_common_tags, { class = "unused" })
+pipeline "correct_network_security_groups_allowing_rdp_access" {
+  title         = "Correct NSGs allowing RDP access"
+  description   = "Runs corrective action on a collection of NSGs allowing RDP access."
+  tags          = merge(local.network_common_tags, { class = "security" })
 
   param "items" {
     type = list(object({
       id              = string
       title           = string
-      name            = string
+      rule_name       = string
+			sg_name         = string
       resource_group  = string
       subscription_id = string
       cred            = string
@@ -131,32 +159,33 @@ pipeline "correct_postgres_db_server_ssl_disabled" {
   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.postgres_db_server_ssl_disabled_default_action
+    default     = var.network_security_groups_allowing_rdp_access_default_action
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.postgres_db_server_ssl_disabled_enabled_actions
+    default     = var.network_security_groups_allowing_rdp_access_enabled_actions
   }
 
   step "message" "notify_detection_count" {
     if       = var.notification_level == local.level_verbose
     notifier = notifier[param.notifier]
-    text     = "Detected ${length(param.items)} PostgreSQL DB servers with SSL disabled."
+    text     = "Detected ${length(param.items)} NSGs allowing RDP access."
   }
 
   step "transform" "items_by_id" {
-    value = { for row in param.items : row.id => row }
+    value = { for row in param.items : row.title => row }
   }
 
   step "pipeline" "correct_item" {
     for_each        = step.transform.items_by_id.value
     max_concurrency = var.max_concurrency
-    pipeline        = pipeline.correct_one_postgres_db_server_ssl_disabled
+    pipeline        = pipeline.correct_one_network_security_groups_allowing_rdp_access
     args = {
       title              = each.value.title
-      name               = each.value.name
+      rule_name          = each.value.rule_name
+			sg_name            = each.value.sg_name
       resource_group     = each.value.resource_group
       subscription_id    = each.value.subscription_id
       cred               = each.value.cred
@@ -169,24 +198,29 @@ pipeline "correct_postgres_db_server_ssl_disabled" {
   }
 }
 
-pipeline "correct_one_postgres_db_server_ssl_disabled" {
-  title         = "Correct one PostgreSQL DB server with SSL disabled"
-  description   = "Runs corrective action on a single PostgreSQL database server with SSL disabled."
-  tags          = merge(local.postgres_common_tags, { class = "unused" })
+pipeline "correct_one_network_security_groups_allowing_rdp_access" {
+  title         = "Correct one NSG allowing RDP access"
+  description   = "Runs corrective action on a single NSG allowing RDP access."
+  tags          = merge(local.network_common_tags, { class = "security" })
 
   param "title" {
     type        = string
     description = local.description_title
   }
 
-  param "name" {
-    type        = string
-    description = "The name of the PostgreSQL database server."
-  }
-
   param "resource_group" {
     type        = string
     description = local.description_resource_group
+  }
+
+ 	param "rule_name" {
+    type        = string
+    description = "The name of NSG rule."
+  }
+
+	param "sg_name" {
+    type        = string
+    description = "The name of NSG."
   }
 
   param "subscription_id" {
@@ -221,13 +255,13 @@ pipeline "correct_one_postgres_db_server_ssl_disabled" {
   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.postgres_db_server_ssl_disabled_default_action
+    default     = var.network_security_groups_allowing_rdp_access_default_action
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.postgres_db_server_ssl_disabled_enabled_actions
+    default     = var.network_security_groups_allowing_rdp_access_enabled_actions
   }
 
   step "pipeline" "respond" {
@@ -236,7 +270,7 @@ pipeline "correct_one_postgres_db_server_ssl_disabled" {
       notifier           = param.notifier
       notification_level = param.notification_level
       approvers          = param.approvers
-      detect_msg         = "Detected PostgreSQL DB server ${param.title} with SSL disabled."
+      detect_msg         = "Detected NSG ${param.sg_name} allowing RDP access."
       default_action     = param.default_action
       enabled_actions    = param.enabled_actions
       actions = {
@@ -248,51 +282,51 @@ pipeline "correct_one_postgres_db_server_ssl_disabled" {
           pipeline_args = {
             notifier = param.notifier
             send     = param.notification_level == local.level_verbose
-            text     = "Skipped PostgreSQL DB server ${param.title} with SSL disabled."
+            text     = "Skipped NSG ${param.sg_name} allowing RDP access."
           }
           success_msg = ""
           error_msg   = ""
         },
-        "enable_ssl" = {
-          label        = "Enable SSL"
-          value        = "enable_ssl"
+        "delete_rdp_nsg_rule" = {
+          label        = "Delete RDP NSG Rule"
+          value        = "delete_rdp_nsg_rule"
           style        = local.style_alert
-          pipeline_ref = local.azure_pipeline_update_postgres_server_ssl_enforcement
+          pipeline_ref = local.azure_pipeline_delete_network_nsg_rule
           pipeline_args = {
-            server_name       = param.name
-            resource_group    = param.resource_group
-            subscription_id   = param.subscription_id
-            cred              = param.cred
-            ssl_enforcement   = "Enabled"
+            resource_group     = param.resource_group
+						nsg_name           = param.sg_name
+						nsg_rule_name      = param.rule_name
+            subscription_id    = param.subscription_id
+            cred               = param.cred
           }
-          success_msg = "Enabled SSL for PostgreSQL DB server ${param.title}."
-          error_msg   = "Error enabling SSL for PostgreSQL DB server ${param.title}."
+          success_msg = "Deleted RDP rule for NSG ${param.sg_name}."
+          error_msg   = "Error deleting RDP rule for NSG ${param.sg_name}."
         }
       }
     }
   }
 }
 
-variable "postgres_db_server_ssl_disabled_trigger_enabled" {
+variable "network_security_groups_allowing_rdp_access_trigger_enabled" {
   type        = bool
   default     = false
   description = "If true, the trigger is enabled."
 }
 
-variable "postgres_db_server_ssl_disabled_trigger_schedule" {
+variable "network_security_groups_allowing_rdp_access_trigger_schedule" {
   type        = string
   default     = "15m"
   description = "The schedule on which to run the trigger if enabled."
 }
 
-variable "postgres_db_server_ssl_disabled_default_action" {
+variable "network_security_groups_allowing_rdp_access_default_action" {
   type        = string
   description = "The default action to use for the detected item, used if no input is provided."
-  default     = "enable_ssl"
+  default     = "notify"
 }
 
-variable "postgres_db_server_ssl_disabled_enabled_actions" {
+variable "network_security_groups_allowing_rdp_access_enabled_actions" {
   type        = list(string)
   description = "The list of enabled actions to provide to approvers for selection."
-  default     = ["skip", "enable_ssl"]
+  default     = ["skip", "delete_rdp_nsg_rule"]
 }
