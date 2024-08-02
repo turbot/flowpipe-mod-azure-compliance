@@ -1,49 +1,43 @@
 locals {
-  sql_database_allow_internet_access_query = <<-EOQ
-		select
-			distinct concat(s.id, ' [', s.resource_group, '/', s.subscription_id, '/firewallrule/', f ->> 'name',']') as title,
-				s.id as id,
-				s.name,
-				f ->> 'name' as firewall_rule_name,
-				s.resource_group,
-				s.subscription_id,
-				s._ctx ->> 'connection_name' as cred
-		from
-			azure_sql_server s,
-			jsonb_array_elements(firewall_rules) as f,
-			azure_subscription sub
-		where
-			sub.subscription_id = s.subscription_id
-			and (
-				(f -> 'properties' ->>  'endIpAddress' = '0.0.0.0' and f -> 'properties' ->>  'startIpAddress' = '0.0.0.0')
-				or
-				( f -> 'properties' ->>  'endIpAddress' = '255.255.255.255' and f -> 'properties' ->>  'startIpAddress' = '0.0.0.0')
-		);
+  storage_accounts_no_min_tls_1_2_query = <<-EOQ
+    select
+      concat(sa.id, ' [', sa.resource_group, '/', sa.subscription_id, ']') as title,
+      sa.id as id,
+      sa.name,
+      sa.resource_group,
+      sa.subscription_id,
+      sa._ctx ->> 'connection_name' as cred
+    from
+      azure_storage_account as sa,
+      azure_subscription as sub
+    where
+      sa.minimum_tls_version <> 'TLS1_2'
+      and sub.subscription_id = sa.subscription_id;
   EOQ
 }
 
-trigger "query" "detect_and_correct_sql_database_allow_internet_access" {
-  title         = "Detect & correct SQL Databases allowing internet access"
-  description   = "Detects SQL Databases allowing internet access and runs your chosen action."
-  tags          = merge(local.sql_common_tags, { class = "security" })
+trigger "query" "detect_and_correct_storage_accounts_no_min_tls_1_2" {
+  title         = "Detect & correct Storage Accounts with minimum TLS version less than 1.2"
+  description   = "Detects Storage Accounts with minimum TLS version less than 1.2 and runs your chosen action."
+  tags          = merge(local.storage_common_tags, { class = "unused" })
 
-  enabled  = var.sql_database_allow_internet_access_trigger_enabled
-  schedule = var.sql_database_allow_internet_access_trigger_schedule
+  enabled  = var.storage_accounts_no_min_tls_1_2_trigger_enabled
+  schedule = var.storage_accounts_no_min_tls_1_2_trigger_schedule
   database = var.database
-  sql      = local.sql_database_allow_internet_access_query
+  sql      = local.storage_accounts_no_min_tls_1_2_query
 
   capture "insert" {
-    pipeline = pipeline.correct_sql_database_allow_internet_access
+    pipeline = pipeline.correct_storage_accounts_no_min_tls_1_2
     args = {
       items = self.inserted_rows
     }
   }
 }
 
-pipeline "detect_and_correct_sql_database_allow_internet_access" {
-  title         = "Detect & correct SQL Databases allowing internet access"
-  description   = "Detects SQL Databases allowing internet access and runs your chosen action."
-  tags          = merge(local.sql_common_tags, { class = "security", type = "featured" })
+pipeline "detect_and_correct_storage_accounts_no_min_tls_1_2" {
+  title         = "Detect & correct Storage Accounts with minimum TLS version less than 1.2"
+  description   = "Detects Storage Accounts with minimum TLS version less than 1.2 and runs your chosen action."
+  tags          = merge(local.storage_common_tags, { class = "unused", type = "featured" })
 
   param "database" {
     type        = string
@@ -72,22 +66,22 @@ pipeline "detect_and_correct_sql_database_allow_internet_access" {
   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.sql_database_allow_internet_access_default_action
+    default     = var.storage_accounts_no_min_tls_1_2_default_action
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.sql_database_allow_internet_access_enabled_actions
+    default     = var.storage_accounts_no_min_tls_1_2_enabled_actions
   }
 
   step "query" "detect" {
     database = param.database
-    sql      = local.sql_database_allow_internet_access_query
+    sql      = local.storage_accounts_no_min_tls_1_2_query
   }
 
   step "pipeline" "respond" {
-    pipeline = pipeline.correct_sql_database_allow_internet_access
+    pipeline = pipeline.correct_storage_accounts_no_min_tls_1_2
     args = {
       items              = step.query.detect.rows
       notifier           = param.notifier
@@ -99,20 +93,19 @@ pipeline "detect_and_correct_sql_database_allow_internet_access" {
   }
 }
 
-pipeline "correct_sql_database_allow_internet_access" {
-  title         = "Correct SQL Databases allowing internet access"
-  description   = "Runs corrective action on a collection of SQL Databases allowing internet access."
-  tags          = merge(local.sql_common_tags, { class = "security" })
+pipeline "correct_storage_accounts_no_min_tls_1_2" {
+  title         = "Correct Storage Accounts with minimum TLS version less than 1.2"
+  description   = "Runs corrective action on a collection of Storage Accounts with minimum TLS version less than 1.2."
+  tags          = merge(local.storage_common_tags, { class = "unused" })
 
   param "items" {
     type = list(object({
-      id                 = string
-      title              = string
-      name               = string
-      resource_group     = string
-			firewall_rule_name = string
-      subscription_id    = string
-      cred               = string
+      id              = string
+      title           = string
+      name            = string
+      resource_group  = string
+      subscription_id = string
+      cred            = string
     }))
     description = local.description_items
   }
@@ -138,34 +131,33 @@ pipeline "correct_sql_database_allow_internet_access" {
   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.sql_database_allow_internet_access_default_action
+    default     = var.storage_accounts_no_min_tls_1_2_default_action
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.sql_database_allow_internet_access_enabled_actions
+    default     = var.storage_accounts_no_min_tls_1_2_enabled_actions
   }
 
   step "message" "notify_detection_count" {
     if       = var.notification_level == local.level_verbose
     notifier = notifier[param.notifier]
-    text     = "Detected ${length(param.items)} SQL Databases allowing internet access."
+    text     = "Detected ${length(param.items)} Storage Accounts with minimum TLS version less than 1.2."
   }
 
   step "transform" "items_by_id" {
-    value = { for row in param.items : row.title => row }
+    value = { for row in param.items : row.id => row }
   }
 
   step "pipeline" "correct_item" {
     for_each        = step.transform.items_by_id.value
     max_concurrency = var.max_concurrency
-    pipeline        = pipeline.correct_one_sql_database_allow_internet_access
+    pipeline        = pipeline.correct_one_storage_accounts_no_min_tls_1_2
     args = {
       title              = each.value.title
       name               = each.value.name
       resource_group     = each.value.resource_group
-			firewall_rule_name = each.value.firewall_rule_name
       subscription_id    = each.value.subscription_id
       cred               = each.value.cred
       notifier           = param.notifier
@@ -177,10 +169,10 @@ pipeline "correct_sql_database_allow_internet_access" {
   }
 }
 
-pipeline "correct_one_sql_database_allow_internet_access" {
-  title         = "Correct one SQL Database allowing internet access"
-  description   = "Runs corrective action on a single SQL Database allowing internet access."
-  tags          = merge(local.sql_common_tags, { class = "security" })
+pipeline "correct_one_storage_accounts_no_min_tls_1_2" {
+  title         = "Correct one Storage Account with minimum TLS version less than 1.2"
+  description   = "Runs corrective action on a single Storage Account with minimum TLS version less than 1.2."
+  tags          = merge(local.storage_common_tags, { class = "unused" })
 
   param "title" {
     type        = string
@@ -189,17 +181,12 @@ pipeline "correct_one_sql_database_allow_internet_access" {
 
   param "name" {
     type        = string
-    description = "The name of the SQL Database."
+    description = "The name of the Storage Account."
   }
 
   param "resource_group" {
     type        = string
     description = local.description_resource_group
-  }
-
- 	param "firewall_rule_name" {
-    type        = string
-    description = "The firewall rule name."
   }
 
   param "subscription_id" {
@@ -231,16 +218,16 @@ pipeline "correct_one_sql_database_allow_internet_access" {
     default     = var.approvers
   }
 
-  param "default_action" {
+   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.sql_database_allow_internet_access_default_action
+    default     = var.storage_accounts_no_min_tls_1_2_default_action
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.sql_database_allow_internet_access_enabled_actions
+    default     = var.storage_accounts_no_min_tls_1_2_enabled_actions
   }
 
   step "pipeline" "respond" {
@@ -249,7 +236,7 @@ pipeline "correct_one_sql_database_allow_internet_access" {
       notifier           = param.notifier
       notification_level = param.notification_level
       approvers          = param.approvers
-      detect_msg         = "Detected SQL Database ${param.title} allowing internet access."
+      detect_msg         = "Detected Storage Account ${param.title} with minimum TLS version less than 1.2."
       default_action     = param.default_action
       enabled_actions    = param.enabled_actions
       actions = {
@@ -261,51 +248,51 @@ pipeline "correct_one_sql_database_allow_internet_access" {
           pipeline_args = {
             notifier = param.notifier
             send     = param.notification_level == local.level_verbose
-            text     = "Skipped SQL Database ${param.title} allowing internet access."
+            text     = "Skipped Storage Account ${param.title} with minimum TLS version less than 1.2."
           }
           success_msg = ""
           error_msg   = ""
         },
-        "delete_firewall_rule" = {
-          label        = "Delete Firewall Rule"
-          value        = "delete_firewall_rule"
+        "enable_min_tls_1_2" = {
+          label        = "Enable Minimum TLS 1.2"
+          value        = "enable_min_tls_1_2"
           style        = local.style_alert
-          pipeline_ref = local.azure_pipeline_delete_sql_server_firewall_rule
+          pipeline_ref = local.azure_pipeline_update_storage_account_minimum_tls
           pipeline_args = {
-            resource_group     = param.resource_group
-            subscription_id    = param.subscription_id
-            server_name        = param.name
-            cred               = param.cred
-            firewall_rule_name = param.firewall_rule_name
+            account_name        = param.name
+            resource_group      = param.resource_group
+            subscription_id     = param.subscription_id
+            cred                = param.cred
+            minimum_tls_version = "TLS1_2"
           }
-          success_msg = "Removed firewall rule allowing internet access for SQL Database ${param.title}."
-          error_msg   = "Error removing firewall rule allowing internet access for SQL Database ${param.title}."
+          success_msg = "Enabled minimum TLS 1.2 for Storage Account ${param.title}."
+          error_msg   = "Error enabling minimum TLS 1.2 for Storage Account ${param.title}."
         }
       }
     }
   }
 }
 
-variable "sql_database_allow_internet_access_trigger_enabled" {
+variable "storage_accounts_no_min_tls_1_2_trigger_enabled" {
   type        = bool
   default     = false
   description = "If true, the trigger is enabled."
 }
 
-variable "sql_database_allow_internet_access_trigger_schedule" {
+variable "storage_accounts_no_min_tls_1_2_trigger_schedule" {
   type        = string
   default     = "15m"
   description = "The schedule on which to run the trigger if enabled."
 }
 
-variable "sql_database_allow_internet_access_default_action" {
+variable "storage_accounts_no_min_tls_1_2_default_action" {
   type        = string
   description = "The default action to use for the detected item, used if no input is provided."
   default     = "notify"
 }
 
-variable "sql_database_allow_internet_access_enabled_actions" {
+variable "storage_accounts_no_min_tls_1_2_enabled_actions" {
   type        = list(string)
   description = "The list of enabled actions to provide to approvers for selection."
-  default     = ["skip", "delete_firewall_rule"]
+  default     = ["skip", "enable_min_tls_1_2"]
 }

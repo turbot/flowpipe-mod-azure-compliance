@@ -1,5 +1,5 @@
 locals {
-  appservice_webapp_not_using_https_query = <<-EOQ
+  appservice_webapps_not_using_latest_tls_version_query = <<-EOQ
     select
       concat(app.id, ' [', app.resource_group, '/', app.subscription_id, ']') as title,
       app.id as id,
@@ -12,31 +12,31 @@ locals {
       azure_subscription as sub
     where
       sub.subscription_id = app.subscription_id
-      and not https_only;
+      and configuration -> 'properties' ->> 'minTlsVersion' < '1.2';
   EOQ
 }
 
-trigger "query" "detect_and_correct_appservice_webapp_not_using_https" {
-  title         = "Detect & correct App Services not using HTTPS"
-  description   = "Detects App Services not using HTTPS and runs your chosen action."
+trigger "query" "detect_and_correct_appservice_webapps_not_using_latest_tls_version" {
+  title         = "Detect & correct App Services not using the latest TLS version"
+  description   = "Detects App Services not using the latest TLS version and runs your chosen action."
   tags          = merge(local.appservice_common_tags, { class = "unused" })
 
-  enabled  = var.appservice_webapp_not_using_https_trigger_enabled
-  schedule = var.appservice_webapp_not_using_https_trigger_schedule
+  enabled  = var.appservice_webapps_not_using_latest_tls_version_trigger_enabled
+  schedule = var.appservice_webapps_not_using_latest_tls_version_trigger_schedule
   database = var.database
-  sql      = local.appservice_webapp_not_using_https_query
+  sql      = local.appservice_webapps_not_using_latest_tls_version_query
 
   capture "insert" {
-    pipeline = pipeline.correct_appservice_webapp_not_using_https
+    pipeline = pipeline.correct_appservice_webapps_not_using_latest_tls_version
     args = {
       items = self.inserted_rows
     }
   }
 }
 
-pipeline "detect_and_correct_appservice_webapp_not_using_https" {
-  title         = "Detect & correct App Services not using HTTPS"
-  description   = "Detects App Services not using HTTPS and runs your chosen action."
+pipeline "detect_and_correct_appservice_webapps_not_using_latest_tls_version" {
+  title         = "Detect & correct App Services not using the latest TLS version"
+  description   = "Detects App Services not using the latest TLS version and runs your chosen action."
   tags          = merge(local.appservice_common_tags, { class = "unused", type = "featured" })
 
   param "database" {
@@ -66,22 +66,22 @@ pipeline "detect_and_correct_appservice_webapp_not_using_https" {
   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.appservice_webapp_not_using_https_default_action
+    default     = var.appservice_webapps_not_using_latest_tls_version_default_action
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.appservice_webapp_not_using_https_enabled_actions
+    default     = var.appservice_webapps_not_using_latest_tls_version_enabled_actions
   }
 
   step "query" "detect" {
     database = param.database
-    sql      = local.appservice_webapp_not_using_https_query
+    sql      = local.appservice_webapps_not_using_latest_tls_version_query
   }
 
   step "pipeline" "respond" {
-    pipeline = pipeline.correct_appservice_webapp_not_using_https
+    pipeline = pipeline.correct_appservice_webapps_not_using_latest_tls_version
     args = {
       items              = step.query.detect.rows
       notifier           = param.notifier
@@ -93,9 +93,9 @@ pipeline "detect_and_correct_appservice_webapp_not_using_https" {
   }
 }
 
-pipeline "correct_appservice_webapp_not_using_https" {
-  title         = "Correct App Services not using HTTPS"
-  description   = "Runs corrective action on a collection of App Services not using HTTPS."
+pipeline "correct_appservice_webapps_not_using_latest_tls_version" {
+  title         = "Correct App Services not using the latest TLS version"
+  description   = "Runs corrective action on a collection of App Services not using the latest TLS version."
   tags          = merge(local.appservice_common_tags, { class = "unused" })
 
   param "items" {
@@ -131,19 +131,19 @@ pipeline "correct_appservice_webapp_not_using_https" {
   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.appservice_webapp_not_using_https_default_action
+    default     = var.appservice_webapps_not_using_latest_tls_version_default_action
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.appservice_webapp_not_using_https_enabled_actions
+    default     = var.appservice_webapps_not_using_latest_tls_version_enabled_actions
   }
 
   step "message" "notify_detection_count" {
     if       = var.notification_level == local.level_verbose
     notifier = notifier[param.notifier]
-    text     = "Detected ${length(param.items)} App Services not using HTTPS."
+    text     = "Detected ${length(param.items)} App Services not using the latest TLS version."
   }
 
   step "transform" "items_by_id" {
@@ -153,7 +153,7 @@ pipeline "correct_appservice_webapp_not_using_https" {
   step "pipeline" "correct_item" {
     for_each        = step.transform.items_by_id.value
     max_concurrency = var.max_concurrency
-    pipeline        = pipeline.correct_one_appservice_webapp_not_using_https
+    pipeline        = pipeline.correct_one_appservice_webapps_not_using_latest_tls_version
     args = {
       title              = each.value.title
       name               = each.value.name
@@ -169,9 +169,9 @@ pipeline "correct_appservice_webapp_not_using_https" {
   }
 }
 
-pipeline "correct_one_appservice_webapp_not_using_https" {
-  title         = "Correct one App Service not using HTTPS"
-  description   = "Runs corrective action on a single App Service not using HTTPS."
+pipeline "correct_one_appservice_webapps_not_using_latest_tls_version" {
+  title         = "Correct one App Service not using the latest TLS version"
+  description   = "Runs corrective action on a single App Service not using the latest TLS version."
   tags          = merge(local.appservice_common_tags, { class = "unused" })
 
   param "title" {
@@ -221,13 +221,13 @@ pipeline "correct_one_appservice_webapp_not_using_https" {
   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.appservice_webapp_not_using_https_default_action
+    default     = var.appservice_webapps_not_using_latest_tls_version_default_action
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.appservice_webapp_not_using_https_enabled_actions
+    default     = var.appservice_webapps_not_using_latest_tls_version_enabled_actions
   }
 
   step "pipeline" "respond" {
@@ -236,7 +236,7 @@ pipeline "correct_one_appservice_webapp_not_using_https" {
       notifier           = param.notifier
       notification_level = param.notification_level
       approvers          = param.approvers
-      detect_msg         = "Detected App Service ${param.title} not using HTTPS."
+      detect_msg         = "Detected App Service ${param.title} not using the latest TLS version."
       default_action     = param.default_action
       enabled_actions    = param.enabled_actions
       actions = {
@@ -248,51 +248,51 @@ pipeline "correct_one_appservice_webapp_not_using_https" {
           pipeline_args = {
             notifier = param.notifier
             send     = param.notification_level == local.level_verbose
-            text     = "Skipped App Service ${param.title} not using HTTPS."
+            text     = "Skipped App Service ${param.title} not using the latest TLS version."
           }
           success_msg = ""
           error_msg   = ""
         },
-        "enable_https" = {
-          label        = "Enable HTTPS"
-          value        = "enable_https"
+        "enable_latest_tls_version" = {
+          label        = "Enable Latest TLS Version"
+          value        = "enable_latest_tls_version"
           style        = local.style_alert
-          pipeline_ref = local.azure_pipeline_update_appservice_webapp
+          pipeline_ref = local.azure_pipeline_set_config_appservice_webapp
           pipeline_args = {
             resource_group  = param.resource_group
             subscription_id = param.subscription_id
             app_name        = param.name
             cred            = param.cred
-            https_only      = true
+            tls_version = "1.2"
           }
-          success_msg = "Enabled HTTPS for App Service ${param.title}."
-          error_msg   = "Error enabling HTTPS for App Service ${param.title}."
+          success_msg = "Enabled latest TLS version for App Service ${param.title}."
+          error_msg   = "Error enabling latest TLS version for App Service ${param.title}."
         }
       }
     }
   }
 }
 
-variable "appservice_webapp_not_using_https_trigger_enabled" {
+variable "appservice_webapps_not_using_latest_tls_version_trigger_enabled" {
   type        = bool
   default     = false
   description = "If true, the trigger is enabled."
 }
 
-variable "appservice_webapp_not_using_https_trigger_schedule" {
+variable "appservice_webapps_not_using_latest_tls_version_trigger_schedule" {
   type        = string
   default     = "15m"
   description = "The schedule on which to run the trigger if enabled."
 }
 
-variable "appservice_webapp_not_using_https_default_action" {
+variable "appservice_webapps_not_using_latest_tls_version_default_action" {
   type        = string
   description = "The default action to use for the detected item, used if no input is provided."
   default     = "notify"
 }
 
-variable "appservice_webapp_not_using_https_enabled_actions" {
+variable "appservice_webapps_not_using_latest_tls_version_enabled_actions" {
   type        = list(string)
   description = "The list of enabled actions to provide to approvers for selection."
-  default     = ["skip", "enable_https"]
+  default     = ["skip", "enable_latest_tls_version"]
 }

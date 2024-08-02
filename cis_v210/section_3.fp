@@ -4,21 +4,21 @@ locals {
   // })
 
   cis_v210_3_control_mapping = {
-    cis_v210_3_1  = {pipeline = pipeline.detect_and_correct_storage_account_secure_transfer_required_disabled, additional_args = {}}
+    cis_v210_3_1  = {pipeline = pipeline.detect_and_correct_storage_accounts_secure_transfer_required_disabled, additional_args = {}}
     cis_v210_3_2  = {pipeline = pipeline.manual_control, additional_args = {message = "CIS v2.1.0 3.2 is a TODO control."}}
     cis_v210_3_3  = {pipeline = pipeline.manual_control, additional_args = {message = "CIS v2.1.0 3.3 is a manual control."}}
 		cis_v210_3_4  = {pipeline = pipeline.manual_control, additional_args = {message = "CIS v2.1.0 3.4 is a manual control."}}
-    cis_v210_3_5  = {pipeline = pipeline.detect_and_correct_storage_account_queue_service_logging_disabled, additional_args = {}}
+    cis_v210_3_5  = {pipeline = pipeline.detect_and_correct_storage_accounts_queue_service_logging_disabled, additional_args = {}}
 		cis_v210_3_6  = {pipeline = pipeline.manual_control, additional_args = {message = "CIS v2.1.0 3.6 is a manual control."}}
-    cis_v210_3_7  = {pipeline = pipeline.detect_and_correct_storage_account_if_allow_public_network_access, additional_args = {}}
-    cis_v210_3_8  = {pipeline = pipeline.detect_and_correct_storage_account_default_network_access_rule_allowed, additional_args = {}}
-		cis_v210_3_9 = {pipeline = pipeline.detect_and_correct_storage_account_trusted_microsoft_services_disabled, additional_args = {}}
+    cis_v210_3_7  = {pipeline = pipeline.detect_and_correct_storage_accounts_if_allow_public_network_access, additional_args = {}}
+    cis_v210_3_8  = {pipeline = pipeline.detect_and_correct_storage_accounts_default_network_access_rule_allowed, additional_args = {}}
+		cis_v210_3_9 = {pipeline = pipeline.detect_and_correct_storage_accounts_trusted_microsoft_services_disabled, additional_args = {}}
 		cis_v210_3_10  = {pipeline = pipeline.manual_control, additional_args = {message = "CIS v2.1.0 3.10 is a TODO control."}}
-		cis_v210_3_11  = {pipeline = pipeline.detect_and_correct_storage_account_blob_soft_delete_disabled, additional_args = {}}
+		cis_v210_3_11  = {pipeline = pipeline.detect_and_correct_storage_accounts_blob_soft_delete_disabled, additional_args = {}}
 		cis_v210_3_12  = {pipeline = pipeline.manual_control, additional_args = {message = "CIS v2.1.0 3.6 is a manual control."}}
-		cis_v210_3_13  = {pipeline = pipeline.detect_and_correct_storage_account_blob_service_logging_disabled, additional_args = {}}
-		cis_v210_3_14  = {pipeline = pipeline.detect_and_correct_storage_account_table_service_logging_disabled, additional_args = {}}
-		cis_v210_3_15  = {pipeline = pipeline.detect_and_correct_storage_account_no_min_tls_1_2, additional_args = {}}
+		cis_v210_3_13  = {pipeline = pipeline.detect_and_correct_storage_accounts_blob_service_logging_disabled, additional_args = {}}
+		cis_v210_3_14  = {pipeline = pipeline.detect_and_correct_storage_accounts_table_service_logging_disabled, additional_args = {}}
+		cis_v210_3_15  = {pipeline = pipeline.detect_and_correct_storage_accounts_no_min_tls_1_2, additional_args = {}}
 		cis_v210_3_16  = {pipeline = pipeline.manual_control, additional_args = {message = "CIS v2.1.0 3.15 is a TODO control."}}
 		cis_v210_3_17  = {pipeline = pipeline.manual_control, additional_args = {message = "CIS v2.1.0 3.17 is a TODO control."}}
   }

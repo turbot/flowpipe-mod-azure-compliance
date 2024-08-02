@@ -1,46 +1,55 @@
 locals {
-  storage_account_table_service_logging_disabled_query = <<-EOQ
+  keyvault_with_rbac_keys_expiration_not_set_query = <<-EOQ
+		with rbac_vault as (
+			select
+				name
+			from
+				azure_key_vault
+			where
+				enable_rbac_authorization
+		)
     select
-      concat(sa.id, ' [', sa.resource_group, '/', sa.subscription_id, ']') as title,
-      sa.id as id,
-      sa.name,
-      sa.subscription_id,
-      sa._ctx ->> 'connection_name' as cred
+      concat(kvk.id, ' [', kvk.resource_group, '/', kvk.subscription_id, ']') as title,
+      kvk.id as id,
+      kvk.name,
+      kvk.subscription_id,
+			kvk.vault_name as vault_name,
+      kvk._ctx ->> 'connection_name' as cred
     from
-      azure_storage_account as sa,
-      azure_subscription as sub
-    where
-      sub.subscription_id = sa.subscription_id
-      and (
-        not table_logging_write
-        or not table_logging_read
-        or not table_logging_delete
-      )
+			azure_key_vault_key kvk
+			left join rbac_vault as v on v.name = kvk.vault_name
+			left join azure_subscription sub on sub.subscription_id = kvk.subscription_id
+		where
+			enabled and expires_at is null;
   EOQ
 }
 
-trigger "query" "detect_and_correct_storage_account_table_service_logging_disabled" {
-  title         = "Detect & correct Storage Accounts with table service logging disabled"
-  description   = "Detects Storage Accounts with table service logging disabled and runs your chosen action."
-  tags          = merge(local.storage_common_tags, { class = "unused" })
+locals {
+  rbac_keys_expiration_date = formatdate("YYYY-MM-DD'T'HH:mm:ss'Z'", timeadd(timestamp(), "2160h"))
+}
 
-  enabled  = var.storage_account_table_service_logging_disabled_trigger_enabled
-  schedule = var.storage_account_table_service_logging_disabled_trigger_schedule
+trigger "query" "detect_and_correct_keyvault_with_rbac_keys_expiration_not_set" {
+  title         = "Detect & correct Key Vaults with RBAC keys without expiration date"
+  description   = "Detects Key Vaults with RBAC keys that do not have an expiration date set and runs your chosen action."
+  tags          = merge(local.keyvault_common_tags, { class = "security" })
+
+  enabled  = var.keyvault_with_rbac_keys_expiration_not_set_trigger_enabled
+  schedule = var.keyvault_with_rbac_keys_expiration_not_set_trigger_schedule
   database = var.database
-  sql      = local.storage_account_table_service_logging_disabled_query
+  sql      = local.keyvault_with_rbac_keys_expiration_not_set_query
 
   capture "insert" {
-    pipeline = pipeline.correct_storage_account_table_service_logging_disabled
+    pipeline = pipeline.correct_keyvault_with_rbac_keys_expiration_not_set
     args = {
       items = self.inserted_rows
     }
   }
 }
 
-pipeline "detect_and_correct_storage_account_table_service_logging_disabled" {
-  title         = "Detect & correct Storage Accounts with table service logging disabled"
-  description   = "Detects Storage Accounts with table service logging disabled and runs your chosen action."
-  tags          = merge(local.storage_common_tags, { class = "unused", type = "featured" })
+pipeline "detect_and_correct_keyvault_with_rbac_keys_expiration_not_set" {
+  title         = "Detect & correct Key Vaults with RBAC keys without expiration date"
+  description   = "Detects Key Vaults with RBAC keys that do not have an expiration date set and runs your chosen action."
+  tags          = merge(local.keyvault_common_tags, { class = "security", type = "featured" })
 
   param "database" {
     type        = string
@@ -69,22 +78,22 @@ pipeline "detect_and_correct_storage_account_table_service_logging_disabled" {
   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.storage_account_table_service_logging_disabled_default_action
+    default     = var.keyvault_with_rbac_keys_expiration_not_set_default_action
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.storage_account_table_service_logging_disabled_enabled_actions
+    default     = var.keyvault_with_rbac_keys_expiration_not_set_enabled_actions
   }
 
   step "query" "detect" {
     database = param.database
-    sql      = local.storage_account_table_service_logging_disabled_query
+    sql      = local.keyvault_with_rbac_keys_expiration_not_set_query
   }
 
   step "pipeline" "respond" {
-    pipeline = pipeline.correct_storage_account_table_service_logging_disabled
+    pipeline = pipeline.correct_keyvault_with_rbac_keys_expiration_not_set
     args = {
       items              = step.query.detect.rows
       notifier           = param.notifier
@@ -96,16 +105,17 @@ pipeline "detect_and_correct_storage_account_table_service_logging_disabled" {
   }
 }
 
-pipeline "correct_storage_account_table_service_logging_disabled" {
-  title         = "Correct Storage Accounts with table service logging disabled"
-  description   = "Runs corrective action on a collection of Storage Accounts with table service logging disabled."
-  tags          = merge(local.storage_common_tags, { class = "unused" })
+pipeline "correct_keyvault_with_rbac_keys_expiration_not_set" {
+  title         = "Correct Key Vaults with RBAC keys without expiration date"
+  description   = "Runs corrective action on a collection of Key Vaults with RBAC keys without expiration date."
+  tags          = merge(local.keyvault_common_tags, { class = "security" })
 
   param "items" {
     type = list(object({
       id              = string
       title           = string
       name            = string
+      vault_name      = string
       subscription_id = string
       cred            = string
     }))
@@ -133,19 +143,19 @@ pipeline "correct_storage_account_table_service_logging_disabled" {
   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.storage_account_table_service_logging_disabled_default_action
+    default     = var.keyvault_with_rbac_keys_expiration_not_set_default_action
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.storage_account_table_service_logging_disabled_enabled_actions
+    default     = var.keyvault_with_rbac_keys_expiration_not_set_enabled_actions
   }
 
   step "message" "notify_detection_count" {
     if       = var.notification_level == local.level_verbose
     notifier = notifier[param.notifier]
-    text     = "Detected ${length(param.items)} Storage Accounts with table service logging disabled."
+    text     = "Detected ${length(param.items)} Key Vaults with RBAC keys without expiration date."
   }
 
   step "transform" "items_by_id" {
@@ -155,10 +165,11 @@ pipeline "correct_storage_account_table_service_logging_disabled" {
   step "pipeline" "correct_item" {
     for_each        = step.transform.items_by_id.value
     max_concurrency = var.max_concurrency
-    pipeline        = pipeline.correct_one_storage_account_table_service_logging_disabled
+    pipeline        = pipeline.correct_one_keyvault_with_rbac_keys_expiration_not_set
     args = {
       title              = each.value.title
       name               = each.value.name
+      vault_name         = each.value.vault_name
       subscription_id    = each.value.subscription_id
       cred               = each.value.cred
       notifier           = param.notifier
@@ -170,10 +181,10 @@ pipeline "correct_storage_account_table_service_logging_disabled" {
   }
 }
 
-pipeline "correct_one_storage_account_table_service_logging_disabled" {
-  title         = "Correct one Storage Account with table service logging disabled"
-  description   = "Runs corrective action on a single Storage Account with table service logging disabled."
-  tags          = merge(local.storage_common_tags, { class = "unused" })
+pipeline "correct_one_keyvault_with_rbac_keys_expiration_not_set" {
+  title         = "Correct one Key Vault with RBAC key without expiration date"
+  description   = "Runs corrective action on a single Key Vault with RBAC key without expiration date."
+  tags          = merge(local.keyvault_common_tags, { class = "security" })
 
   param "title" {
     type        = string
@@ -182,8 +193,13 @@ pipeline "correct_one_storage_account_table_service_logging_disabled" {
 
   param "name" {
     type        = string
-    description = "The name of the Storage Account."
+    description = "The name of the Key Vault key."
   }
+
+  param "vault_name" {
+    type        = string
+    description = "The key vault name."
+	}
 
   param "subscription_id" {
     type        = string
@@ -217,13 +233,13 @@ pipeline "correct_one_storage_account_table_service_logging_disabled" {
   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.storage_account_table_service_logging_disabled_default_action
+    default     = var.keyvault_with_rbac_keys_expiration_not_set_default_action
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.storage_account_table_service_logging_disabled_enabled_actions
+    default     = var.keyvault_with_rbac_keys_expiration_not_set_enabled_actions
   }
 
   step "pipeline" "respond" {
@@ -232,7 +248,7 @@ pipeline "correct_one_storage_account_table_service_logging_disabled" {
       notifier           = param.notifier
       notification_level = param.notification_level
       approvers          = param.approvers
-      detect_msg         = "Detected Storage Account ${param.title} with table service logging disabled."
+      detect_msg         = "Detected Key Vault key ${param.title} without expiration date."
       default_action     = param.default_action
       enabled_actions    = param.enabled_actions
       actions = {
@@ -244,52 +260,51 @@ pipeline "correct_one_storage_account_table_service_logging_disabled" {
           pipeline_args = {
             notifier = param.notifier
             send     = param.notification_level == local.level_verbose
-            text     = "Skipped Storage Account ${param.title} with table service logging disabled."
+            text     = "Skipped Key Vault key ${param.title} without expiration date."
           }
           success_msg = ""
           error_msg   = ""
         },
-        "enable_table_service_logging" = {
-          label        = "Enable Table Service Logging"
-          value        = "enable_table_service_logging"
+        "set_key_expiration" = {
+          label        = "Set Key Expiration"
+          value        = "set_key_expiration"
           style        = local.style_alert
-          pipeline_ref = local.azure_pipeline_update_storage_account_logging
+          pipeline_ref = local.azure_pipeline_set_key_vault_key_attributes
           pipeline_args = {
-            account_name     = param.name
-            subscription_id  = param.subscription_id
-            cred             = param.cred
-            services         = "t"
-            log              = "rwd"
-            retention        = 90
+            vault_name      = param.vault_name
+            key_name        = param.name
+						subscription_id =  param.subscription_id
+            expires         = local.rbac_keys_expiration_date
+            cred            = param.cred
           }
-          success_msg = "Enabled table service logging for Storage Account ${param.title}."
-          error_msg   = "Error enabling table service logging for Storage Account ${param.title}."
+          success_msg = "Set expiration date for Key Vault key ${param.title}."
+          error_msg   = "Error setting expiration date for Key Vault key ${param.title}."
         }
       }
     }
   }
 }
 
-variable "storage_account_table_service_logging_disabled_trigger_enabled" {
+variable "keyvault_with_rbac_keys_expiration_not_set_trigger_enabled" {
   type        = bool
   default     = false
   description = "If true, the trigger is enabled."
 }
 
-variable "storage_account_table_service_logging_disabled_trigger_schedule" {
+variable "keyvault_with_rbac_keys_expiration_not_set_trigger_schedule" {
   type        = string
   default     = "15m"
   description = "The schedule on which to run the trigger if enabled."
 }
 
-variable "storage_account_table_service_logging_disabled_default_action" {
+variable "keyvault_with_rbac_keys_expiration_not_set_default_action" {
   type        = string
   description = "The default action to use for the detected item, used if no input is provided."
-  default     = "enable_table_service_logging"
+  default     = "notify"
 }
 
-variable "storage_account_table_service_logging_disabled_enabled_actions" {
+variable "keyvault_with_rbac_keys_expiration_not_set_enabled_actions" {
   type        = list(string)
   description = "The list of enabled actions to provide to approvers for selection."
-  default     = ["skip", "enable_table_service_logging"]
+  default     = ["skip", "set_key_expiration"]
 }

@@ -1,55 +1,42 @@
 locals {
-  keyvault_with_rbac_secret_expiration_not_set_query = <<-EOQ
-    with rbac_vault as (
-      select
-        name
-      from
-        azure_key_vault
-      where
-        enable_rbac_authorization
-    )
+  storage_accounts_if_allow_public_network_access_query = <<-EOQ
     select
-      concat(kvs.id, ' [', kvs.resource_group, '/', kvs.subscription_id, ']') as title,
-      kvs.id as id,
-      kvs.name,
-      kvs.subscription_id,
-      kvs.vault_name as vault_name,
-      kvs._ctx ->> 'connection_name' as cred
+      concat(sa.id, ' [', sa.resource_group, '/', sa.subscription_id, ']') as title,
+      sa.id as id,
+      sa.name,
+      sa.resource_group,
+      sa.subscription_id,
+      sa._ctx ->> 'connection_name' as cred
     from
-      azure_key_vault_secret kvs
-      left join rbac_vault as v on v.name = kvs.vault_name
-      left join azure_subscription sub on sub.subscription_id = kvs.subscription_id
+      azure_storage_account as sa,
+      azure_subscription as sub
     where
-      kvs.enabled and kvs.expires_at is null;
+      sa.public_network_access = 'Enabled';
   EOQ
 }
 
-locals {
-  rbac_secret_expiration_date = formatdate("YYYY-MM-DD'T'HH:mm:ss'Z'", timeadd(timestamp(), "2160h"))
-}
+trigger "query" "detect_and_correct_storage_accounts_if_allow_public_network_access" {
+  title         = "Detect & correct Storage Accounts allowing public access"
+  description   = "Detects Storage Accounts with public access enabled and runs your chosen action."
+  tags          = merge(local.storage_common_tags, { class = "unused" })
 
-trigger "query" "detect_and_correct_keyvault_with_rbac_secret_expiration_not_set" {
-  title         = "Detect & correct Key Vaults with RBAC secrets without expiration date"
-  description   = "Detects Key Vaults with RBAC secrets that do not have an expiration date set and runs your chosen action."
-  tags          = merge(local.keyvault_common_tags, { class = "security" })
-
-  enabled  = var.keyvault_with_rbac_secret_expiration_not_set_trigger_enabled
-  schedule = var.keyvault_with_rbac_secret_expiration_not_set_trigger_schedule
+  enabled  = var.storage_accounts_if_allow_public_network_access_trigger_enabled
+  schedule = var.storage_accounts_if_allow_public_network_access_trigger_schedule
   database = var.database
-  sql      = local.keyvault_with_rbac_secret_expiration_not_set_query
+  sql      = local.storage_accounts_if_allow_public_network_access_query
 
   capture "insert" {
-    pipeline = pipeline.correct_keyvault_with_rbac_secret_expiration_not_set
+    pipeline = pipeline.correct_storage_accounts_if_allow_public_network_access
     args = {
       items = self.inserted_rows
     }
   }
 }
 
-pipeline "detect_and_correct_keyvault_with_rbac_secret_expiration_not_set" {
-  title         = "Detect & correct Key Vaults with RBAC secrets without expiration date"
-  description   = "Detects Key Vaults with RBAC secrets that do not have an expiration date set and runs your chosen action."
-  tags          = merge(local.keyvault_common_tags, { class = "security", type = "featured" })
+pipeline "detect_and_correct_storage_accounts_if_allow_public_network_access" {
+  title         = "Detect & correct Storage Accounts allowing public access"
+  description   = "Detects Storage Accounts with public access enabled and runs your chosen action."
+  tags          = merge(local.storage_common_tags, { class = "unused", type = "featured" })
 
   param "database" {
     type        = string
@@ -78,22 +65,22 @@ pipeline "detect_and_correct_keyvault_with_rbac_secret_expiration_not_set" {
   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.keyvault_with_rbac_secret_expiration_not_set_default_action
+    default     = var.storage_accounts_if_allow_public_network_access_default_action
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.keyvault_with_rbac_secret_expiration_not_set_enabled_actions
+    default     = var.storage_accounts_if_allow_public_network_access_enabled_actions
   }
 
   step "query" "detect" {
     database = param.database
-    sql      = local.keyvault_with_rbac_secret_expiration_not_set_query
+    sql      = local.storage_accounts_if_allow_public_network_access_query
   }
 
   step "pipeline" "respond" {
-    pipeline = pipeline.correct_keyvault_with_rbac_secret_expiration_not_set
+    pipeline = pipeline.correct_storage_accounts_if_allow_public_network_access
     args = {
       items              = step.query.detect.rows
       notifier           = param.notifier
@@ -105,17 +92,17 @@ pipeline "detect_and_correct_keyvault_with_rbac_secret_expiration_not_set" {
   }
 }
 
-pipeline "correct_keyvault_with_rbac_secret_expiration_not_set" {
-  title         = "Correct Key Vaults with RBAC secrets without expiration date"
-  description   = "Runs corrective action on a collection of Key Vaults with RBAC secrets without expiration date."
-  tags          = merge(local.keyvault_common_tags, { class = "security" })
+pipeline "correct_storage_accounts_if_allow_public_network_access" {
+  title         = "Correct Storage Accounts allowing public access"
+  description   = "Runs corrective action on a collection of Storage Accounts with public access enabled."
+  tags          = merge(local.storage_common_tags, { class = "unused" })
 
   param "items" {
     type = list(object({
       id              = string
       title           = string
       name            = string
-      vault_name      = string
+      resource_group  = string
       subscription_id = string
       cred            = string
     }))
@@ -143,19 +130,19 @@ pipeline "correct_keyvault_with_rbac_secret_expiration_not_set" {
   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.keyvault_with_rbac_secret_expiration_not_set_default_action
+    default     = var.storage_accounts_if_allow_public_network_access_default_action
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.keyvault_with_rbac_secret_expiration_not_set_enabled_actions
+    default     = var.storage_accounts_if_allow_public_network_access_enabled_actions
   }
 
   step "message" "notify_detection_count" {
     if       = var.notification_level == local.level_verbose
     notifier = notifier[param.notifier]
-    text     = "Detected ${length(param.items)} Key Vaults with RBAC secrets without expiration date."
+    text     = "Detected ${length(param.items)} Storage Accounts with public access enabled."
   }
 
   step "transform" "items_by_id" {
@@ -165,11 +152,11 @@ pipeline "correct_keyvault_with_rbac_secret_expiration_not_set" {
   step "pipeline" "correct_item" {
     for_each        = step.transform.items_by_id.value
     max_concurrency = var.max_concurrency
-    pipeline        = pipeline.correct_one_keyvault_with_rbac_secret_expiration_not_set
+    pipeline        = pipeline.correct_one_storage_accounts_if_allow_public_network_access
     args = {
       title              = each.value.title
       name               = each.value.name
-      vault_name         = each.value.vault_name
+      resource_group     = each.value.resource_group
       subscription_id    = each.value.subscription_id
       cred               = each.value.cred
       notifier           = param.notifier
@@ -181,10 +168,10 @@ pipeline "correct_keyvault_with_rbac_secret_expiration_not_set" {
   }
 }
 
-pipeline "correct_one_keyvault_with_rbac_secret_expiration_not_set" {
-  title         = "Correct one Key Vault with RBAC secret without expiration date"
-  description   = "Runs corrective action on a single Key Vault with RBAC secret without expiration date."
-  tags          = merge(local.keyvault_common_tags, { class = "security" })
+pipeline "correct_one_storage_accounts_if_allow_public_network_access" {
+  title         = "Correct one Storage Account allowing public access"
+  description   = "Runs corrective action on a single Storage Account with public access enabled."
+  tags          = merge(local.storage_common_tags, { class = "unused" })
 
   param "title" {
     type        = string
@@ -193,12 +180,12 @@ pipeline "correct_one_keyvault_with_rbac_secret_expiration_not_set" {
 
   param "name" {
     type        = string
-    description = "The name of the Key Vault secret."
+    description = "The name of the Storage Account."
   }
 
-  param "vault_name" {
+  param "resource_group" {
     type        = string
-    description = "The key vault name."
+    description = local.description_resource_group
   }
 
   param "subscription_id" {
@@ -230,16 +217,16 @@ pipeline "correct_one_keyvault_with_rbac_secret_expiration_not_set" {
     default     = var.approvers
   }
 
-  param "default_action" {
+   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.keyvault_with_rbac_secret_expiration_not_set_default_action
+    default     = var.storage_accounts_if_allow_public_network_access_default_action
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.keyvault_with_rbac_secret_expiration_not_set_enabled_actions
+    default     = var.storage_accounts_if_allow_public_network_access_enabled_actions
   }
 
   step "pipeline" "respond" {
@@ -248,7 +235,7 @@ pipeline "correct_one_keyvault_with_rbac_secret_expiration_not_set" {
       notifier           = param.notifier
       notification_level = param.notification_level
       approvers          = param.approvers
-      detect_msg         = "Detected Key Vault secret ${param.title} without expiration date."
+      detect_msg         = "Detected Storage Account ${param.title} with public access enabled."
       default_action     = param.default_action
       enabled_actions    = param.enabled_actions
       actions = {
@@ -260,51 +247,51 @@ pipeline "correct_one_keyvault_with_rbac_secret_expiration_not_set" {
           pipeline_args = {
             notifier = param.notifier
             send     = param.notification_level == local.level_verbose
-            text     = "Skipped Key Vault secret ${param.title} without expiration date."
+            text     = "Skipped Storage Account ${param.title} with public access enabled."
           }
           success_msg = ""
           error_msg   = ""
         },
-        "set_secret_expiration" = {
-          label        = "Set Secret Expiration"
-          value        = "set_secret_expiration"
+        "disable_public_network_access" = {
+          label        = "Disable Public Access"
+          value        = "disable_public_network_access"
           style        = local.style_alert
-          pipeline_ref = local.azure_pipeline_set_key_vault_secret_attributes
+          pipeline_ref = local.azure_pipeline_update_storage_account_public_network_access
           pipeline_args = {
-            vault_name      = param.vault_name
-            secret_name     = param.name
-            subscription_id = param.subscription_id
-            expires         = local.rbac_secret_expiration_date
-            cred            = param.cred
+            account_name           = param.name
+            resource_group         = param.resource_group
+            subscription_id        = param.subscription_id
+            cred                   = param.cred
+            public_network_access  = false
           }
-          success_msg = "Set expiration date for Key Vault secret ${param.title}."
-          error_msg   = "Error setting expiration date for Key Vault secret ${param.title}."
+          success_msg = "Disabled public access for Storage Account ${param.title}."
+          error_msg   = "Error disabling public access for Storage Account ${param.title}."
         }
       }
     }
   }
 }
 
-variable "keyvault_with_rbac_secret_expiration_not_set_trigger_enabled" {
+variable "storage_accounts_if_allow_public_network_access_trigger_enabled" {
   type        = bool
   default     = false
   description = "If true, the trigger is enabled."
 }
 
-variable "keyvault_with_rbac_secret_expiration_not_set_trigger_schedule" {
+variable "storage_accounts_if_allow_public_network_access_trigger_schedule" {
   type        = string
   default     = "15m"
   description = "The schedule on which to run the trigger if enabled."
 }
 
-variable "keyvault_with_rbac_secret_expiration_not_set_default_action" {
+variable "storage_accounts_if_allow_public_network_access_default_action" {
   type        = string
   description = "The default action to use for the detected item, used if no input is provided."
   default     = "notify"
 }
 
-variable "keyvault_with_rbac_secret_expiration_not_set_enabled_actions" {
+variable "storage_accounts_if_allow_public_network_access_enabled_actions" {
   type        = list(string)
   description = "The list of enabled actions to provide to approvers for selection."
-  default     = ["skip", "set_secret_expiration"]
+  default     = ["skip", "disable_public_network_access"]
 }

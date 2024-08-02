@@ -4,11 +4,11 @@ locals {
   // })
 
   cis_v210_8_control_mapping = {
-    cis_v210_8_1  = {pipeline = pipeline.detect_and_correct_keyvault_with_rbac_key_expiration_not_set, additional_args = {}}
-    cis_v210_8_2  = {pipeline = pipeline.detect_and_correct_keyvault_with_non_rbac_key_expiration_not_set, additional_args = {}}
-    cis_v210_8_3  = {pipeline = pipeline.detect_and_correct_keyvault_with_rbac_secret_expiration_not_set, additional_args = {}}
-    cis_v210_8_4  = {pipeline = pipeline.detect_and_correct_keyvault_with_non_rbac_secret_expiration_not_set, additional_args = {}}
-    cis_v210_8_5  = {pipeline = pipeline.detect_and_correct_keyvault_vault_non_recoverable, additional_args = {}}
+    cis_v210_8_1  = {pipeline = pipeline.detect_and_correct_keyvault_with_rbac_keys_expiration_not_set, additional_args = {}}
+    cis_v210_8_2  = {pipeline = pipeline.detect_and_correct_keyvault_with_non_rbac_keys_expiration_not_set, additional_args = {}}
+    cis_v210_8_3  = {pipeline = pipeline.detect_and_correct_keyvault_with_rbac_secrets_expiration_not_set, additional_args = {}}
+    cis_v210_8_4  = {pipeline = pipeline.detect_and_correct_keyvault_with_non_rbac_secrets_expiration_not_set, additional_args = {}}
+    cis_v210_8_5  = {pipeline = pipeline.detect_and_correct_keyvault_vaults_non_recoverable, additional_args = {}}
 		cis_v210_8_6  = {pipeline = pipeline.manual_control, additional_args = {message = "CIS v2.1.0 8.6 is a manual control."}}
 		cis_v210_8_7  = {pipeline = pipeline.manual_control, additional_args = {message = "CIS v2.1.0 8.7 is a manual control."}}
     cis_v210_8_8  = {pipeline = pipeline.manual_control, additional_args = {message = "CIS v2.1.0 8.8 is a manual control."}}

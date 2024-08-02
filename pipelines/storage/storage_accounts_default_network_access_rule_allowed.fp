@@ -1,43 +1,43 @@
 locals {
-  appservice_webapp_not_using_latest_tls_version_query = <<-EOQ
+  storage_accounts_default_network_access_rule_allowed_query = <<-EOQ
     select
-      concat(app.id, ' [', app.resource_group, '/', app.subscription_id, ']') as title,
-      app.id as id,
-      app.name,
-      app.resource_group,
-      app.subscription_id,
-      app._ctx ->> 'connection_name' as cred
+      concat(sa.id, ' [', sa.resource_group, '/', sa.subscription_id, ']') as title,
+      sa.id as id,
+      sa.name,
+      sa.resource_group,
+      sa.subscription_id,
+      sa._ctx ->> 'connection_name' as cred
     from
-      azure_app_service_web_app as app,
+      azure_storage_account as sa,
       azure_subscription as sub
     where
-      sub.subscription_id = app.subscription_id
-      and configuration -> 'properties' ->> 'minTlsVersion' < '1.2';
+      sa.network_rule_default_action = 'Allow'
+      and sub.subscription_id = sa.subscription_id;
   EOQ
 }
 
-trigger "query" "detect_and_correct_appservice_webapp_not_using_latest_tls_version" {
-  title         = "Detect & correct App Services not using the latest TLS version"
-  description   = "Detects App Services not using the latest TLS version and runs your chosen action."
-  tags          = merge(local.appservice_common_tags, { class = "unused" })
+trigger "query" "detect_and_correct_storage_accounts_default_network_access_rule_allowed" {
+  title         = "Detect & correct Storage Accounts with default network access rule set to Allow"
+  description   = "Detects Storage Accounts with default network access rule set to Allow and runs your chosen action."
+  tags          = merge(local.storage_common_tags, { class = "unused" })
 
-  enabled  = var.appservice_webapp_not_using_latest_tls_version_trigger_enabled
-  schedule = var.appservice_webapp_not_using_latest_tls_version_trigger_schedule
+  enabled  = var.storage_accounts_default_network_access_rule_allowed_trigger_enabled
+  schedule = var.storage_accounts_default_network_access_rule_allowed_trigger_schedule
   database = var.database
-  sql      = local.appservice_webapp_not_using_latest_tls_version_query
+  sql      = local.storage_accounts_default_network_access_rule_allowed_query
 
   capture "insert" {
-    pipeline = pipeline.correct_appservice_webapp_not_using_latest_tls_version
+    pipeline = pipeline.correct_storage_accounts_default_network_access_rule_allowed
     args = {
       items = self.inserted_rows
     }
   }
 }
 
-pipeline "detect_and_correct_appservice_webapp_not_using_latest_tls_version" {
-  title         = "Detect & correct App Services not using the latest TLS version"
-  description   = "Detects App Services not using the latest TLS version and runs your chosen action."
-  tags          = merge(local.appservice_common_tags, { class = "unused", type = "featured" })
+pipeline "detect_and_correct_storage_accounts_default_network_access_rule_allowed" {
+  title         = "Detect & correct Storage Accounts with default network access rule set to Allow"
+  description   = "Detects Storage Accounts with default network access rule set to Allow and runs your chosen action."
+  tags          = merge(local.storage_common_tags, { class = "unused", type = "featured" })
 
   param "database" {
     type        = string
@@ -66,22 +66,22 @@ pipeline "detect_and_correct_appservice_webapp_not_using_latest_tls_version" {
   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.appservice_webapp_not_using_latest_tls_version_default_action
+    default     = var.storage_accounts_default_network_access_rule_allowed_default_action
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.appservice_webapp_not_using_latest_tls_version_enabled_actions
+    default     = var.storage_accounts_default_network_access_rule_allowed_enabled_actions
   }
 
   step "query" "detect" {
     database = param.database
-    sql      = local.appservice_webapp_not_using_latest_tls_version_query
+    sql      = local.storage_accounts_default_network_access_rule_allowed_query
   }
 
   step "pipeline" "respond" {
-    pipeline = pipeline.correct_appservice_webapp_not_using_latest_tls_version
+    pipeline = pipeline.correct_storage_accounts_default_network_access_rule_allowed
     args = {
       items              = step.query.detect.rows
       notifier           = param.notifier
@@ -93,10 +93,10 @@ pipeline "detect_and_correct_appservice_webapp_not_using_latest_tls_version" {
   }
 }
 
-pipeline "correct_appservice_webapp_not_using_latest_tls_version" {
-  title         = "Correct App Services not using the latest TLS version"
-  description   = "Runs corrective action on a collection of App Services not using the latest TLS version."
-  tags          = merge(local.appservice_common_tags, { class = "unused" })
+pipeline "correct_storage_accounts_default_network_access_rule_allowed" {
+  title         = "Correct Storage Accounts with default network access rule set to Allow"
+  description   = "Runs corrective action on a collection of Storage Accounts with default network access rule set to Allow."
+  tags          = merge(local.storage_common_tags, { class = "unused" })
 
   param "items" {
     type = list(object({
@@ -131,19 +131,19 @@ pipeline "correct_appservice_webapp_not_using_latest_tls_version" {
   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.appservice_webapp_not_using_latest_tls_version_default_action
+    default     = var.storage_accounts_default_network_access_rule_allowed_default_action
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.appservice_webapp_not_using_latest_tls_version_enabled_actions
+    default     = var.storage_accounts_default_network_access_rule_allowed_enabled_actions
   }
 
   step "message" "notify_detection_count" {
     if       = var.notification_level == local.level_verbose
     notifier = notifier[param.notifier]
-    text     = "Detected ${length(param.items)} App Services not using the latest TLS version."
+    text     = "Detected ${length(param.items)} Storage Accounts with default network access rule set to Allow."
   }
 
   step "transform" "items_by_id" {
@@ -153,7 +153,7 @@ pipeline "correct_appservice_webapp_not_using_latest_tls_version" {
   step "pipeline" "correct_item" {
     for_each        = step.transform.items_by_id.value
     max_concurrency = var.max_concurrency
-    pipeline        = pipeline.correct_one_appservice_webapp_not_using_latest_tls_version
+    pipeline        = pipeline.correct_one_storage_accounts_default_network_access_rule_allowed
     args = {
       title              = each.value.title
       name               = each.value.name
@@ -169,10 +169,10 @@ pipeline "correct_appservice_webapp_not_using_latest_tls_version" {
   }
 }
 
-pipeline "correct_one_appservice_webapp_not_using_latest_tls_version" {
-  title         = "Correct one App Service not using the latest TLS version"
-  description   = "Runs corrective action on a single App Service not using the latest TLS version."
-  tags          = merge(local.appservice_common_tags, { class = "unused" })
+pipeline "correct_one_storage_accounts_default_network_access_rule_allowed" {
+  title         = "Correct one Storage Account with default network access rule set to Allow"
+  description   = "Runs corrective action on a single Storage Account with default network access rule set to Allow."
+  tags          = merge(local.storage_common_tags, { class = "unused" })
 
   param "title" {
     type        = string
@@ -181,7 +181,7 @@ pipeline "correct_one_appservice_webapp_not_using_latest_tls_version" {
 
   param "name" {
     type        = string
-    description = "The name of the App Service."
+    description = "The name of the Storage Account."
   }
 
   param "resource_group" {
@@ -221,13 +221,13 @@ pipeline "correct_one_appservice_webapp_not_using_latest_tls_version" {
   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.appservice_webapp_not_using_latest_tls_version_default_action
+    default     = var.storage_accounts_default_network_access_rule_allowed_default_action
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.appservice_webapp_not_using_latest_tls_version_enabled_actions
+    default     = var.storage_accounts_default_network_access_rule_allowed_enabled_actions
   }
 
   step "pipeline" "respond" {
@@ -236,7 +236,7 @@ pipeline "correct_one_appservice_webapp_not_using_latest_tls_version" {
       notifier           = param.notifier
       notification_level = param.notification_level
       approvers          = param.approvers
-      detect_msg         = "Detected App Service ${param.title} not using the latest TLS version."
+      detect_msg         = "Detected Storage Account ${param.title} with default network access rule set to Allow."
       default_action     = param.default_action
       enabled_actions    = param.enabled_actions
       actions = {
@@ -248,51 +248,51 @@ pipeline "correct_one_appservice_webapp_not_using_latest_tls_version" {
           pipeline_args = {
             notifier = param.notifier
             send     = param.notification_level == local.level_verbose
-            text     = "Skipped App Service ${param.title} not using the latest TLS version."
+            text     = "Skipped Storage Account ${param.title} with default network access rule set to Allow."
           }
           success_msg = ""
           error_msg   = ""
         },
-        "enable_latest_tls_version" = {
-          label        = "Enable Latest TLS Version"
-          value        = "enable_latest_tls_version"
+        "update_default_action_deny" = {
+          label        = "Update Default Action to Deny"
+          value        = "update_default_action_deny"
           style        = local.style_alert
-          pipeline_ref = local.azure_pipeline_set_config_appservice_webapp
+          pipeline_ref = local.azure_pipeline_update_storage_account_default_action
           pipeline_args = {
-            resource_group  = param.resource_group
-            subscription_id = param.subscription_id
-            app_name        = param.name
-            cred            = param.cred
-            tls_version = "1.2"
+            account_name      = param.name
+            resource_group    = param.resource_group
+            subscription_id   = param.subscription_id
+            cred              = param.cred
+            default_action    = "Deny"
           }
-          success_msg = "Enabled latest TLS version for App Service ${param.title}."
-          error_msg   = "Error enabling latest TLS version for App Service ${param.title}."
+          success_msg = "Updated default action to Deny for Storage Account ${param.title}."
+          error_msg   = "Error updating default action to Deny for Storage Account ${param.title}."
         }
       }
     }
   }
 }
 
-variable "appservice_webapp_not_using_latest_tls_version_trigger_enabled" {
+variable "storage_accounts_default_network_access_rule_allowed_trigger_enabled" {
   type        = bool
   default     = false
   description = "If true, the trigger is enabled."
 }
 
-variable "appservice_webapp_not_using_latest_tls_version_trigger_schedule" {
+variable "storage_accounts_default_network_access_rule_allowed_trigger_schedule" {
   type        = string
   default     = "15m"
   description = "The schedule on which to run the trigger if enabled."
 }
 
-variable "appservice_webapp_not_using_latest_tls_version_default_action" {
+variable "storage_accounts_default_network_access_rule_allowed_default_action" {
   type        = string
   description = "The default action to use for the detected item, used if no input is provided."
   default     = "notify"
 }
 
-variable "appservice_webapp_not_using_latest_tls_version_enabled_actions" {
+variable "storage_accounts_default_network_access_rule_allowed_enabled_actions" {
   type        = list(string)
   description = "The list of enabled actions to provide to approvers for selection."
-  default     = ["skip", "enable_latest_tls_version"]
+  default     = ["skip", "update_default_action_deny"]
 }

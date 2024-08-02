@@ -4,15 +4,15 @@ locals {
   // })
 
   cis_v210_9_control_mapping = {
-    cis_v210_9_1  = {pipeline = pipeline.detect_and_correct_appservice_webapp_authentication_disabled, additional_args = {}}
-    cis_v210_9_2  = {pipeline = pipeline.detect_and_correct_appservice_webapp_not_using_https, additional_args = {}}
-    cis_v210_9_3  = {pipeline = pipeline.detect_and_correct_appservice_webapp_not_using_latest_tls_version, additional_args = {}}
-    cis_v210_9_4  = {pipeline = pipeline.detect_and_correct_appservice_webapp_register_with_active_directory_disabled, additional_args = {}}
+    cis_v210_9_1  = {pipeline = pipeline.detect_and_correct_appservice_webapps_authentication_disabled, additional_args = {}}
+    cis_v210_9_2  = {pipeline = pipeline.detect_and_correct_appservice_webapps_not_using_https, additional_args = {}}
+    cis_v210_9_3  = {pipeline = pipeline.detect_and_correct_appservice_webapps_not_using_latest_tls_version, additional_args = {}}
+    cis_v210_9_4  = {pipeline = pipeline.detect_and_correct_appservice_webapps_register_with_active_directory_disabled, additional_args = {}}
     cis_v210_9_5  = {pipeline = pipeline.manual_control, additional_args = {message = "CIS v2.1.0 9.5 is a manual control."}}
 		cis_v210_9_6  = {pipeline = pipeline.manual_control, additional_args = {message = "CIS v2.1.0 9.6 is a manual control."}}
 		cis_v210_9_7  = {pipeline = pipeline.manual_control, additional_args = {message = "CIS v2.1.0 9.7 is a manual control."}}
-    cis_v210_9_8  = {pipeline = pipeline.detect_and_correct_appservice_webapp_not_using_latest_http_version, additional_args = {}}
-    cis_v210_9_9  = {pipeline = pipeline.detect_and_correct_appservice_webapp_ftp_deployment_enabled, additional_args = {}}
+    cis_v210_9_8  = {pipeline = pipeline.detect_and_correct_appservice_webapps_not_using_latest_http_version, additional_args = {}}
+    cis_v210_9_9  = {pipeline = pipeline.detect_and_correct_appservice_webapps_ftp_deployment_enabled, additional_args = {}}
 		cis_v210_9_10  = {pipeline = pipeline.manual_control, additional_args = {message = "CIS v2.1.0 9.10 is a manual control."}}
   }
 }

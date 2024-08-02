@@ -1,5 +1,5 @@
 locals {
-  storage_account_if_allow_public_network_access_query = <<-EOQ
+  storage_accounts_secure_transfer_required_disabled_query = <<-EOQ
     select
       concat(sa.id, ' [', sa.resource_group, '/', sa.subscription_id, ']') as title,
       sa.id as id,
@@ -11,31 +11,32 @@ locals {
       azure_storage_account as sa,
       azure_subscription as sub
     where
-      sa.public_network_access = 'Enabled';
+      not enable_https_traffic_only;
   EOQ
 }
 
-trigger "query" "detect_and_correct_storage_account_if_allow_public_network_access" {
-  title         = "Detect & correct Storage Accounts allowing public access"
-  description   = "Detects Storage Accounts with public access enabled and runs your chosen action."
+trigger "query" "detect_and_correct_storage_accounts_secure_transfer_required_disabled" {
+  title         = "Detect & correct Storage Accounts with secure transfer required disabled"
+  description   = "Detects Storage Accounts with secure transfer required disabled and runs your chosen action."
   tags          = merge(local.storage_common_tags, { class = "unused" })
 
-  enabled  = var.storage_account_if_allow_public_network_access_trigger_enabled
-  schedule = var.storage_account_if_allow_public_network_access_trigger_schedule
+  enabled  = var.storage_accounts_secure_transfer_required_disabled_trigger_enabled
+  schedule = var.storage_accounts_secure_transfer_required_disabled_trigger_schedule
   database = var.database
-  sql      = local.storage_account_if_allow_public_network_access_query
+  sql      = local.storage_accounts_secure_transfer_required_disabled_query
 
   capture "insert" {
-    pipeline = pipeline.correct_storage_account_if_allow_public_network_access
+    pipeline = pipeline.correct_storage_accounts_secure_transfer_required_disabled
     args = {
       items = self.inserted_rows
     }
   }
 }
 
-pipeline "detect_and_correct_storage_account_if_allow_public_network_access" {
-  title         = "Detect & correct Storage Accounts allowing public access"
-  description   = "Detects Storage Accounts with public access enabled and runs your chosen action."
+pipeline "detect_and_correct_storage_accounts_secure_transfer_required_disabled" {
+  title         = "Detect & correct Storage Accounts with secure transfer required disabled"
+  description   = "Detects Storage Accounts with secure transfer required disabled and runs your chosen action."
+  // documentation = file("./storage/docs/detect_and_correct_storage_accounts_secure_transfer_required_disabled.md")
   tags          = merge(local.storage_common_tags, { class = "unused", type = "featured" })
 
   param "database" {
@@ -65,22 +66,22 @@ pipeline "detect_and_correct_storage_account_if_allow_public_network_access" {
   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.storage_account_if_allow_public_network_access_default_action
+    default     = var.storage_accounts_secure_transfer_required_disabled_default_action
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.storage_account_if_allow_public_network_access_enabled_actions
+    default     = var.storage_accounts_secure_transfer_required_disabled_enabled_actions
   }
 
   step "query" "detect" {
     database = param.database
-    sql      = local.storage_account_if_allow_public_network_access_query
+    sql      = local.storage_accounts_secure_transfer_required_disabled_query
   }
 
   step "pipeline" "respond" {
-    pipeline = pipeline.correct_storage_account_if_allow_public_network_access
+    pipeline = pipeline.correct_storage_accounts_secure_transfer_required_disabled
     args = {
       items              = step.query.detect.rows
       notifier           = param.notifier
@@ -92,9 +93,9 @@ pipeline "detect_and_correct_storage_account_if_allow_public_network_access" {
   }
 }
 
-pipeline "correct_storage_account_if_allow_public_network_access" {
-  title         = "Correct Storage Accounts allowing public access"
-  description   = "Runs corrective action on a collection of Storage Accounts with public access enabled."
+pipeline "correct_storage_accounts_secure_transfer_required_disabled" {
+  title         = "Correct Storage Accounts with secure transfer required disabled"
+  description   = "Runs corrective action on a collection of Storage Accounts with secure transfer required disabled."
   tags          = merge(local.storage_common_tags, { class = "unused" })
 
   param "items" {
@@ -130,19 +131,19 @@ pipeline "correct_storage_account_if_allow_public_network_access" {
   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.storage_account_if_allow_public_network_access_default_action
+    default     = var.storage_accounts_secure_transfer_required_disabled_default_action
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.storage_account_if_allow_public_network_access_enabled_actions
+    default     = var.storage_accounts_secure_transfer_required_disabled_enabled_actions
   }
 
   step "message" "notify_detection_count" {
     if       = var.notification_level == local.level_verbose
     notifier = notifier[param.notifier]
-    text     = "Detected ${length(param.items)} Storage Accounts with public access enabled."
+    text     = "Detected ${length(param.items)} Storage Accounts with secure transfer required disabled."
   }
 
   step "transform" "items_by_id" {
@@ -152,7 +153,7 @@ pipeline "correct_storage_account_if_allow_public_network_access" {
   step "pipeline" "correct_item" {
     for_each        = step.transform.items_by_id.value
     max_concurrency = var.max_concurrency
-    pipeline        = pipeline.correct_one_storage_account_if_allow_public_network_access
+    pipeline        = pipeline.correct_one_storage_accounts_secure_transfer_required_disabled
     args = {
       title              = each.value.title
       name               = each.value.name
@@ -168,9 +169,9 @@ pipeline "correct_storage_account_if_allow_public_network_access" {
   }
 }
 
-pipeline "correct_one_storage_account_if_allow_public_network_access" {
-  title         = "Correct one Storage Account allowing public access"
-  description   = "Runs corrective action on a single Storage Account with public access enabled."
+pipeline "correct_one_storage_accounts_secure_transfer_required_disabled" {
+  title         = "Correct one Storage Account with secure transfer required disabled"
+  description   = "Runs corrective action on a single Storage Account with secure transfer required disabled."
   tags          = merge(local.storage_common_tags, { class = "unused" })
 
   param "title" {
@@ -217,16 +218,16 @@ pipeline "correct_one_storage_account_if_allow_public_network_access" {
     default     = var.approvers
   }
 
-   param "default_action" {
+  param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.storage_account_if_allow_public_network_access_default_action
+    default     = var.storage_accounts_secure_transfer_required_disabled_default_action
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.storage_account_if_allow_public_network_access_enabled_actions
+    default     = var.storage_accounts_secure_transfer_required_disabled_enabled_actions
   }
 
   step "pipeline" "respond" {
@@ -235,7 +236,7 @@ pipeline "correct_one_storage_account_if_allow_public_network_access" {
       notifier           = param.notifier
       notification_level = param.notification_level
       approvers          = param.approvers
-      detect_msg         = "Detected Storage Account ${param.title} with public access enabled."
+      detect_msg         = "Detected Storage Account ${param.title} with secure transfer required disabled."
       default_action     = param.default_action
       enabled_actions    = param.enabled_actions
       actions = {
@@ -247,51 +248,51 @@ pipeline "correct_one_storage_account_if_allow_public_network_access" {
           pipeline_args = {
             notifier = param.notifier
             send     = param.notification_level == local.level_verbose
-            text     = "Skipped Storage Account ${param.title} with public access enabled."
+            text     = "Skipped Storage Account ${param.title} with secure transfer required disabled."
           }
           success_msg = ""
           error_msg   = ""
         },
-        "disable_public_network_access" = {
-          label        = "Disable Public Access"
-          value        = "disable_public_network_access"
+        "enable_secure_transfer" = {
+          label        = "Enable Secure Transfer"
+          value        = "enable_secure_transfer"
           style        = local.style_alert
-          pipeline_ref = local.azure_pipeline_update_storage_account_public_network_access
+          pipeline_ref = local.azure_pipeline_update_storage_account_https_only
           pipeline_args = {
             account_name           = param.name
             resource_group         = param.resource_group
             subscription_id        = param.subscription_id
             cred                   = param.cred
-            public_network_access  = false
+            https_only             = true
           }
-          success_msg = "Disabled public access for Storage Account ${param.title}."
-          error_msg   = "Error disabling public access for Storage Account ${param.title}."
+          success_msg = "Enabled secure transfer for Storage Account ${param.title}."
+          error_msg   = "Error enabling secure transfer for Storage Account ${param.title}."
         }
       }
     }
   }
 }
 
-variable "storage_account_if_allow_public_network_access_trigger_enabled" {
+variable "storage_accounts_secure_transfer_required_disabled_trigger_enabled" {
   type        = bool
   default     = false
   description = "If true, the trigger is enabled."
 }
 
-variable "storage_account_if_allow_public_network_access_trigger_schedule" {
+variable "storage_accounts_secure_transfer_required_disabled_trigger_schedule" {
   type        = string
   default     = "15m"
   description = "The schedule on which to run the trigger if enabled."
 }
 
-variable "storage_account_if_allow_public_network_access_default_action" {
+variable "storage_accounts_secure_transfer_required_disabled_default_action" {
   type        = string
   description = "The default action to use for the detected item, used if no input is provided."
-  default     = "disable_public_network_access"
+  default     = "notify"
 }
 
-variable "storage_account_if_allow_public_network_access_enabled_actions" {
+variable "storage_accounts_secure_transfer_required_disabled_enabled_actions" {
   type        = list(string)
   description = "The list of enabled actions to provide to approvers for selection."
-  default     = ["skip", "disable_public_network_access"]
+  default     = ["skip", "enable_secure_transfer"]
 }

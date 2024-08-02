@@ -1,55 +1,43 @@
 locals {
-  keyvault_with_non_rbac_key_expiration_not_set_query = <<-EOQ
-    with non_rbac_vault as (
-			select
-				name
-			from
-				azure_key_vault
-			where
-				not enable_rbac_authorization
-		)
+  appservice_webapps_not_using_https_query = <<-EOQ
     select
-      concat(kvk.id, ' [', kvk.resource_group, '/', kvk.subscription_id, ']') as title,
-      kvk.id as id,
-      kvk.name,
-      kvk.subscription_id,
-			kvk.vault_name as vault_name,
-      kvk._ctx ->> 'connection_name' as cred
+      concat(app.id, ' [', app.resource_group, '/', app.subscription_id, ']') as title,
+      app.id as id,
+      app.name,
+      app.resource_group,
+      app.subscription_id,
+      app._ctx ->> 'connection_name' as cred
     from
-			azure_key_vault_key kvk
-			left join non_rbac_vault as v on v.name = kvk.vault_name
-			left join azure_subscription sub on sub.subscription_id = kvk.subscription_id
-		where
-			enabled and expires_at is null;
+      azure_app_service_web_app as app,
+      azure_subscription as sub
+    where
+      sub.subscription_id = app.subscription_id
+      and not https_only;
   EOQ
 }
 
-locals {
-  non_rbac_key_expiration_date = formatdate("YYYY-MM-DD'T'HH:mm:ss'Z'", timeadd(timestamp(), "2160h"))
-}
+trigger "query" "detect_and_correct_appservice_webapps_not_using_https" {
+  title         = "Detect & correct App Services not using HTTPS"
+  description   = "Detects App Services not using HTTPS and runs your chosen action."
+  tags          = merge(local.appservice_common_tags, { class = "unused" })
 
-trigger "query" "detect_and_correct_keyvault_with_non_rbac_key_expiration_not_set" {
-  title         = "Detect & correct Key Vaults with non-RBAC keys without expiration date"
-  description   = "Detects Key Vaults with non-RBAC keys that do not have an expiration date set and runs your chosen action."
-  tags          = merge(local.keyvault_common_tags, { class = "security" })
-
-  enabled  = var.keyvault_with_non_rbac_key_expiration_not_set_trigger_enabled
-  schedule = var.keyvault_with_non_rbac_key_expiration_not_set_trigger_schedule
+  enabled  = var.appservice_webapps_not_using_https_trigger_enabled
+  schedule = var.appservice_webapps_not_using_https_trigger_schedule
   database = var.database
-  sql      = local.keyvault_with_non_rbac_key_expiration_not_set_query
+  sql      = local.appservice_webapps_not_using_https_query
 
   capture "insert" {
-    pipeline = pipeline.correct_keyvault_with_non_rbac_key_expiration_not_set
+    pipeline = pipeline.correct_appservice_webapps_not_using_https
     args = {
       items = self.inserted_rows
     }
   }
 }
 
-pipeline "detect_and_correct_keyvault_with_non_rbac_key_expiration_not_set" {
-  title         = "Detect & correct Key Vaults with non-RBAC keys without expiration date"
-  description   = "Detects Key Vaults with non-RBAC keys that do not have an expiration date set and runs your chosen action."
-  tags          = merge(local.keyvault_common_tags, { class = "security", type = "featured" })
+pipeline "detect_and_correct_appservice_webapps_not_using_https" {
+  title         = "Detect & correct App Services not using HTTPS"
+  description   = "Detects App Services not using HTTPS and runs your chosen action."
+  tags          = merge(local.appservice_common_tags, { class = "unused", type = "featured" })
 
   param "database" {
     type        = string
@@ -78,22 +66,22 @@ pipeline "detect_and_correct_keyvault_with_non_rbac_key_expiration_not_set" {
   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.keyvault_with_non_rbac_key_expiration_not_set_default_action
+    default     = var.appservice_webapps_not_using_https_default_action
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.keyvault_with_non_rbac_key_expiration_not_set_enabled_actions
+    default     = var.appservice_webapps_not_using_https_enabled_actions
   }
 
   step "query" "detect" {
     database = param.database
-    sql      = local.keyvault_with_non_rbac_key_expiration_not_set_query
+    sql      = local.appservice_webapps_not_using_https_query
   }
 
   step "pipeline" "respond" {
-    pipeline = pipeline.correct_keyvault_with_non_rbac_key_expiration_not_set
+    pipeline = pipeline.correct_appservice_webapps_not_using_https
     args = {
       items              = step.query.detect.rows
       notifier           = param.notifier
@@ -105,17 +93,17 @@ pipeline "detect_and_correct_keyvault_with_non_rbac_key_expiration_not_set" {
   }
 }
 
-pipeline "correct_keyvault_with_non_rbac_key_expiration_not_set" {
-  title         = "Correct Key Vaults with non-RBAC keys without expiration date"
-  description   = "Runs corrective action on a collection of Key Vaults with non-RBAC keys without expiration date."
-  tags          = merge(local.keyvault_common_tags, { class = "security" })
+pipeline "correct_appservice_webapps_not_using_https" {
+  title         = "Correct App Services not using HTTPS"
+  description   = "Runs corrective action on a collection of App Services not using HTTPS."
+  tags          = merge(local.appservice_common_tags, { class = "unused" })
 
   param "items" {
     type = list(object({
       id              = string
       title           = string
       name            = string
-      vault_name      = string
+      resource_group  = string
       subscription_id = string
       cred            = string
     }))
@@ -143,19 +131,19 @@ pipeline "correct_keyvault_with_non_rbac_key_expiration_not_set" {
   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.keyvault_with_non_rbac_key_expiration_not_set_default_action
+    default     = var.appservice_webapps_not_using_https_default_action
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.keyvault_with_non_rbac_key_expiration_not_set_enabled_actions
+    default     = var.appservice_webapps_not_using_https_enabled_actions
   }
 
   step "message" "notify_detection_count" {
     if       = var.notification_level == local.level_verbose
     notifier = notifier[param.notifier]
-    text     = "Detected ${length(param.items)} Key Vaults with non-RBAC keys without expiration date."
+    text     = "Detected ${length(param.items)} App Services not using HTTPS."
   }
 
   step "transform" "items_by_id" {
@@ -165,11 +153,11 @@ pipeline "correct_keyvault_with_non_rbac_key_expiration_not_set" {
   step "pipeline" "correct_item" {
     for_each        = step.transform.items_by_id.value
     max_concurrency = var.max_concurrency
-    pipeline        = pipeline.correct_one_keyvault_with_non_rbac_key_expiration_not_set
+    pipeline        = pipeline.correct_one_appservice_webapps_not_using_https
     args = {
       title              = each.value.title
       name               = each.value.name
-      vault_name         = each.value.vault_name
+      resource_group     = each.value.resource_group
       subscription_id    = each.value.subscription_id
       cred               = each.value.cred
       notifier           = param.notifier
@@ -181,10 +169,10 @@ pipeline "correct_keyvault_with_non_rbac_key_expiration_not_set" {
   }
 }
 
-pipeline "correct_one_keyvault_with_non_rbac_key_expiration_not_set" {
-  title         = "Correct one Key Vault with non-RBAC key without expiration date"
-  description   = "Runs corrective action on a single Key Vault with non-RBAC key without expiration date."
-  tags          = merge(local.keyvault_common_tags, { class = "security" })
+pipeline "correct_one_appservice_webapps_not_using_https" {
+  title         = "Correct one App Service not using HTTPS"
+  description   = "Runs corrective action on a single App Service not using HTTPS."
+  tags          = merge(local.appservice_common_tags, { class = "unused" })
 
   param "title" {
     type        = string
@@ -193,12 +181,12 @@ pipeline "correct_one_keyvault_with_non_rbac_key_expiration_not_set" {
 
   param "name" {
     type        = string
-    description = "The name of the Key Vault key."
+    description = "The name of the App Service."
   }
 
-  param "vault_name" {
+  param "resource_group" {
     type        = string
-    description = "The key vault name."
+    description = local.description_resource_group
   }
 
   param "subscription_id" {
@@ -233,13 +221,13 @@ pipeline "correct_one_keyvault_with_non_rbac_key_expiration_not_set" {
   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.keyvault_with_non_rbac_key_expiration_not_set_default_action
+    default     = var.appservice_webapps_not_using_https_default_action
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.keyvault_with_non_rbac_key_expiration_not_set_enabled_actions
+    default     = var.appservice_webapps_not_using_https_enabled_actions
   }
 
   step "pipeline" "respond" {
@@ -248,7 +236,7 @@ pipeline "correct_one_keyvault_with_non_rbac_key_expiration_not_set" {
       notifier           = param.notifier
       notification_level = param.notification_level
       approvers          = param.approvers
-      detect_msg         = "Detected Key Vault key ${param.title} without expiration date."
+      detect_msg         = "Detected App Service ${param.title} not using HTTPS."
       default_action     = param.default_action
       enabled_actions    = param.enabled_actions
       actions = {
@@ -260,51 +248,51 @@ pipeline "correct_one_keyvault_with_non_rbac_key_expiration_not_set" {
           pipeline_args = {
             notifier = param.notifier
             send     = param.notification_level == local.level_verbose
-            text     = "Skipped Key Vault key ${param.title} without expiration date."
+            text     = "Skipped App Service ${param.title} not using HTTPS."
           }
           success_msg = ""
           error_msg   = ""
         },
-        "set_key_expiration" = {
-          label        = "Set Key Expiration"
-          value        = "set_key_expiration"
+        "enable_https" = {
+          label        = "Enable HTTPS"
+          value        = "enable_https"
           style        = local.style_alert
-          pipeline_ref = local.azure_pipeline_set_key_vault_key_attributes
+          pipeline_ref = local.azure_pipeline_update_appservice_webapp
           pipeline_args = {
-            vault_name      = param.vault_name
-            key_name        = param.name
+            resource_group  = param.resource_group
             subscription_id = param.subscription_id
-            expires         = local.non_rbac_key_expiration_date
+            app_name        = param.name
             cred            = param.cred
+            https_only      = true
           }
-          success_msg = "Set expiration date for Key Vault key ${param.title}."
-          error_msg   = "Error setting expiration date for Key Vault key ${param.title}."
+          success_msg = "Enabled HTTPS for App Service ${param.title}."
+          error_msg   = "Error enabling HTTPS for App Service ${param.title}."
         }
       }
     }
   }
 }
 
-variable "keyvault_with_non_rbac_key_expiration_not_set_trigger_enabled" {
+variable "appservice_webapps_not_using_https_trigger_enabled" {
   type        = bool
   default     = false
   description = "If true, the trigger is enabled."
 }
 
-variable "keyvault_with_non_rbac_key_expiration_not_set_trigger_schedule" {
+variable "appservice_webapps_not_using_https_trigger_schedule" {
   type        = string
   default     = "15m"
   description = "The schedule on which to run the trigger if enabled."
 }
 
-variable "keyvault_with_non_rbac_key_expiration_not_set_default_action" {
+variable "appservice_webapps_not_using_https_default_action" {
   type        = string
   description = "The default action to use for the detected item, used if no input is provided."
   default     = "notify"
 }
 
-variable "keyvault_with_non_rbac_key_expiration_not_set_enabled_actions" {
+variable "appservice_webapps_not_using_https_enabled_actions" {
   type        = list(string)
   description = "The list of enabled actions to provide to approvers for selection."
-  default     = ["skip", "set_key_expiration"]
+  default     = ["skip", "enable_https"]
 }

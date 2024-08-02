@@ -1,43 +1,45 @@
 locals {
-  appservice_webapp_register_with_active_directory_disabled_query = <<-EOQ
+  sql_dbs_transparent_data_encryption_disabled_query = <<-EOQ
     select
-      concat(app.id, ' [', app.resource_group, '/', app.subscription_id, ']') as title,
-      app.id as id,
-      app.name,
-      app.resource_group,
-      app.subscription_id,
-      app._ctx ->> 'connection_name' as cred
+      concat(s.id, ' [', s.resource_group, '/', s.subscription_id, ']') as title,
+      s.id as id,
+      s.server_name as server_name,
+      s.name as name,
+      s.resource_group,
+      s.subscription_id,
+      s._ctx ->> 'connection_name' as cred
     from
-      azure_app_service_web_app as app,
-      azure_subscription as sub
+      azure_sql_database s,
+      azure_subscription sub
     where
-      sub.subscription_id = app.subscription_id
-      and identity = '{}';
+      sub.subscription_id = s.subscription_id
+			and s.name <> 'master'
+      and (transparent_data_encryption ->> 'status' <> 'Enabled' or transparent_data_encryption ->> 'state' = 'Enabled');
   EOQ
 }
 
-trigger "query" "detect_and_correct_appservice_webapp_register_with_active_directory_disabled" {
-  title         = "Detect & correct App Services not registered with Active Directory"
-  description   = "Detects App Services not registered with Active Directory and runs your chosen action."
-  tags          = merge(local.appservice_common_tags, { class = "unused" })
+trigger "query" "detect_and_correct_sql_dbs_transparent_data_encryption_disabled" {
+  title         = "Detect & correct SQL Databases with Transparent Data Encryption disabled"
+  description   = "Detects SQL Databases with Transparent Data Encryption disabled and runs your chosen action."
+  tags          = merge(local.sql_common_tags, { class = "security" })
 
-  enabled  = var.appservice_webapp_register_with_active_directory_disabled_trigger_enabled
-  schedule = var.appservice_webapp_register_with_active_directory_disabled_trigger_schedule
+  enabled  = var.sql_dbs_transparent_data_encryption_disabled_trigger_enabled
+  schedule = var.sql_dbs_transparent_data_encryption_disabled_trigger_schedule
   database = var.database
-  sql      = local.appservice_webapp_register_with_active_directory_disabled_query
+  sql      = local.sql_dbs_transparent_data_encryption_disabled_query
 
   capture "insert" {
-    pipeline = pipeline.correct_appservice_webapp_register_with_active_directory_disabled
+    pipeline = pipeline.correct_sql_dbs_transparent_data_encryption_disabled
     args = {
       items = self.inserted_rows
     }
   }
 }
 
-pipeline "detect_and_correct_appservice_webapp_register_with_active_directory_disabled" {
-  title         = "Detect & correct App Services not registered with Active Directory"
-  description   = "Detects App Services not registered with Active Directory and runs your chosen action."
-  tags          = merge(local.appservice_common_tags, { class = "unused", type = "featured" })
+pipeline "detect_and_correct_sql_dbs_transparent_data_encryption_disabled" {
+  title         = "Detect & correct SQL Databases with Transparent Data Encryption disabled"
+  description   = "Detects SQL Databases with Transparent Data Encryption disabled and runs your chosen action."
+  tags          = merge(local.sql_common_tags, { class = "security", type = "featured" })
 
   param "database" {
     type        = string
@@ -66,22 +68,22 @@ pipeline "detect_and_correct_appservice_webapp_register_with_active_directory_di
   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.appservice_webapp_register_with_active_directory_disabled_default_action
+    default     = var.sql_dbs_transparent_data_encryption_disabled_default_action
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.appservice_webapp_register_with_active_directory_disabled_enabled_actions
+    default     = var.sql_dbs_transparent_data_encryption_disabled_enabled_actions
   }
 
   step "query" "detect" {
     database = param.database
-    sql      = local.appservice_webapp_register_with_active_directory_disabled_query
+    sql      = local.sql_dbs_transparent_data_encryption_disabled_query
   }
 
   step "pipeline" "respond" {
-    pipeline = pipeline.correct_appservice_webapp_register_with_active_directory_disabled
+    pipeline = pipeline.correct_sql_dbs_transparent_data_encryption_disabled
     args = {
       items              = step.query.detect.rows
       notifier           = param.notifier
@@ -93,16 +95,17 @@ pipeline "detect_and_correct_appservice_webapp_register_with_active_directory_di
   }
 }
 
-pipeline "correct_appservice_webapp_register_with_active_directory_disabled" {
-  title         = "Correct App Services not registered with Active Directory"
-  description   = "Runs corrective action on a collection of App Services not registered with Active Directory."
-  tags          = merge(local.appservice_common_tags, { class = "unused" })
+pipeline "correct_sql_dbs_transparent_data_encryption_disabled" {
+  title         = "Correct SQL Databases with Transparent Data Encryption disabled"
+  description   = "Runs corrective action on a collection of SQL Databases with Transparent Data Encryption disabled."
+  tags          = merge(local.sql_common_tags, { class = "security" })
 
   param "items" {
     type = list(object({
       id              = string
       title           = string
-      name            = string
+      server_name     = string
+      name   = string
       resource_group  = string
       subscription_id = string
       cred            = string
@@ -131,31 +134,32 @@ pipeline "correct_appservice_webapp_register_with_active_directory_disabled" {
   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.appservice_webapp_register_with_active_directory_disabled_default_action
+    default     = var.sql_dbs_transparent_data_encryption_disabled_default_action
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.appservice_webapp_register_with_active_directory_disabled_enabled_actions
+    default     = var.sql_dbs_transparent_data_encryption_disabled_enabled_actions
   }
 
   step "message" "notify_detection_count" {
     if       = var.notification_level == local.level_verbose
     notifier = notifier[param.notifier]
-    text     = "Detected ${length(param.items)} App Services not registered with Active Directory."
+    text     = "Detected ${length(param.items)} SQL Databases with Transparent Data Encryption disabled."
   }
 
   step "transform" "items_by_id" {
-    value = { for row in param.items : row.id => row }
+    value = { for row in param.items : row.title => row }
   }
 
   step "pipeline" "correct_item" {
     for_each        = step.transform.items_by_id.value
     max_concurrency = var.max_concurrency
-    pipeline        = pipeline.correct_one_appservice_webapp_register_with_active_directory_disabled
+    pipeline        = pipeline.correct_one_sql_dbs_transparent_data_encryption_disabled
     args = {
       title              = each.value.title
+      server_name        = each.value.server_name
       name               = each.value.name
       resource_group     = each.value.resource_group
       subscription_id    = each.value.subscription_id
@@ -169,19 +173,24 @@ pipeline "correct_appservice_webapp_register_with_active_directory_disabled" {
   }
 }
 
-pipeline "correct_one_appservice_webapp_register_with_active_directory_disabled" {
-  title         = "Correct one App Service not registered with Active Directory"
-  description   = "Runs corrective action on a single App Service not registered with Active Directory."
-  tags          = merge(local.appservice_common_tags, { class = "unused" })
+pipeline "correct_one_sql_dbs_transparent_data_encryption_disabled" {
+  title         = "Correct one SQL Database with Transparent Data Encryption disabled"
+  description   = "Runs corrective action on a single SQL Database with Transparent Data Encryption disabled."
+  tags          = merge(local.sql_common_tags, { class = "security" })
 
   param "title" {
     type        = string
     description = local.description_title
   }
 
+  param "server_name" {
+    type        = string
+    description = "The name of the SQL Server."
+  }
+
   param "name" {
     type        = string
-    description = "The name of the App Service."
+    description = "The name of the SQL Database."
   }
 
   param "resource_group" {
@@ -221,13 +230,13 @@ pipeline "correct_one_appservice_webapp_register_with_active_directory_disabled"
   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.appservice_webapp_register_with_active_directory_disabled_default_action
+    default     = var.sql_dbs_transparent_data_encryption_disabled_default_action
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.appservice_webapp_register_with_active_directory_disabled_enabled_actions
+    default     = var.sql_dbs_transparent_data_encryption_disabled_enabled_actions
   }
 
   step "pipeline" "respond" {
@@ -236,7 +245,7 @@ pipeline "correct_one_appservice_webapp_register_with_active_directory_disabled"
       notifier           = param.notifier
       notification_level = param.notification_level
       approvers          = param.approvers
-      detect_msg         = "Detected App Service ${param.title} not registered with Active Directory."
+      detect_msg         = "Detected SQL Database ${param.title} with Transparent Data Encryption disabled."
       default_action     = param.default_action
       enabled_actions    = param.enabled_actions
       actions = {
@@ -248,50 +257,52 @@ pipeline "correct_one_appservice_webapp_register_with_active_directory_disabled"
           pipeline_args = {
             notifier = param.notifier
             send     = param.notification_level == local.level_verbose
-            text     = "Skipped App Service ${param.title} not registered with Active Directory."
+            text     = "Skipped SQL Database ${param.title} with Transparent Data Encryption disabled."
           }
           success_msg = ""
           error_msg   = ""
         },
-        "enable_active_directory" = {
-          label        = "Enable Active Directory"
-          value        = "enable_active_directory"
+        "enable_sql_db_tde" = {
+          label        = "Enable Transparent Data Encryption"
+          value        = "enable_sql_db_tde"
           style        = local.style_alert
-          pipeline_ref = local.azure_pipeline_assign_appservice_webapp_identity
+          pipeline_ref = local.azure_pipeline_set_sql_db_tde
           pipeline_args = {
             resource_group  = param.resource_group
             subscription_id = param.subscription_id
-            app_name        = param.name
+            server_name     = param.server_name
+            database_name   = param.name
             cred            = param.cred
+						status          = "Enabled"
           }
-          success_msg = "Enabled Active Directory for App Service ${param.title}."
-          error_msg   = "Error enabling Active Directory for App Service ${param.title}."
+          success_msg = "Enabled Transparent Data Encryption for SQL Database ${param.title}."
+          error_msg   = "Error enabling Transparent Data Encryption for SQL Database ${param.title}."
         }
       }
     }
   }
 }
 
-variable "appservice_webapp_register_with_active_directory_disabled_trigger_enabled" {
+variable "sql_dbs_transparent_data_encryption_disabled_trigger_enabled" {
   type        = bool
   default     = false
   description = "If true, the trigger is enabled."
 }
 
-variable "appservice_webapp_register_with_active_directory_disabled_trigger_schedule" {
+variable "sql_dbs_transparent_data_encryption_disabled_trigger_schedule" {
   type        = string
   default     = "15m"
   description = "The schedule on which to run the trigger if enabled."
 }
 
-variable "appservice_webapp_register_with_active_directory_disabled_default_action" {
+variable "sql_dbs_transparent_data_encryption_disabled_default_action" {
   type        = string
   description = "The default action to use for the detected item, used if no input is provided."
   default     = "notify"
 }
 
-variable "appservice_webapp_register_with_active_directory_disabled_enabled_actions" {
+variable "sql_dbs_transparent_data_encryption_disabled_enabled_actions" {
   type        = list(string)
   description = "The list of enabled actions to provide to approvers for selection."
-  default     = ["skip", "enable_active_directory"]
+  default     = ["skip", "enable_sql_db_tde"]
 }

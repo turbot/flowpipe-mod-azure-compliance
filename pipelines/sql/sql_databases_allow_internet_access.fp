@@ -1,55 +1,49 @@
 locals {
-  keyvault_with_non_rbac_secret_expiration_not_set_query = <<-EOQ
-    with non_rbac_vault as (
-      select
-				name
-			from
-				azure_key_vault
-			where
-				not enable_rbac_authorization
-    )
-    select
-      concat(kvs.id, ' [', kvs.resource_group, '/', kvs.subscription_id, ']') as title,
-      kvs.id as id,
-      kvs.name,
-      kvs.subscription_id,
-      kvs.vault_name as vault_name,
-      kvs._ctx ->> 'connection_name' as cred
-    from
-      azure_key_vault_secret kvs
-      left join non_rbac_vault as v on v.name = kvs.vault_name
-      left join azure_subscription sub on sub.subscription_id = kvs.subscription_id
-    where
-      kvs.enabled and kvs.expires_at is null;
+  sql_databases_allow_internet_access_query = <<-EOQ
+		select
+			distinct concat(s.id, ' [', s.resource_group, '/', s.subscription_id, '/firewallrule/', f ->> 'name',']') as title,
+				s.id as id,
+				s.name,
+				f ->> 'name' as firewall_rule_name,
+				s.resource_group,
+				s.subscription_id,
+				s._ctx ->> 'connection_name' as cred
+		from
+			azure_sql_server s,
+			jsonb_array_elements(firewall_rules) as f,
+			azure_subscription sub
+		where
+			sub.subscription_id = s.subscription_id
+			and (
+				(f -> 'properties' ->>  'endIpAddress' = '0.0.0.0' and f -> 'properties' ->>  'startIpAddress' = '0.0.0.0')
+				or
+				( f -> 'properties' ->>  'endIpAddress' = '255.255.255.255' and f -> 'properties' ->>  'startIpAddress' = '0.0.0.0')
+		);
   EOQ
 }
 
-locals {
-  non_rbac_secret_expiration_date = formatdate("YYYY-MM-DD'T'HH:mm:ss'Z'", timeadd(timestamp(), "2160h"))
-}
+trigger "query" "detect_and_correct_sql_databases_allow_internet_access" {
+  title         = "Detect & correct SQL Databases allowing internet access"
+  description   = "Detects SQL Databases allowing internet access and runs your chosen action."
+  tags          = merge(local.sql_common_tags, { class = "security" })
 
-trigger "query" "detect_and_correct_keyvault_with_non_rbac_secret_expiration_not_set" {
-  title         = "Detect & correct Key Vaults with non-RBAC secrets without expiration date"
-  description   = "Detects Key Vaults with non-RBAC secrets that do not have an expiration date set and runs your chosen action."
-  tags          = merge(local.keyvault_common_tags, { class = "security" })
-
-  enabled  = var.keyvault_with_non_rbac_secret_expiration_not_set_trigger_enabled
-  schedule = var.keyvault_with_non_rbac_secret_expiration_not_set_trigger_schedule
+  enabled  = var.sql_databases_allow_internet_access_trigger_enabled
+  schedule = var.sql_databases_allow_internet_access_trigger_schedule
   database = var.database
-  sql      = local.keyvault_with_non_rbac_secret_expiration_not_set_query
+  sql      = local.sql_databases_allow_internet_access_query
 
   capture "insert" {
-    pipeline = pipeline.correct_keyvault_with_non_rbac_secret_expiration_not_set
+    pipeline = pipeline.correct_sql_databases_allow_internet_access
     args = {
       items = self.inserted_rows
     }
   }
 }
 
-pipeline "detect_and_correct_keyvault_with_non_rbac_secret_expiration_not_set" {
-  title         = "Detect & correct Key Vaults with non-RBAC secrets without expiration date"
-  description   = "Detects Key Vaults with non-RBAC secrets that do not have an expiration date set and runs your chosen action."
-  tags          = merge(local.keyvault_common_tags, { class = "security", type = "featured" })
+pipeline "detect_and_correct_sql_databases_allow_internet_access" {
+  title         = "Detect & correct SQL Databases allowing internet access"
+  description   = "Detects SQL Databases allowing internet access and runs your chosen action."
+  tags          = merge(local.sql_common_tags, { class = "security", type = "featured" })
 
   param "database" {
     type        = string
@@ -78,22 +72,22 @@ pipeline "detect_and_correct_keyvault_with_non_rbac_secret_expiration_not_set" {
   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.keyvault_with_non_rbac_secret_expiration_not_set_default_action
+    default     = var.sql_databases_allow_internet_access_default_action
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.keyvault_with_non_rbac_secret_expiration_not_set_enabled_actions
+    default     = var.sql_databases_allow_internet_access_enabled_actions
   }
 
   step "query" "detect" {
     database = param.database
-    sql      = local.keyvault_with_non_rbac_secret_expiration_not_set_query
+    sql      = local.sql_databases_allow_internet_access_query
   }
 
   step "pipeline" "respond" {
-    pipeline = pipeline.correct_keyvault_with_non_rbac_secret_expiration_not_set
+    pipeline = pipeline.correct_sql_databases_allow_internet_access
     args = {
       items              = step.query.detect.rows
       notifier           = param.notifier
@@ -105,19 +99,20 @@ pipeline "detect_and_correct_keyvault_with_non_rbac_secret_expiration_not_set" {
   }
 }
 
-pipeline "correct_keyvault_with_non_rbac_secret_expiration_not_set" {
-  title         = "Correct Key Vaults with non-RBAC secrets without expiration date"
-  description   = "Runs corrective action on a collection of Key Vaults with non-RBAC secrets without expiration date."
-  tags          = merge(local.keyvault_common_tags, { class = "security" })
+pipeline "correct_sql_databases_allow_internet_access" {
+  title         = "Correct SQL Databases allowing internet access"
+  description   = "Runs corrective action on a collection of SQL Databases allowing internet access."
+  tags          = merge(local.sql_common_tags, { class = "security" })
 
   param "items" {
     type = list(object({
-      id              = string
-      title           = string
-      name            = string
-      vault_name      = string
-      subscription_id = string
-      cred            = string
+      id                 = string
+      title              = string
+      name               = string
+      resource_group     = string
+			firewall_rule_name = string
+      subscription_id    = string
+      cred               = string
     }))
     description = local.description_items
   }
@@ -143,33 +138,34 @@ pipeline "correct_keyvault_with_non_rbac_secret_expiration_not_set" {
   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.keyvault_with_non_rbac_secret_expiration_not_set_default_action
+    default     = var.sql_databases_allow_internet_access_default_action
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.keyvault_with_non_rbac_secret_expiration_not_set_enabled_actions
+    default     = var.sql_databases_allow_internet_access_enabled_actions
   }
 
   step "message" "notify_detection_count" {
     if       = var.notification_level == local.level_verbose
     notifier = notifier[param.notifier]
-    text     = "Detected ${length(param.items)} Key Vaults with non-RBAC secrets without expiration date."
+    text     = "Detected ${length(param.items)} SQL Databases allowing internet access."
   }
 
   step "transform" "items_by_id" {
-    value = { for row in param.items : row.id => row }
+    value = { for row in param.items : row.title => row }
   }
 
   step "pipeline" "correct_item" {
     for_each        = step.transform.items_by_id.value
     max_concurrency = var.max_concurrency
-    pipeline        = pipeline.correct_one_keyvault_with_non_rbac_secret_expiration_not_set
+    pipeline        = pipeline.correct_one_sql_databases_allow_internet_access
     args = {
       title              = each.value.title
       name               = each.value.name
-      vault_name         = each.value.vault_name
+      resource_group     = each.value.resource_group
+			firewall_rule_name = each.value.firewall_rule_name
       subscription_id    = each.value.subscription_id
       cred               = each.value.cred
       notifier           = param.notifier
@@ -181,10 +177,10 @@ pipeline "correct_keyvault_with_non_rbac_secret_expiration_not_set" {
   }
 }
 
-pipeline "correct_one_keyvault_with_non_rbac_secret_expiration_not_set" {
-  title         = "Correct one Key Vault with non-RBAC secret without expiration date"
-  description   = "Runs corrective action on a single Key Vault with non-RBAC secret without expiration date."
-  tags          = merge(local.keyvault_common_tags, { class = "security" })
+pipeline "correct_one_sql_databases_allow_internet_access" {
+  title         = "Correct one SQL Database allowing internet access"
+  description   = "Runs corrective action on a single SQL Database allowing internet access."
+  tags          = merge(local.sql_common_tags, { class = "security" })
 
   param "title" {
     type        = string
@@ -193,12 +189,17 @@ pipeline "correct_one_keyvault_with_non_rbac_secret_expiration_not_set" {
 
   param "name" {
     type        = string
-    description = "The name of the Key Vault secret."
+    description = "The name of the SQL Database."
   }
 
-  param "vault_name" {
+  param "resource_group" {
     type        = string
-    description = "The key vault name."
+    description = local.description_resource_group
+  }
+
+ 	param "firewall_rule_name" {
+    type        = string
+    description = "The firewall rule name."
   }
 
   param "subscription_id" {
@@ -233,13 +234,13 @@ pipeline "correct_one_keyvault_with_non_rbac_secret_expiration_not_set" {
   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.keyvault_with_non_rbac_secret_expiration_not_set_default_action
+    default     = var.sql_databases_allow_internet_access_default_action
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.keyvault_with_non_rbac_secret_expiration_not_set_enabled_actions
+    default     = var.sql_databases_allow_internet_access_enabled_actions
   }
 
   step "pipeline" "respond" {
@@ -248,7 +249,7 @@ pipeline "correct_one_keyvault_with_non_rbac_secret_expiration_not_set" {
       notifier           = param.notifier
       notification_level = param.notification_level
       approvers          = param.approvers
-      detect_msg         = "Detected Key Vault secret ${param.title} without expiration date."
+      detect_msg         = "Detected SQL Database ${param.title} allowing internet access."
       default_action     = param.default_action
       enabled_actions    = param.enabled_actions
       actions = {
@@ -260,51 +261,51 @@ pipeline "correct_one_keyvault_with_non_rbac_secret_expiration_not_set" {
           pipeline_args = {
             notifier = param.notifier
             send     = param.notification_level == local.level_verbose
-            text     = "Skipped Key Vault secret ${param.title} without expiration date."
+            text     = "Skipped SQL Database ${param.title} allowing internet access."
           }
           success_msg = ""
           error_msg   = ""
         },
-        "set_secret_expiration" = {
-          label        = "Set Secret Expiration"
-          value        = "set_secret_expiration"
+        "delete_firewall_rule" = {
+          label        = "Delete Firewall Rule"
+          value        = "delete_firewall_rule"
           style        = local.style_alert
-          pipeline_ref = local.azure_pipeline_set_key_vault_secret_attributes
+          pipeline_ref = local.azure_pipeline_delete_sql_server_firewall_rule
           pipeline_args = {
-            vault_name      = param.vault_name
-            secret_name     = param.name
-            subscription_id = param.subscription_id
-            expires         = local.non_rbac_secret_expiration_date
-            cred            = param.cred
+            resource_group     = param.resource_group
+            subscription_id    = param.subscription_id
+            server_name        = param.name
+            cred               = param.cred
+            firewall_rule_name = param.firewall_rule_name
           }
-          success_msg = "Set expiration date for Key Vault secret ${param.title}."
-          error_msg   = "Error setting expiration date for Key Vault secret ${param.title}."
+          success_msg = "Removed firewall rule allowing internet access for SQL Database ${param.title}."
+          error_msg   = "Error removing firewall rule allowing internet access for SQL Database ${param.title}."
         }
       }
     }
   }
 }
 
-variable "keyvault_with_non_rbac_secret_expiration_not_set_trigger_enabled" {
+variable "sql_databases_allow_internet_access_trigger_enabled" {
   type        = bool
   default     = false
   description = "If true, the trigger is enabled."
 }
 
-variable "keyvault_with_non_rbac_secret_expiration_not_set_trigger_schedule" {
+variable "sql_databases_allow_internet_access_trigger_schedule" {
   type        = string
   default     = "15m"
   description = "The schedule on which to run the trigger if enabled."
 }
 
-variable "keyvault_with_non_rbac_secret_expiration_not_set_default_action" {
+variable "sql_databases_allow_internet_access_default_action" {
   type        = string
   description = "The default action to use for the detected item, used if no input is provided."
   default     = "notify"
 }
 
-variable "keyvault_with_non_rbac_secret_expiration_not_set_enabled_actions" {
+variable "sql_databases_allow_internet_access_enabled_actions" {
   type        = list(string)
   description = "The list of enabled actions to provide to approvers for selection."
-  default     = ["skip", "set_secret_expiration"]
+  default     = ["skip", "delete_firewall_rule"]
 }

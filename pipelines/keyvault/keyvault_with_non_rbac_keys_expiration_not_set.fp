@@ -1,43 +1,55 @@
 locals {
-  appservice_webapp_not_using_latest_http_version_query = <<-EOQ
+  keyvault_with_non_rbac_keys_expiration_not_set_query = <<-EOQ
+    with non_rbac_vault as (
+			select
+				name
+			from
+				azure_key_vault
+			where
+				not enable_rbac_authorization
+		)
     select
-      concat(app.id, ' [', app.resource_group, '/', app.subscription_id, ']') as title,
-      app.id as id,
-      app.name,
-      app.resource_group,
-      app.subscription_id,
-      app._ctx ->> 'connection_name' as cred
+      concat(kvk.id, ' [', kvk.resource_group, '/', kvk.subscription_id, ']') as title,
+      kvk.id as id,
+      kvk.name,
+      kvk.subscription_id,
+			kvk.vault_name as vault_name,
+      kvk._ctx ->> 'connection_name' as cred
     from
-      azure_app_service_web_app as app,
-      azure_subscription as sub
-    where
-      sub.subscription_id = app.subscription_id
-      and not (configuration -> 'properties' ->> 'http20Enabled') :: boolean;
+			azure_key_vault_key kvk
+			left join non_rbac_vault as v on v.name = kvk.vault_name
+			left join azure_subscription sub on sub.subscription_id = kvk.subscription_id
+		where
+			enabled and expires_at is null;
   EOQ
 }
 
-trigger "query" "detect_and_correct_appservice_webapp_not_using_latest_http_version" {
-  title         = "Detect & correct App Services not using the latest HTTP version"
-  description   = "Detects App Services not using the latest HTTP version and runs your chosen action."
-  tags          = merge(local.appservice_common_tags, { class = "unused" })
+locals {
+  non_rbac_keys_expiration_date = formatdate("YYYY-MM-DD'T'HH:mm:ss'Z'", timeadd(timestamp(), "2160h"))
+}
 
-  enabled  = var.appservice_webapp_not_using_latest_http_version_trigger_enabled
-  schedule = var.appservice_webapp_not_using_latest_http_version_trigger_schedule
+trigger "query" "detect_and_correct_keyvault_with_non_rbac_keys_expiration_not_set" {
+  title         = "Detect & correct Key Vaults with non-RBAC keys without expiration date"
+  description   = "Detects Key Vaults with non-RBAC keys that do not have an expiration date set and runs your chosen action."
+  tags          = merge(local.keyvault_common_tags, { class = "security" })
+
+  enabled  = var.keyvault_with_non_rbac_keys_expiration_not_set_trigger_enabled
+  schedule = var.keyvault_with_non_rbac_keys_expiration_not_set_trigger_schedule
   database = var.database
-  sql      = local.appservice_webapp_not_using_latest_http_version_query
+  sql      = local.keyvault_with_non_rbac_keys_expiration_not_set_query
 
   capture "insert" {
-    pipeline = pipeline.correct_appservice_webapp_not_using_latest_http_version
+    pipeline = pipeline.correct_keyvault_with_non_rbac_keys_expiration_not_set
     args = {
       items = self.inserted_rows
     }
   }
 }
 
-pipeline "detect_and_correct_appservice_webapp_not_using_latest_http_version" {
-  title         = "Detect & correct App Services not using the latest HTTP version"
-  description   = "Detects App Services not using the latest HTTP version and runs your chosen action."
-  tags          = merge(local.appservice_common_tags, { class = "unused", type = "featured" })
+pipeline "detect_and_correct_keyvault_with_non_rbac_keys_expiration_not_set" {
+  title         = "Detect & correct Key Vaults with non-RBAC keys without expiration date"
+  description   = "Detects Key Vaults with non-RBAC keys that do not have an expiration date set and runs your chosen action."
+  tags          = merge(local.keyvault_common_tags, { class = "security", type = "featured" })
 
   param "database" {
     type        = string
@@ -66,22 +78,22 @@ pipeline "detect_and_correct_appservice_webapp_not_using_latest_http_version" {
   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.appservice_webapp_not_using_latest_http_version_default_action
+    default     = var.keyvault_with_non_rbac_keys_expiration_not_set_default_action
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.appservice_webapp_not_using_latest_http_version_enabled_actions
+    default     = var.keyvault_with_non_rbac_keys_expiration_not_set_enabled_actions
   }
 
   step "query" "detect" {
     database = param.database
-    sql      = local.appservice_webapp_not_using_latest_http_version_query
+    sql      = local.keyvault_with_non_rbac_keys_expiration_not_set_query
   }
 
   step "pipeline" "respond" {
-    pipeline = pipeline.correct_appservice_webapp_not_using_latest_http_version
+    pipeline = pipeline.correct_keyvault_with_non_rbac_keys_expiration_not_set
     args = {
       items              = step.query.detect.rows
       notifier           = param.notifier
@@ -93,17 +105,17 @@ pipeline "detect_and_correct_appservice_webapp_not_using_latest_http_version" {
   }
 }
 
-pipeline "correct_appservice_webapp_not_using_latest_http_version" {
-  title         = "Correct App Services not using the latest HTTP version"
-  description   = "Runs corrective action on a collection of App Services not using the latest HTTP version."
-  tags          = merge(local.appservice_common_tags, { class = "unused" })
+pipeline "correct_keyvault_with_non_rbac_keys_expiration_not_set" {
+  title         = "Correct Key Vaults with non-RBAC keys without expiration date"
+  description   = "Runs corrective action on a collection of Key Vaults with non-RBAC keys without expiration date."
+  tags          = merge(local.keyvault_common_tags, { class = "security" })
 
   param "items" {
     type = list(object({
       id              = string
       title           = string
       name            = string
-      resource_group  = string
+      vault_name      = string
       subscription_id = string
       cred            = string
     }))
@@ -131,19 +143,19 @@ pipeline "correct_appservice_webapp_not_using_latest_http_version" {
   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.appservice_webapp_not_using_latest_http_version_default_action
+    default     = var.keyvault_with_non_rbac_keys_expiration_not_set_default_action
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.appservice_webapp_not_using_latest_http_version_enabled_actions
+    default     = var.keyvault_with_non_rbac_keys_expiration_not_set_enabled_actions
   }
 
   step "message" "notify_detection_count" {
     if       = var.notification_level == local.level_verbose
     notifier = notifier[param.notifier]
-    text     = "Detected ${length(param.items)} App Services not using the latest HTTP version."
+    text     = "Detected ${length(param.items)} Key Vaults with non-RBAC keys without expiration date."
   }
 
   step "transform" "items_by_id" {
@@ -153,11 +165,11 @@ pipeline "correct_appservice_webapp_not_using_latest_http_version" {
   step "pipeline" "correct_item" {
     for_each        = step.transform.items_by_id.value
     max_concurrency = var.max_concurrency
-    pipeline        = pipeline.correct_one_appservice_webapp_not_using_latest_http_version
+    pipeline        = pipeline.correct_one_keyvault_with_non_rbac_keys_expiration_not_set
     args = {
       title              = each.value.title
       name               = each.value.name
-      resource_group     = each.value.resource_group
+      vault_name         = each.value.vault_name
       subscription_id    = each.value.subscription_id
       cred               = each.value.cred
       notifier           = param.notifier
@@ -169,10 +181,10 @@ pipeline "correct_appservice_webapp_not_using_latest_http_version" {
   }
 }
 
-pipeline "correct_one_appservice_webapp_not_using_latest_http_version" {
-  title         = "Correct one App Service not using the latest HTTP version"
-  description   = "Runs corrective action on a single App Service not using the latest HTTP version."
-  tags          = merge(local.appservice_common_tags, { class = "unused" })
+pipeline "correct_one_keyvault_with_non_rbac_keys_expiration_not_set" {
+  title         = "Correct one Key Vault with non-RBAC key without expiration date"
+  description   = "Runs corrective action on a single Key Vault with non-RBAC key without expiration date."
+  tags          = merge(local.keyvault_common_tags, { class = "security" })
 
   param "title" {
     type        = string
@@ -181,12 +193,12 @@ pipeline "correct_one_appservice_webapp_not_using_latest_http_version" {
 
   param "name" {
     type        = string
-    description = "The name of the App Service."
+    description = "The name of the Key Vault key."
   }
 
-  param "resource_group" {
+  param "vault_name" {
     type        = string
-    description = local.description_resource_group
+    description = "The key vault name."
   }
 
   param "subscription_id" {
@@ -221,13 +233,13 @@ pipeline "correct_one_appservice_webapp_not_using_latest_http_version" {
   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.appservice_webapp_not_using_latest_http_version_default_action
+    default     = var.keyvault_with_non_rbac_keys_expiration_not_set_default_action
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.appservice_webapp_not_using_latest_http_version_enabled_actions
+    default     = var.keyvault_with_non_rbac_keys_expiration_not_set_enabled_actions
   }
 
   step "pipeline" "respond" {
@@ -236,7 +248,7 @@ pipeline "correct_one_appservice_webapp_not_using_latest_http_version" {
       notifier           = param.notifier
       notification_level = param.notification_level
       approvers          = param.approvers
-      detect_msg         = "Detected App Service ${param.title} not using the latest HTTP version."
+      detect_msg         = "Detected Key Vault key ${param.title} without expiration date."
       default_action     = param.default_action
       enabled_actions    = param.enabled_actions
       actions = {
@@ -248,51 +260,51 @@ pipeline "correct_one_appservice_webapp_not_using_latest_http_version" {
           pipeline_args = {
             notifier = param.notifier
             send     = param.notification_level == local.level_verbose
-            text     = "Skipped App Service ${param.title} not using the latest HTTP version."
+            text     = "Skipped Key Vault key ${param.title} without expiration date."
           }
           success_msg = ""
           error_msg   = ""
         },
-        "enable_latest_http_version" = {
-          label        = "Enable Latest HTTP Version"
-          value        = "enable_latest_http_version"
+        "set_key_expiration" = {
+          label        = "Set Key Expiration"
+          value        = "set_key_expiration"
           style        = local.style_alert
-          pipeline_ref = local.azure_pipeline_set_config_appservice_webapp
+          pipeline_ref = local.azure_pipeline_set_key_vault_key_attributes
           pipeline_args = {
-            resource_group  = param.resource_group
+            vault_name      = param.vault_name
+            key_name        = param.name
             subscription_id = param.subscription_id
-            app_name        = param.name
+            expires         = local.non_rbac_keys_expiration_date
             cred            = param.cred
-            enable_http2    = true
           }
-          success_msg = "Enabled latest HTTP version for App Service ${param.title}."
-          error_msg   = "Error enabling latest HTTP version for App Service ${param.title}."
+          success_msg = "Set expiration date for Key Vault key ${param.title}."
+          error_msg   = "Error setting expiration date for Key Vault key ${param.title}."
         }
       }
     }
   }
 }
 
-variable "appservice_webapp_not_using_latest_http_version_trigger_enabled" {
+variable "keyvault_with_non_rbac_keys_expiration_not_set_trigger_enabled" {
   type        = bool
   default     = false
   description = "If true, the trigger is enabled."
 }
 
-variable "appservice_webapp_not_using_latest_http_version_trigger_schedule" {
+variable "keyvault_with_non_rbac_keys_expiration_not_set_trigger_schedule" {
   type        = string
   default     = "15m"
   description = "The schedule on which to run the trigger if enabled."
 }
 
-variable "appservice_webapp_not_using_latest_http_version_default_action" {
+variable "keyvault_with_non_rbac_keys_expiration_not_set_default_action" {
   type        = string
   description = "The default action to use for the detected item, used if no input is provided."
   default     = "notify"
 }
 
-variable "appservice_webapp_not_using_latest_http_version_enabled_actions" {
+variable "keyvault_with_non_rbac_keys_expiration_not_set_enabled_actions" {
   type        = list(string)
   description = "The list of enabled actions to provide to approvers for selection."
-  default     = ["skip", "enable_latest_http_version"]
+  default     = ["skip", "set_key_expiration"]
 }

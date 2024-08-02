@@ -1,43 +1,43 @@
 locals {
-  storage_account_secure_transfer_required_disabled_query = <<-EOQ
+  appservice_webapps_register_with_active_directory_disabled_query = <<-EOQ
     select
-      concat(sa.id, ' [', sa.resource_group, '/', sa.subscription_id, ']') as title,
-      sa.id as id,
-      sa.name,
-      sa.resource_group,
-      sa.subscription_id,
-      sa._ctx ->> 'connection_name' as cred
+      concat(app.id, ' [', app.resource_group, '/', app.subscription_id, ']') as title,
+      app.id as id,
+      app.name,
+      app.resource_group,
+      app.subscription_id,
+      app._ctx ->> 'connection_name' as cred
     from
-      azure_storage_account as sa,
+      azure_app_service_web_app as app,
       azure_subscription as sub
     where
-      not enable_https_traffic_only;
+      sub.subscription_id = app.subscription_id
+      and identity = '{}';
   EOQ
 }
 
-trigger "query" "detect_and_correct_storage_account_secure_transfer_required_disabled" {
-  title         = "Detect & correct Storage Accounts with secure transfer required disabled"
-  description   = "Detects Storage Accounts with secure transfer required disabled and runs your chosen action."
-  tags          = merge(local.storage_common_tags, { class = "unused" })
+trigger "query" "detect_and_correct_appservice_webapps_register_with_active_directory_disabled" {
+  title         = "Detect & correct App Services not registered with Active Directory"
+  description   = "Detects App Services not registered with Active Directory and runs your chosen action."
+  tags          = merge(local.appservice_common_tags, { class = "unused" })
 
-  enabled  = var.storage_account_secure_transfer_required_disabled_trigger_enabled
-  schedule = var.storage_account_secure_transfer_required_disabled_trigger_schedule
+  enabled  = var.appservice_webapps_register_with_active_directory_disabled_trigger_enabled
+  schedule = var.appservice_webapps_register_with_active_directory_disabled_trigger_schedule
   database = var.database
-  sql      = local.storage_account_secure_transfer_required_disabled_query
+  sql      = local.appservice_webapps_register_with_active_directory_disabled_query
 
   capture "insert" {
-    pipeline = pipeline.correct_storage_account_secure_transfer_required_disabled
+    pipeline = pipeline.correct_appservice_webapps_register_with_active_directory_disabled
     args = {
       items = self.inserted_rows
     }
   }
 }
 
-pipeline "detect_and_correct_storage_account_secure_transfer_required_disabled" {
-  title         = "Detect & correct Storage Accounts with secure transfer required disabled"
-  description   = "Detects Storage Accounts with secure transfer required disabled and runs your chosen action."
-  // documentation = file("./storage/docs/detect_and_correct_storage_account_secure_transfer_required_disabled.md")
-  tags          = merge(local.storage_common_tags, { class = "unused", type = "featured" })
+pipeline "detect_and_correct_appservice_webapps_register_with_active_directory_disabled" {
+  title         = "Detect & correct App Services not registered with Active Directory"
+  description   = "Detects App Services not registered with Active Directory and runs your chosen action."
+  tags          = merge(local.appservice_common_tags, { class = "unused", type = "featured" })
 
   param "database" {
     type        = string
@@ -66,22 +66,22 @@ pipeline "detect_and_correct_storage_account_secure_transfer_required_disabled" 
   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.storage_account_secure_transfer_required_disabled_default_action
+    default     = var.appservice_webapps_register_with_active_directory_disabled_default_action
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.storage_account_secure_transfer_required_disabled_enabled_actions
+    default     = var.appservice_webapps_register_with_active_directory_disabled_enabled_actions
   }
 
   step "query" "detect" {
     database = param.database
-    sql      = local.storage_account_secure_transfer_required_disabled_query
+    sql      = local.appservice_webapps_register_with_active_directory_disabled_query
   }
 
   step "pipeline" "respond" {
-    pipeline = pipeline.correct_storage_account_secure_transfer_required_disabled
+    pipeline = pipeline.correct_appservice_webapps_register_with_active_directory_disabled
     args = {
       items              = step.query.detect.rows
       notifier           = param.notifier
@@ -93,10 +93,10 @@ pipeline "detect_and_correct_storage_account_secure_transfer_required_disabled" 
   }
 }
 
-pipeline "correct_storage_account_secure_transfer_required_disabled" {
-  title         = "Correct Storage Accounts with secure transfer required disabled"
-  description   = "Runs corrective action on a collection of Storage Accounts with secure transfer required disabled."
-  tags          = merge(local.storage_common_tags, { class = "unused" })
+pipeline "correct_appservice_webapps_register_with_active_directory_disabled" {
+  title         = "Correct App Services not registered with Active Directory"
+  description   = "Runs corrective action on a collection of App Services not registered with Active Directory."
+  tags          = merge(local.appservice_common_tags, { class = "unused" })
 
   param "items" {
     type = list(object({
@@ -131,19 +131,19 @@ pipeline "correct_storage_account_secure_transfer_required_disabled" {
   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.storage_account_secure_transfer_required_disabled_default_action
+    default     = var.appservice_webapps_register_with_active_directory_disabled_default_action
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.storage_account_secure_transfer_required_disabled_enabled_actions
+    default     = var.appservice_webapps_register_with_active_directory_disabled_enabled_actions
   }
 
   step "message" "notify_detection_count" {
     if       = var.notification_level == local.level_verbose
     notifier = notifier[param.notifier]
-    text     = "Detected ${length(param.items)} Storage Accounts with secure transfer required disabled."
+    text     = "Detected ${length(param.items)} App Services not registered with Active Directory."
   }
 
   step "transform" "items_by_id" {
@@ -153,7 +153,7 @@ pipeline "correct_storage_account_secure_transfer_required_disabled" {
   step "pipeline" "correct_item" {
     for_each        = step.transform.items_by_id.value
     max_concurrency = var.max_concurrency
-    pipeline        = pipeline.correct_one_storage_account_secure_transfer_required_disabled
+    pipeline        = pipeline.correct_one_appservice_webapps_register_with_active_directory_disabled
     args = {
       title              = each.value.title
       name               = each.value.name
@@ -169,10 +169,10 @@ pipeline "correct_storage_account_secure_transfer_required_disabled" {
   }
 }
 
-pipeline "correct_one_storage_account_secure_transfer_required_disabled" {
-  title         = "Correct one Storage Account with secure transfer required disabled"
-  description   = "Runs corrective action on a single Storage Account with secure transfer required disabled."
-  tags          = merge(local.storage_common_tags, { class = "unused" })
+pipeline "correct_one_appservice_webapps_register_with_active_directory_disabled" {
+  title         = "Correct one App Service not registered with Active Directory"
+  description   = "Runs corrective action on a single App Service not registered with Active Directory."
+  tags          = merge(local.appservice_common_tags, { class = "unused" })
 
   param "title" {
     type        = string
@@ -181,7 +181,7 @@ pipeline "correct_one_storage_account_secure_transfer_required_disabled" {
 
   param "name" {
     type        = string
-    description = "The name of the Storage Account."
+    description = "The name of the App Service."
   }
 
   param "resource_group" {
@@ -221,13 +221,13 @@ pipeline "correct_one_storage_account_secure_transfer_required_disabled" {
   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.storage_account_secure_transfer_required_disabled_default_action
+    default     = var.appservice_webapps_register_with_active_directory_disabled_default_action
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.storage_account_secure_transfer_required_disabled_enabled_actions
+    default     = var.appservice_webapps_register_with_active_directory_disabled_enabled_actions
   }
 
   step "pipeline" "respond" {
@@ -236,7 +236,7 @@ pipeline "correct_one_storage_account_secure_transfer_required_disabled" {
       notifier           = param.notifier
       notification_level = param.notification_level
       approvers          = param.approvers
-      detect_msg         = "Detected Storage Account ${param.title} with secure transfer required disabled."
+      detect_msg         = "Detected App Service ${param.title} not registered with Active Directory."
       default_action     = param.default_action
       enabled_actions    = param.enabled_actions
       actions = {
@@ -248,51 +248,50 @@ pipeline "correct_one_storage_account_secure_transfer_required_disabled" {
           pipeline_args = {
             notifier = param.notifier
             send     = param.notification_level == local.level_verbose
-            text     = "Skipped Storage Account ${param.title} with secure transfer required disabled."
+            text     = "Skipped App Service ${param.title} not registered with Active Directory."
           }
           success_msg = ""
           error_msg   = ""
         },
-        "enable_secure_transfer" = {
-          label        = "Enable Secure Transfer"
-          value        = "enable_secure_transfer"
+        "enable_active_directory" = {
+          label        = "Enable Active Directory"
+          value        = "enable_active_directory"
           style        = local.style_alert
-          pipeline_ref = local.azure_pipeline_update_storage_account_https_only
+          pipeline_ref = local.azure_pipeline_assign_appservice_webapp_identity
           pipeline_args = {
-            account_name           = param.name
-            resource_group         = param.resource_group
-            subscription_id        = param.subscription_id
-            cred                   = param.cred
-            https_only             = true
+            resource_group  = param.resource_group
+            subscription_id = param.subscription_id
+            app_name        = param.name
+            cred            = param.cred
           }
-          success_msg = "Enabled secure transfer for Storage Account ${param.title}."
-          error_msg   = "Error enabling secure transfer for Storage Account ${param.title}."
+          success_msg = "Enabled Active Directory for App Service ${param.title}."
+          error_msg   = "Error enabling Active Directory for App Service ${param.title}."
         }
       }
     }
   }
 }
 
-variable "storage_account_secure_transfer_required_disabled_trigger_enabled" {
+variable "appservice_webapps_register_with_active_directory_disabled_trigger_enabled" {
   type        = bool
   default     = false
   description = "If true, the trigger is enabled."
 }
 
-variable "storage_account_secure_transfer_required_disabled_trigger_schedule" {
+variable "appservice_webapps_register_with_active_directory_disabled_trigger_schedule" {
   type        = string
   default     = "15m"
   description = "The schedule on which to run the trigger if enabled."
 }
 
-variable "storage_account_secure_transfer_required_disabled_default_action" {
+variable "appservice_webapps_register_with_active_directory_disabled_default_action" {
   type        = string
   description = "The default action to use for the detected item, used if no input is provided."
-  default     = "enable_secure_transfer"
+  default     = "notify"
 }
 
-variable "storage_account_secure_transfer_required_disabled_enabled_actions" {
+variable "appservice_webapps_register_with_active_directory_disabled_enabled_actions" {
   type        = list(string)
   description = "The list of enabled actions to provide to approvers for selection."
-  default     = ["skip", "enable_secure_transfer"]
+  default     = ["skip", "enable_active_directory"]
 }
