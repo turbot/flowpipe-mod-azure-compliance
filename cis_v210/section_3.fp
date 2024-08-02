@@ -10,7 +10,7 @@ locals {
 		cis_v210_3_4  = {pipeline = pipeline.manual_control, additional_args = {message = "CIS v2.1.0 3.4 is a manual control."}}
     cis_v210_3_5  = {pipeline = pipeline.detect_and_correct_storage_account_queue_service_logging_disabled, additional_args = {}}
 		cis_v210_3_6  = {pipeline = pipeline.manual_control, additional_args = {message = "CIS v2.1.0 3.6 is a manual control."}}
-    cis_v210_3_7  = {pipeline = pipeline.detect_and_correct_storage_account_if_allow_public_access, additional_args = {}}
+    cis_v210_3_7  = {pipeline = pipeline.detect_and_correct_storage_account_if_allow_public_network_access, additional_args = {}}
     cis_v210_3_8  = {pipeline = pipeline.detect_and_correct_storage_account_default_network_access_rule_allowed, additional_args = {}}
 		cis_v210_3_9 = {pipeline = pipeline.detect_and_correct_storage_account_trusted_microsoft_services_disabled, additional_args = {}}
 		cis_v210_3_10  = {pipeline = pipeline.manual_control, additional_args = {message = "CIS v2.1.0 3.10 is a TODO control."}}

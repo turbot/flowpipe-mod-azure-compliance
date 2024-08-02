@@ -1,5 +1,5 @@
 locals {
-  cis_v210_common_tags = merge(local.aws_compliance_common_tags, {
+  cis_v210_common_tags = merge(local.azure_compliance_common_tags, {
     cis         = "true"
     cis_version = "v2.1.0"
   })
@@ -20,7 +20,7 @@ locals {
 variable "cis_v210_enabled_controls" {
   type        = list(string)
   description = "List of CIS v2.1.0 controls to enable"
-  default     = ["cis_v210_1", "cis_v210_2", "cis_v210_3", "cis_v210_4", "cis_v210_5", "cis_v210_6", "cis_v210_7", "cis_v210_8", "cis_v210_9", "cis_v210_10",]
+  default     = ["cis_v210_1", "cis_v210_2", "cis_v210_3", "cis_v210_4", "cis_v210_5", "cis_v210_6", "cis_v210_7", "cis_v210_8", "cis_v210_9", "cis_v210_10"]
 }
 
 pipeline "cis_v210" {

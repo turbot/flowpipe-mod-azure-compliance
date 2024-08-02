@@ -1,6 +1,6 @@
 locals {
   // cis_v210_6_common_tags = merge(local.cis_v210_common_tags, {
-  //   cis_section_id = "7"
+  //   cis_section_id = "6"
   // })
 
   cis_v210_6_control_mapping = {

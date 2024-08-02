@@ -10,12 +10,12 @@ locals {
     cis_v210_4_1_4  =  {pipeline = pipeline.manual_control, additional_args = {message = "CIS v2.1.0 4.1.4 is a TODO control."}}
     cis_v210_4_1_5  = {pipeline = pipeline.detect_and_correct_sql_db_transparent_data_encryption_disabled, additional_args = {}}
 		cis_v210_4_1_6  = {pipeline = pipeline.manual_control, additional_args = {message = "CIS v2.1.0 4.1.6 is a TODO control."}}
-		cis_v210_4_3_1  = {pipeline = pipeline.detect_and_correct_mpostgres_db_server_ssl_disabled, additional_args = {}}
+		cis_v210_4_3_1  = {pipeline = pipeline.detect_and_correct_postgres_db_server_ssl_disabled, additional_args = {}}
 		cis_v210_4_3_2  = {pipeline = pipeline.detect_and_correct_postgres_db_server_log_checkpoints_off, additional_args = {}}
 		cis_v210_4_3_3  = {pipeline = pipeline.detect_and_correct_postgres_db_server_log_connections_off, additional_args = {}}
 		cis_v210_4_3_4  = {pipeline = pipeline.detect_and_correct_postgres_db_server_log_disconnections_off, additional_args = {}}
 		cis_v210_4_3_5  = {pipeline = pipeline.detect_and_correct_postgres_db_server_connection_throttling_off, additional_args = {}}
-		cis_v210_4_3_6  = {pipeline = pipeline.detect_and_correct_postgres_db_server_ log_retention_days_less_than_3, additional_args = {}}
+		cis_v210_4_3_6  = {pipeline = pipeline.detect_and_correct_postgres_db_server_log_retention_days_less_than_3, additional_args = {}}
 		cis_v210_4_3_7  = {pipeline = pipeline.detect_and_correct_postgres_db_server_allow_access_to_azure_services_enabled, additional_args = {}}
 		cis_v210_4_3_8  = {pipeline = pipeline.manual_control, additional_args = {message = "CIS v2.1.0 4.3.8 is a TODO control."}}
 		cis_v210_4_4_1  = {pipeline = pipeline.manual_control, additional_args = {message = "CIS v2.1.0 4.4.1 is a TODO control."}}

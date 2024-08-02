@@ -1,6 +1,6 @@
 locals {
   // cis_v210_9_common_tags = merge(local.cis_v210_common_tags, {
-  //   cis_section_id = "5"
+  //   cis_section_id = "9"
   // })
 
   cis_v210_9_control_mapping = {
@@ -21,16 +21,16 @@ variable "cis_v210_9_enabled_controls" {
   type        = list(string)
   description = "List of CIS v2.1.0 section 9 controls to enable"
   default     = [
-    "cis_v210_9_1_1",
-    "cis_v210_9_1_2",
-    "cis_v210_9_1_3",
-    "cis_v210_9_1_4",
-    "cis_v210_9_1_5",
-    "cis_v210_9_1_6",
-    "cis_v210_9_1_7",
-    "cis_v210_9_1_8",
-    "cis_v210_9_1_9",
-    "cis_v210_9_1_10"
+    "cis_v210_9_1",
+    "cis_v210_9_2",
+    "cis_v210_9_3",
+    "cis_v210_9_4",
+    "cis_v210_9_5",
+    "cis_v210_9_6",
+    "cis_v210_9_7",
+    "cis_v210_9_8",
+    "cis_v210_9_9",
+    "cis_v210_9_10"
   ]
 }
 
