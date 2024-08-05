@@ -44,7 +44,6 @@ variable "cis_v210_1_enabled_controls" {
   type        = list(string)
   description = "List of CIS v2.1.0 section 1 controls to enable"
   default     = [
-    "cis_v210_1_2",
     "cis_v210_1_4",
     "cis_v210_1_8",
     "cis_v210_1_9",
