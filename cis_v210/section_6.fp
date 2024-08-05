@@ -7,9 +7,9 @@ locals {
     cis_v210_6_1  = {pipeline = pipeline.detect_and_correct_network_security_groups_allowing_rdp_access, additional_args = {}}
     cis_v210_6_2  = {pipeline = pipeline.detect_and_correct_network_security_groups_allowing_ssh_access, additional_args = {}}
     cis_v210_6_3  = {pipeline = pipeline.detect_and_correct_network_security_groups_allowing_udp_access, additional_args = {}}
-    cis_v210_6_4  =  {pipeline = pipeline.detect_and_correct_network_security_groups_allowing_https_access, additional_args = {}}
+    cis_v210_6_4  = {pipeline = pipeline.detect_and_correct_network_security_groups_allowing_https_access, additional_args = {}}
     cis_v210_6_5  = {pipeline = pipeline.manual_control, additional_args = {message = "CIS v2.1.0 6.5 is a TODO control."}}
-		cis_v210_6_6  = {pipeline = pipeline.detect_and_correct_network_watcher_disabled, additional_args = {message = "CIS v2.1.0 6.6 is a manual control."}}
+		cis_v210_6_6  = {pipeline = pipeline.detect_and_correct_network_watcher_disabled, additional_args = {}}
 		cis_v210_6_7  = {pipeline = pipeline.manual_control, additional_args = {message = "CIS v2.1.0 6.7 is a manual control."}}
   }
 }
@@ -22,9 +22,7 @@ variable "cis_v210_6_enabled_controls" {
     "cis_v210_6_2",
     "cis_v210_6_3",
     "cis_v210_6_4",
-    "cis_v210_6_5",
-    "cis_v210_6_6",
-    "cis_v210_6_7"
+    "cis_v210_6_6"
   ]
 }
 

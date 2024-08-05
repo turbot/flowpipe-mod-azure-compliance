@@ -23,10 +23,7 @@ variable "cis_v210_8_enabled_controls" {
     "cis_v210_8_2",
     "cis_v210_8_3",
     "cis_v210_8_4",
-    "cis_v210_8_5",
-    "cis_v210_8_6",
-    "cis_v210_8_7",
-    "cis_v210_8_8"
+    "cis_v210_8_5"
   ]
 }
 

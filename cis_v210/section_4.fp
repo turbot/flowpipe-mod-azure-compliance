@@ -33,16 +33,17 @@ variable "cis_v210_4_enabled_controls" {
   type        = list(string)
   description = "List of CIS v2.1.0 section 4 controls to enable"
   default     = [
-    "cis_v210_4_1",
-    "cis_v210_4_2",
-    "cis_v210_4_3",
-    "cis_v210_4_4",
-    "cis_v210_4_5",
-    "cis_v210_4_6",
-    "cis_v210_4_7"
+    "cis_v210_4_1_2",
+    "cis_v210_4_1_5",
+    "cis_v210_4_3_1",
+    "cis_v210_4_3_2",
+    "cis_v210_4_3_3",
+    "cis_v210_4_3_4",
+    "cis_v210_4_3_5",
+    "cis_v210_4_3_6",
+    "cis_v210_4_3_7"
   ]
 }
-
 
 pipeline "cis_v210_4" {
   title         = "4 Database Services"

@@ -28,23 +28,15 @@ variable "cis_v210_3_enabled_controls" {
   type        = list(string)
   description = "List of CIS v2.1.0 section 3 controls to enable"
   default     = [
-    "cis_v210_3_1_1",
-    "cis_v210_3_1_2",
-    "cis_v210_3_1_3",
-    "cis_v210_3_1_4",
-    "cis_v210_3_1_5",
-    "cis_v210_3_1_6",
-    "cis_v210_3_1_7",
-    "cis_v210_3_1_8",
-    "cis_v210_3_1_9",
-    "cis_v210_3_1_10",
-    "cis_v210_3_1_11",
-    "cis_v210_3_1_12",
-    "cis_v210_3_1_13",
-    "cis_v210_3_1_14",
-    "cis_v210_3_1_15",
-    "cis_v210_3_1_16",
-    "cis_v210_3_1_17"
+    "cis_v210_3_1",
+    "cis_v210_3_5",
+    "cis_v210_3_7",
+    "cis_v210_3_8",
+    "cis_v210_3_9",
+    "cis_v210_3_11",
+    "cis_v210_3_13",
+    "cis_v210_3_14",
+    "cis_v210_3_15"
   ]
 }
 

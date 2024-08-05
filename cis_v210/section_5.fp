@@ -31,13 +31,16 @@ variable "cis_v210_5_enabled_controls" {
   type        = list(string)
   description = "List of CIS v2.1.0 section 5 controls to enable"
   default     = [
-    "cis_v210_5_1",
-    "cis_v210_5_2",
-    "cis_v210_5_3",
-    "cis_v210_5_4",
-    "cis_v210_5_5",
-    "cis_v210_5_6",
-    "cis_v210_5_7"
+    "cis_v210_5_2_1",
+    "cis_v210_5_2_2",
+    "cis_v210_5_2_3",
+    "cis_v210_5_2_4",
+    "cis_v210_5_2_5",
+    "cis_v210_5_2_6",
+    "cis_v210_5_2_7",
+    "cis_v210_5_2_8",
+    "cis_v210_5_2_9",
+    "cis_v210_5_2_10"
   ]
 }
 
