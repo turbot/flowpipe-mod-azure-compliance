@@ -1,5 +1,5 @@
 locals {
-  monitor_log_without_activity_log_alert_for_create_update_sql_servers_firewall_rule_query = <<-EOQ
+  monitor_logs_without_activity_log_alert_for_create_update_public_ip_address_query = <<-EOQ
     with alert_rule as (
       select
         alert.id as alert_id,
@@ -20,11 +20,11 @@ locals {
         and (
 				(
 					alert.condition -> 'allOf' @> '[{"equals":"Administrative","field":"category"}]'
-					and alert.condition -> 'allOf' @> '[{"field": "operationName", "equals": "Microsoft.Sql/servers/firewallRules/write"}]'
+					and alert.condition -> 'allOf' @> '[{"field": "operationName", "equals": "Microsoft.Network/publicIPAddresses/write"}]'
 				)
 				or (
 					alert.condition -> 'allOf' @> '[{"equals":"Administrative","field":"category"}]'
-					and alert.condition -> 'allOf' @> '[{"field": "resourceType", "equals": "microsoft.sql/servers/firewallrules"}]'
+					and alert.condition -> 'allOf' @> '[{"field": "resourceType", "equals": "microsoft.network/publicipaddresses"}]'
 					and jsonb_array_length(alert.condition -> 'allOf') = 2
 				)
 			)
@@ -37,7 +37,7 @@ locals {
         r.subscription_id
       from
         azure_subscription as s
-        left join azure_resource_group as r on r.subscription_id = s.subscription_id
+        left join azure_resource_group AS r ON r.subscription_id = s.subscription_id
       order by
         s.subscription_id, r.name
     )
@@ -66,27 +66,27 @@ locals {
   EOQ
 }
 
-trigger "query" "detect_and_correct_monitor_log_without_activity_log_alert_for_create_update_sql_servers_firewall_rule" {
-  title         = "Detect & correct Monitor Logs without activity log alert for create and update SQL servers firewall rule"
-  description   = "Detects Monitor Logs without an activity log alert for create and update SQL servers firewall rule and runs your chosen action."
+trigger "query" "detect_and_correct_monitor_logs_without_activity_log_alert_for_create_update_public_ip_address" {
+  title         = "Detect & correct Monitor Logs without activity log alert for create update public IP address"
+  description   = "Detects Monitor Logs without an activity log alert for create update public IP address and runs your chosen action."
   tags          = merge(local.monitor_common_tags, { class = "security" })
 
-  enabled  = var.monitor_log_without_activity_log_alert_for_create_update_sql_servers_firewall_rule_trigger_enabled
-  schedule = var.monitor_log_without_activity_log_alert_for_create_update_sql_servers_firewall_rule_trigger_schedule
+  enabled  = var.monitor_logs_without_activity_log_alert_for_create_update_public_ip_address_trigger_enabled
+  schedule = var.monitor_logs_without_activity_log_alert_for_create_update_public_ip_address_trigger_schedule
   database = var.database
-  sql      = local.monitor_log_without_activity_log_alert_for_create_update_sql_servers_firewall_rule_query
+  sql      = local.monitor_logs_without_activity_log_alert_for_create_update_public_ip_address_query
 
   capture "insert" {
-    pipeline = pipeline.correct_monitor_log_without_activity_log_alert_for_create_update_sql_servers_firewall_rule
+    pipeline = pipeline.correct_monitor_logs_without_activity_log_alert_for_create_update_public_ip_address
     args = {
       items = self.inserted_rows
     }
   }
 }
 
-pipeline "detect_and_correct_monitor_log_without_activity_log_alert_for_create_update_sql_servers_firewall_rule" {
-  title         = "Detect & correct Monitor Logs without activity log alert for create and update SQL servers firewall rule"
-  description   = "Detects Monitor Logs without an activity log alert for create and update SQL servers firewall rule and runs your chosen action."
+pipeline "detect_and_correct_monitor_logs_without_activity_log_alert_for_create_update_public_ip_address" {
+  title         = "Detect & correct Monitor Logs without activity log alert for create update public IP address"
+  description   = "Detects Monitor Logs without an activity log alert for create update public IP address and runs your chosen action."
   tags          = merge(local.monitor_common_tags, { class = "security", type = "featured" })
 
   param "database" {
@@ -116,22 +116,22 @@ pipeline "detect_and_correct_monitor_log_without_activity_log_alert_for_create_u
   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.monitor_log_without_activity_log_alert_for_create_update_sql_servers_firewall_rule_default_action
+    default     = var.monitor_logs_without_activity_log_alert_for_create_update_public_ip_address_default_action
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.monitor_log_without_activity_log_alert_for_create_update_sql_servers_firewall_rule_enabled_actions
+    default     = var.monitor_logs_without_activity_log_alert_for_create_update_public_ip_address_enabled_actions
   }
 
   step "query" "detect" {
     database = param.database
-    sql      = local.monitor_log_without_activity_log_alert_for_create_update_sql_servers_firewall_rule_query
+    sql      = local.monitor_logs_without_activity_log_alert_for_create_update_public_ip_address_query
   }
 
   step "pipeline" "respond" {
-    pipeline = pipeline.correct_monitor_log_without_activity_log_alert_for_create_update_sql_servers_firewall_rule
+    pipeline = pipeline.correct_monitor_logs_without_activity_log_alert_for_create_update_public_ip_address
     args = {
       items              = step.query.detect.rows
       notifier           = param.notifier
@@ -143,9 +143,9 @@ pipeline "detect_and_correct_monitor_log_without_activity_log_alert_for_create_u
   }
 }
 
-pipeline "correct_monitor_log_without_activity_log_alert_for_create_update_sql_servers_firewall_rule" {
-  title         = "Correct Monitor Logs without activity log alert for create and update SQL servers firewall rule"
-  description   = "Runs corrective action on a collection of Monitor Logs without activity log alert for create and update SQL servers firewall rule."
+pipeline "correct_monitor_logs_without_activity_log_alert_for_create_update_public_ip_address" {
+  title         = "Correct Monitor Logs without activity log alert for create update public IP address"
+  description   = "Runs corrective action on a collection of Monitor Logs without activity log alert for create update public IP address."
   tags          = merge(local.monitor_common_tags, { class = "security" })
 
   param "items" {
@@ -181,19 +181,19 @@ pipeline "correct_monitor_log_without_activity_log_alert_for_create_update_sql_s
   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.monitor_log_without_activity_log_alert_for_create_update_sql_servers_firewall_rule_default_action
+    default     = var.monitor_logs_without_activity_log_alert_for_create_update_public_ip_address_default_action
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.monitor_log_without_activity_log_alert_for_create_update_sql_servers_firewall_rule_enabled_actions
+    default     = var.monitor_logs_without_activity_log_alert_for_create_update_public_ip_address_enabled_actions
   }
 
   step "message" "notify_detection_count" {
     if       = var.notification_level == local.level_verbose
     notifier = notifier[param.notifier]
-    text     = "Detected ${length(param.items)} Monitor Logs without activity log alert for create and update SQL servers firewall rule."
+    text     = "Detected ${length(param.items)} Monitor Logs without activity log alert for create update public IP address."
   }
 
   step "transform" "items_by_id" {
@@ -203,7 +203,7 @@ pipeline "correct_monitor_log_without_activity_log_alert_for_create_update_sql_s
   step "pipeline" "correct_item" {
     for_each        = step.transform.items_by_id.value
     max_concurrency = var.max_concurrency
-    pipeline        = pipeline.correct_one_monitor_log_without_activity_log_alert_for_create_update_sql_servers_firewall_rule
+    pipeline        = pipeline.correct_one_monitor_logs_without_activity_log_alert_for_create_update_public_ip_address
     args = {
       title              = each.value.title
       subscription_id    = each.value.subscription_id
@@ -219,9 +219,9 @@ pipeline "correct_monitor_log_without_activity_log_alert_for_create_update_sql_s
   }
 }
 
-pipeline "correct_one_monitor_log_without_activity_log_alert_for_create_update_sql_servers_firewall_rule" {
-  title         = "Correct one Monitor Log without activity log alert for create and update SQL servers firewall rule"
-  description   = "Runs corrective action on a single Monitor Log without activity log alert for create and update SQL servers firewall rule."
+pipeline "correct_one_monitor_logs_without_activity_log_alert_for_create_update_public_ip_address" {
+  title         = "Correct one Monitor Log without activity log alert for create update public IP address"
+  description   = "Runs corrective action on a single Monitor Log without activity log alert for create update public IP address."
   tags          = merge(local.monitor_common_tags, { class = "security" })
 
   param "title" {
@@ -271,13 +271,13 @@ pipeline "correct_one_monitor_log_without_activity_log_alert_for_create_update_s
   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.monitor_log_without_activity_log_alert_for_create_update_sql_servers_firewall_rule_default_action
+    default     = var.monitor_logs_without_activity_log_alert_for_create_update_public_ip_address_default_action
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.monitor_log_without_activity_log_alert_for_create_update_sql_servers_firewall_rule_enabled_actions
+    default     = var.monitor_logs_without_activity_log_alert_for_create_update_public_ip_address_enabled_actions
   }
 
   step "pipeline" "respond" {
@@ -286,7 +286,7 @@ pipeline "correct_one_monitor_log_without_activity_log_alert_for_create_update_s
       notifier           = param.notifier
       notification_level = param.notification_level
       approvers          = param.approvers
-      detect_msg         = "Detected Monitor Log ${param.title} without activity log alert for create and update SQL servers firewall rule."
+      detect_msg         = "Detected Monitor Log ${param.title} without activity log alert for create update public IP address."
       default_action     = param.default_action
       enabled_actions    = param.enabled_actions
       actions = {
@@ -298,61 +298,61 @@ pipeline "correct_one_monitor_log_without_activity_log_alert_for_create_update_s
           pipeline_args = {
             notifier = param.notifier
             send     = param.notification_level == local.level_verbose
-            text     = "Skipped subscription ${param.title} without activity log alert for create and update SQL servers firewall rule."
+            text     = "Skipped subscription ${param.title} without activity log alert for create update public IP address."
           }
           success_msg = ""
           error_msg   = ""
         },
-        "create_update_sql_servers_firewall_rule_activity_log_alert" = {
-          label        = "Create Update SQL Servers Firewall Rule Activity Log Alert"
-          value        = "create_update_sql_servers_firewall_rule_activity_log_alert"
+        "create_update_public_ip_address_activity_log_alert" = {
+          label        = "Create Update Public IP Address Activity Log Alert"
+          value        = "create_update_public_ip_address_activity_log_alert"
           style        = local.style_alert
-          pipeline_ref = pipeline.create_activity_log_alert_for_create_update_sql_servers_firewall_rule
+          pipeline_ref = pipeline.create_activity_log_alert_for_create_update_public_ip_address
           pipeline_args = {
             resource_group    = param.resource_group
             subscription_id   = param.subscription_id
-            alert_name        = "alertCreateUpdateSqlServersFirewallRule"
+            alert_name        = "alertCreateUpdatePublicIPAddress"
             level             = "verbose"
             scope             = param.scope
-            action_group_name = "actionGroupCreateUpdateSqlServersFirewallRule"
+            action_group_name = "actionGroupCreateUpdatePublicIPAddres"
             cred              = param.cred
           }
-          success_msg = "Created create and update SQL servers firewall rule activity log alert for subscription ${param.title}."
-          error_msg   = "Error creating  create and update SQL servers firewall rule activity log alert for subscription ${param.title}."
+          success_msg = "Created create and update Public IP Address activity log alert for subscription ${param.title}."
+          error_msg   = "Error creating create and update Public IP Address activity log alert for subscription ${param.title}."
         }
       }
     }
   }
 }
 
-variable "monitor_log_without_activity_log_alert_for_create_update_sql_servers_firewall_rule_trigger_enabled" {
+variable "monitor_logs_without_activity_log_alert_for_create_update_public_ip_address_trigger_enabled" {
   type        = bool
   default     = false
   description = "If true, the trigger is enabled."
 }
 
-variable "monitor_log_without_activity_log_alert_for_create_update_sql_servers_firewall_rule_trigger_schedule" {
+variable "monitor_logs_without_activity_log_alert_for_create_update_public_ip_address_trigger_schedule" {
   type        = string
   default     = "15m"
   description = "The schedule on which to run the trigger if enabled."
 }
 
-variable "monitor_log_without_activity_log_alert_for_create_update_sql_servers_firewall_rule_default_action" {
+variable "monitor_logs_without_activity_log_alert_for_create_update_public_ip_address_default_action" {
   type        = string
   description = "The default action to use for the detected item, used if no input is provided."
   default     = "notify"
 }
 
-variable "monitor_log_without_activity_log_alert_for_create_update_sql_servers_firewall_rule_enabled_actions" {
+variable "monitor_logs_without_activity_log_alert_for_create_update_public_ip_address_enabled_actions" {
   type        = list(string)
   description = "The list of enabled actions to provide to approvers for selection."
-  default     = ["skip", "create_update_sql_servers_firewall_rule_activity_log_alert"]
+  default     = ["skip", "create_update_public_ip_address_activity_log_alert"]
 }
 
 
-pipeline "create_activity_log_alert_for_create_update_sql_servers_firewall_rule" {
-  title       = "Create Activity Log Alert for create and update SQL servers firewall rule"
-  description = "Create an Azure Monitor activity log alert for create and update SQL servers firewall rule."
+pipeline "create_activity_log_alert_for_create_update_public_ip_address" {
+  title       = "Create Activity log alert for create update public IP address"
+  description = "Create an Azure Monitor activity log alert for create update public IP address."
 
   param "cred" {
     type        = string
@@ -373,7 +373,7 @@ pipeline "create_activity_log_alert_for_create_update_sql_servers_firewall_rule"
   param "alert_name" {
     type        = string
     description = "The name of the activity log alert."
-    default     = "alertCreateUpdateSqlServersFirewallRule"
+    default     = "alertCreateUpdatePublicIPAddress"
   }
 
   param "level" {
@@ -385,7 +385,7 @@ pipeline "create_activity_log_alert_for_create_update_sql_servers_firewall_rule"
   param "action_group_name" {
     type        = string
     description = "The name of the action group."
-    default     = "actionGroupCreateUpdateSqlServersFirewallRule"
+    default     = "actionGroupCreateUpdatePublicIPAddres"
   }
 
   param "scope" {
@@ -412,7 +412,7 @@ pipeline "create_activity_log_alert_for_create_update_sql_servers_firewall_rule"
     cmd   = [
       "monitor", "activity-log", "alert", "create",
       "--resource-group", param.resource_group,
-      "--condition", "category=Administrative and operationName=Microsoft.Sql/servers/firewallRules/write and level=verbose",
+      "--condition", "category=Administrative and operationName=Microsoft.Network/publicIPAddresses/write and level=verbose",
       "--scope", param.scope,
       "--name", param.alert_name,
       "--subscription", param.subscription_id,

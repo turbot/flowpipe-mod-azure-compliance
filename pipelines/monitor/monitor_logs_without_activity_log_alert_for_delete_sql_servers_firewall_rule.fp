@@ -1,5 +1,5 @@
 locals {
-  monitor_log_without_activity_log_alert_for_create_policy_assignment_query = <<-EOQ
+  monitor_logs_without_activity_log_alert_for_delete_sql_servers_firewall_rule_query = <<-EOQ
     with alert_rule as (
       select
         alert.id as alert_id,
@@ -17,8 +17,17 @@ locals {
         alert.location = 'Global'
         and alert.enabled
         and sc = '/subscriptions/' || alert.subscription_id
-        and alert.condition -> 'allOf' @> '[{"equals":"Administrative","field":"category"}]'
-    		and alert.condition -> 'allOf' @> '[{"field": "operationName", "equals": "Microsoft.Authorization/policyAssignments/write"}]'
+        and (
+					(
+						alert.condition -> 'allOf' @> '[{"equals":"Administrative","field":"category"}]'
+						and alert.condition -> 'allOf' @> '[{"field": "operationName", "equals": "Microsoft.Sql/servers/firewallRules/delete"}]'
+					)
+					or (
+						alert.condition -> 'allOf' @> '[{"equals":"Administrative","field":"category"}]'
+						and alert.condition -> 'allOf' @> '[{"field": "resourceType", "equals": "microsoft.sql/servers/firewallrules"}]'
+						and jsonb_array_length(alert.condition -> 'allOf') = 2
+					)
+				)
       limit
         1
     ), resource_group as (
@@ -57,27 +66,27 @@ locals {
   EOQ
 }
 
-trigger "query" "detect_and_correct_monitor_log_without_activity_log_alert_for_create_policy_assignment" {
-  title         = "Detect & correct Monitor Logs without activity log alert for create policy assignment"
-  description   = "Detects Monitor Logs without an activity log alert for create policy assignment and runs your chosen action."
+trigger "query" "detect_and_correct_monitor_logs_without_activity_log_alert_for_delete_sql_servers_firewall_rule" {
+  title         = "Detect & correct Monitor Logs without activity log alert for delete SQL servers firewall rule"
+  description   = "Detects Monitor Logs without an activity log alert for delete SQL servers firewall rule and runs your chosen action."
   tags          = merge(local.monitor_common_tags, { class = "security" })
 
-  enabled  = var.monitor_log_without_activity_log_alert_for_create_policy_assignment_trigger_enabled
-  schedule = var.monitor_log_without_activity_log_alert_for_create_policy_assignment_trigger_schedule
+  enabled  = var.monitor_logs_without_activity_log_alert_for_delete_sql_servers_firewall_rule_trigger_enabled
+  schedule = var.monitor_logs_without_activity_log_alert_for_delete_sql_servers_firewall_rule_trigger_schedule
   database = var.database
-  sql      = local.monitor_log_without_activity_log_alert_for_create_policy_assignment_query
+  sql      = local.monitor_logs_without_activity_log_alert_for_delete_sql_servers_firewall_rule_query
 
   capture "insert" {
-    pipeline = pipeline.correct_monitor_log_without_activity_log_alert_for_create_policy_assignment
+    pipeline = pipeline.correct_monitor_logs_without_activity_log_alert_for_delete_sql_servers_firewall_rule
     args = {
       items = self.inserted_rows
     }
   }
 }
 
-pipeline "detect_and_correct_monitor_log_without_activity_log_alert_for_create_policy_assignment" {
-  title         = "Detect & correct Monitor Logs without activity log alert for create policy assignment"
-  description   = "Detects Monitor Logs without an activity log alert for create policy assignment and runs your chosen action."
+pipeline "detect_and_correct_monitor_logs_without_activity_log_alert_for_delete_sql_servers_firewall_rule" {
+  title         = "Detect & correct Monitor Logs without activity log alert for delete SQL servers firewall rule"
+  description   = "Detects Monitor Logs without an activity log alert for delete SQL servers firewall rule and runs your chosen action."
   tags          = merge(local.monitor_common_tags, { class = "security", type = "featured" })
 
   param "database" {
@@ -107,22 +116,22 @@ pipeline "detect_and_correct_monitor_log_without_activity_log_alert_for_create_p
   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.monitor_log_without_activity_log_alert_for_create_policy_assignment_default_action
+    default     = var.monitor_logs_without_activity_log_alert_for_delete_sql_servers_firewall_rule_default_action
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.monitor_log_without_activity_log_alert_for_create_policy_assignment_enabled_actions
+    default     = var.monitor_logs_without_activity_log_alert_for_delete_sql_servers_firewall_rule_enabled_actions
   }
 
   step "query" "detect" {
     database = param.database
-    sql      = local.monitor_log_without_activity_log_alert_for_create_policy_assignment_query
+    sql      = local.monitor_logs_without_activity_log_alert_for_delete_sql_servers_firewall_rule_query
   }
 
   step "pipeline" "respond" {
-    pipeline = pipeline.correct_monitor_log_without_activity_log_alert_for_create_policy_assignment
+    pipeline = pipeline.correct_monitor_logs_without_activity_log_alert_for_delete_sql_servers_firewall_rule
     args = {
       items              = step.query.detect.rows
       notifier           = param.notifier
@@ -134,9 +143,9 @@ pipeline "detect_and_correct_monitor_log_without_activity_log_alert_for_create_p
   }
 }
 
-pipeline "correct_monitor_log_without_activity_log_alert_for_create_policy_assignment" {
-  title         = "Correct Monitor Logs without activity log alert for create policy assignment"
-  description   = "Runs corrective action on a collection of Monitor Logs without activity log alert for create policy assignment."
+pipeline "correct_monitor_logs_without_activity_log_alert_for_delete_sql_servers_firewall_rule" {
+  title         = "Correct Monitor Logs without activity log alert for delete SQL servers firewall rule"
+  description   = "Runs corrective action on a collection of Monitor Logs without activity log alert for delete SQL servers firewall rule."
   tags          = merge(local.monitor_common_tags, { class = "security" })
 
   param "items" {
@@ -172,19 +181,19 @@ pipeline "correct_monitor_log_without_activity_log_alert_for_create_policy_assig
   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.monitor_log_without_activity_log_alert_for_create_policy_assignment_default_action
+    default     = var.monitor_logs_without_activity_log_alert_for_delete_sql_servers_firewall_rule_default_action
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.monitor_log_without_activity_log_alert_for_create_policy_assignment_enabled_actions
+    default     = var.monitor_logs_without_activity_log_alert_for_delete_sql_servers_firewall_rule_enabled_actions
   }
 
   step "message" "notify_detection_count" {
     if       = var.notification_level == local.level_verbose
     notifier = notifier[param.notifier]
-    text     = "Detected ${length(param.items)} Monitor Logs without activity log alert for create policy assignment."
+    text     = "Detected ${length(param.items)} Monitor Logs without activity log alert for delete SQL servers firewall rule."
   }
 
   step "transform" "items_by_id" {
@@ -194,7 +203,7 @@ pipeline "correct_monitor_log_without_activity_log_alert_for_create_policy_assig
   step "pipeline" "correct_item" {
     for_each        = step.transform.items_by_id.value
     max_concurrency = var.max_concurrency
-    pipeline        = pipeline.correct_one_monitor_log_without_activity_log_alert_for_create_policy_assignment
+    pipeline        = pipeline.correct_one_monitor_logs_without_activity_log_alert_for_delete_sql_servers_firewall_rule
     args = {
       title              = each.value.title
       subscription_id    = each.value.subscription_id
@@ -210,9 +219,9 @@ pipeline "correct_monitor_log_without_activity_log_alert_for_create_policy_assig
   }
 }
 
-pipeline "correct_one_monitor_log_without_activity_log_alert_for_create_policy_assignment" {
-  title         = "Correct one Monitor Log without activity log alert for create policy assignment"
-  description   = "Runs corrective action on a single Monitor Log without activity log alert for create policy assignment."
+pipeline "correct_one_monitor_logs_without_activity_log_alert_for_delete_sql_servers_firewall_rule" {
+  title         = "Correct one Monitor Log without activity log alert for delete SQL servers firewall rule"
+  description   = "Runs corrective action on a single Monitor Log without activity log alert for delete SQL servers firewall rule."
   tags          = merge(local.monitor_common_tags, { class = "security" })
 
   param "title" {
@@ -262,13 +271,13 @@ pipeline "correct_one_monitor_log_without_activity_log_alert_for_create_policy_a
   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.monitor_log_without_activity_log_alert_for_create_policy_assignment_default_action
+    default     = var.monitor_logs_without_activity_log_alert_for_delete_sql_servers_firewall_rule_default_action
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.monitor_log_without_activity_log_alert_for_create_policy_assignment_enabled_actions
+    default     = var.monitor_logs_without_activity_log_alert_for_delete_sql_servers_firewall_rule_enabled_actions
   }
 
   step "pipeline" "respond" {
@@ -277,7 +286,7 @@ pipeline "correct_one_monitor_log_without_activity_log_alert_for_create_policy_a
       notifier           = param.notifier
       notification_level = param.notification_level
       approvers          = param.approvers
-      detect_msg         = "Detected Monitor Log ${param.title} without activity log alert for create policy assignment."
+      detect_msg         = "Detected Monitor Log ${param.title} without activity log alert for delete SQL servers firewall rule."
       default_action     = param.default_action
       enabled_actions    = param.enabled_actions
       actions = {
@@ -289,61 +298,61 @@ pipeline "correct_one_monitor_log_without_activity_log_alert_for_create_policy_a
           pipeline_args = {
             notifier = param.notifier
             send     = param.notification_level == local.level_verbose
-            text     = "Skipped subscription ${param.title} without activity log alert for create policy assignment."
+            text     = "Skipped subscription ${param.title} without activity log alert for delete SQL servers firewall rule."
           }
           success_msg = ""
           error_msg   = ""
         },
-        "create_policy_assignment_activity_log_alert" = {
-          label        = "Create Policy Assignment Activity Log Alert"
-          value        = "create_policy_assignment_activity_log_alert"
+        "create_delete_sql_servers_firewall_rule_activity_log_alert" = {
+          label        = "Create Delete SQL Servers Firewall Rule Activity Log Alert"
+          value        = "create_delete_sql_servers_firewall_rule_activity_log_alert"
           style        = local.style_alert
-          pipeline_ref = pipeline.create_activity_log_alert_for_create_policy_assignment
+          pipeline_ref = pipeline.create_activity_log_alert_for_delete_sql_servers_firewall_rule
           pipeline_args = {
             resource_group    = param.resource_group
             subscription_id   = param.subscription_id
-            alert_name        = "alertCreatePolicyAssignment"
+            alert_name        = "alertDeleteSqlServersFirewallRule"
             level             = "verbose"
             scope             = param.scope
-            action_group_name = "actionCreatePolicyAssignment"
+            action_group_name = "actionGroupDeleteSqlServersFirewallRule"
             cred              = param.cred
           }
-          success_msg = "Created create policy assignment activity log alert for subscription ${param.title}."
-          error_msg   = "Error creating create policy assignment activity log alert for subscription ${param.title}."
+          success_msg = "Created delete SQL servers firewall rule activity log alert for subscription ${param.title}."
+          error_msg   = "Error creating delete SQL servers firewall rule activity log alert for subscription ${param.title}."
         }
       }
     }
   }
 }
 
-variable "monitor_log_without_activity_log_alert_for_create_policy_assignment_trigger_enabled" {
+variable "monitor_logs_without_activity_log_alert_for_delete_sql_servers_firewall_rule_trigger_enabled" {
   type        = bool
   default     = false
   description = "If true, the trigger is enabled."
 }
 
-variable "monitor_log_without_activity_log_alert_for_create_policy_assignment_trigger_schedule" {
+variable "monitor_logs_without_activity_log_alert_for_delete_sql_servers_firewall_rule_trigger_schedule" {
   type        = string
   default     = "15m"
   description = "The schedule on which to run the trigger if enabled."
 }
 
-variable "monitor_log_without_activity_log_alert_for_create_policy_assignment_default_action" {
+variable "monitor_logs_without_activity_log_alert_for_delete_sql_servers_firewall_rule_default_action" {
   type        = string
   description = "The default action to use for the detected item, used if no input is provided."
   default     = "notify"
 }
 
-variable "monitor_log_without_activity_log_alert_for_create_policy_assignment_enabled_actions" {
+variable "monitor_logs_without_activity_log_alert_for_delete_sql_servers_firewall_rule_enabled_actions" {
   type        = list(string)
   description = "The list of enabled actions to provide to approvers for selection."
-  default     = ["skip", "create_policy_assignment_activity_log_alert"]
+  default     = ["skip", "create_delete_sql_servers_firewall_rule_activity_log_alert"]
 }
 
 
-pipeline "create_activity_log_alert_for_create_policy_assignment" {
-  title       = "Create Activity Log Alert for create policy assignment"
-  description = "Create an Azure Monitor activity log alert for create policy assignment."
+pipeline "create_activity_log_alert_for_delete_sql_servers_firewall_rule" {
+  title       = "Create Activity Log Alert for delete SQL servers firewall rule"
+  description = "Create an Azure Monitor activity log alert for delete SQL servers firewall rule."
 
   param "cred" {
     type        = string
@@ -364,7 +373,7 @@ pipeline "create_activity_log_alert_for_create_policy_assignment" {
   param "alert_name" {
     type        = string
     description = "The name of the activity log alert."
-    default     = "alertCreatePolicyAssignment"
+    default     = "alertDeleteSqlServersFirewallRule"
   }
 
   param "level" {
@@ -376,7 +385,7 @@ pipeline "create_activity_log_alert_for_create_policy_assignment" {
   param "action_group_name" {
     type        = string
     description = "The name of the action group."
-    default     = "actionCreatePolicyAssignment"
+    default     = "actionGroupDeleteSqlServersFirewallRule"
   }
 
   param "scope" {
@@ -403,7 +412,7 @@ pipeline "create_activity_log_alert_for_create_policy_assignment" {
     cmd   = [
       "monitor", "activity-log", "alert", "create",
       "--resource-group", param.resource_group,
-      "--condition", "category=Administrative and operationName=Microsoft.Authorization/policyAssignments/write and level=verbose",
+      "--condition", "category=Administrative and operationName=Microsoft.Sql/servers/firewallRules/delete and level=verbose",
       "--scope", param.scope,
       "--name", param.alert_name,
       "--subscription", param.subscription_id,

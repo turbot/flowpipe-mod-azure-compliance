@@ -306,7 +306,7 @@ variable "storage_accounts_blob_service_logging_disabled_trigger_schedule" {
 variable "storage_accounts_blob_service_logging_disabled_default_action" {
   type        = string
   description = "The default action to use for the detected item, used if no input is provided."
-  default     = "enable_blob_service_logging"
+  default     = "notify"
 }
 
 variable "storage_accounts_blob_service_logging_disabled_enabled_actions" {

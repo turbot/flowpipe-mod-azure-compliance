@@ -10,16 +10,16 @@ locals {
     cis_v210_5_1_4  =  {pipeline = pipeline.manual_control, additional_args = {message = "CIS v2.1.0 5.1.4 is a TODO control."}}
     cis_v210_5_1_5  = {pipeline = pipeline.manual_control, additional_args = {message = "CIS v2.1.0 5.1.5 is a manual control."}}
 		cis_v210_5_1_6  = {pipeline = pipeline.manual_control, additional_args = {message = "CIS v2.1.0 5.1.6 is a manual control."}}
-		cis_v210_5_2_1  = {pipeline = pipeline.detect_and_correct_monitor_log_without_activity_log_alert_for_create_policy_assignment, additional_args = {}}
-		cis_v210_5_2_2  = {pipeline = pipeline.detect_and_correct_monitor_log_without_activity_log_alert_for_delete_policy_assignment, additional_args = {}}
-		cis_v210_5_2_3  = {pipeline = pipeline.detect_and_correct_monitor_log_without_activity_log_alert_for_create_update_nsg, additional_args = {}}
-		cis_v210_5_2_4  = {pipeline = pipeline.detect_and_correct_monitor_log_without_activity_log_alert_for_delete_nsg, additional_args = {}}
-		cis_v210_5_2_5  = {pipeline = pipeline.detect_and_correct_monitor_log_without_activity_log_alert_for_create_update_security_solution, additional_args = {}}
-		cis_v210_5_2_6  = {pipeline = pipeline.detect_and_correct_monitor_log_without_activity_log_alert_for_delete_security_solution, additional_args = {}}
-		cis_v210_5_2_7  = {pipeline = pipeline.detect_and_correct_monitor_log_without_activity_log_alert_for_create_update_sql_servers_firewall_rule, additional_args = {}}
-		cis_v210_5_2_8  = {pipeline = pipeline.detect_and_correct_monitor_log_without_activity_log_alert_for_delete_sql_servers_firewall_rule, additional_args = {}}
-		cis_v210_5_2_9  = {pipeline = pipeline.detect_and_correct_monitor_log_without_activity_log_alert_for_create_update_public_ip_address, additional_args = {}}
-		cis_v210_5_2_10  = {pipeline = pipeline.detect_and_correct_monitor_log_without_activity_log_alert_for_delete_public_ip_address, additional_args = {}}
+		cis_v210_5_2_1  = {pipeline = pipeline.detect_and_correct_monitor_logs_without_activity_log_alert_for_create_policy_assignment, additional_args = {}}
+		cis_v210_5_2_2  = {pipeline = pipeline.detect_and_correct_monitor_logs_without_activity_log_alert_for_delete_policy_assignment, additional_args = {}}
+		cis_v210_5_2_3  = {pipeline = pipeline.detect_and_correct_monitor_logs_without_activity_log_alert_for_create_update_nsg, additional_args = {}}
+		cis_v210_5_2_4  = {pipeline = pipeline.detect_and_correct_monitor_logs_without_activity_log_alert_for_delete_nsg, additional_args = {}}
+		cis_v210_5_2_5  = {pipeline = pipeline.detect_and_correct_monitor_logs_without_activity_log_alert_for_create_update_security_solution, additional_args = {}}
+		cis_v210_5_2_6  = {pipeline = pipeline.detect_and_correct_monitor_logs_without_activity_log_alert_for_delete_security_solution, additional_args = {}}
+		cis_v210_5_2_7  = {pipeline = pipeline.detect_and_correct_monitor_logs_without_activity_log_alert_for_create_update_sql_servers_firewall_rule, additional_args = {}}
+		cis_v210_5_2_8  = {pipeline = pipeline.detect_and_correct_monitor_logs_without_activity_log_alert_for_delete_sql_servers_firewall_rule, additional_args = {}}
+		cis_v210_5_2_9  = {pipeline = pipeline.detect_and_correct_monitor_logs_without_activity_log_alert_for_create_update_public_ip_address, additional_args = {}}
+		cis_v210_5_2_10  = {pipeline = pipeline.detect_and_correct_monitor_logs_without_activity_log_alert_for_delete_public_ip_address, additional_args = {}}
 		cis_v210_5_3_1  = {pipeline = pipeline.manual_control, additional_args = {message = "CIS v2.1.0 5.3.1 is a TODO control."}}
 		cis_v210_5_4  = {pipeline = pipeline.manual_control, additional_args = {message = "CIS v2.1.0 5.4 is a manual control."}}
 		cis_v210_5_5  = {pipeline = pipeline.manual_control, additional_args = {message = "CIS v2.1.0 5.5 is a manual control."}}

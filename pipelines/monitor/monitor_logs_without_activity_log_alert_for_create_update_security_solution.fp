@@ -1,5 +1,5 @@
 locals {
-  monitor_log_without_activity_log_alert_for_create_update_nsg_query = <<-EOQ
+  monitor_logs_without_activity_log_alert_for_create_update_security_solution_query = <<-EOQ
     with alert_rule as (
       select
         alert.id as alert_id,
@@ -18,13 +18,13 @@ locals {
         and alert.enabled
         and sc = '/subscriptions/' || alert.subscription_id
         and (
-      	(
-					alert.condition -> 'allOf' @> '[{"equals":"Administrative","field":"category"}]'
-					and alert.condition -> 'allOf' @> '[{"field": "operationName", "equals": "Microsoft.Network/networkSecurityGroups/write"}]'
+				(
+					alert.condition -> 'allOf' @> '[{"equals":"Security","field":"category"}]'
+					and alert.condition -> 'allOf' @> '[{"field": "operationName", "equals": "Microsoft.Security/securitySolutions/write"}]'
 				)
 				or (
-					alert.condition -> 'allOf' @> '[{"equals":"Administrative","field":"category"}]'
-					and alert.condition -> 'allOf' @> '[{"field": "resourceType", "equals": "microsoft.network/networksecuritygroups"}]'
+					alert.condition -> 'allOf' @> '[{"equals":"Security","field":"category"}]'
+					and alert.condition -> 'allOf' @> '[{"field": "resourceType", "equals": "microsoft.security/securitysolutions"}]'
 					and jsonb_array_length(alert.condition -> 'allOf') = 2
 				)
 			)
@@ -66,27 +66,27 @@ locals {
   EOQ
 }
 
-trigger "query" "detect_and_correct_monitor_log_without_activity_log_alert_for_create_update_nsg" {
-  title         = "Detect & correct Monitor Logs without activity log alert for create and update NSG"
-  description   = "Detects Monitor Logs without an activity log alert for create and update NSG and runs your chosen action."
+trigger "query" "detect_and_correct_monitor_logs_without_activity_log_alert_for_create_update_security_solution" {
+  title         = "Detect & correct Monitor Logs without activity log alert for create and update security solution"
+  description   = "Detects Monitor Logs without an activity log alert for create and update security solution and runs your chosen action."
   tags          = merge(local.monitor_common_tags, { class = "security" })
 
-  enabled  = var.monitor_log_without_activity_log_alert_for_create_update_nsg_trigger_enabled
-  schedule = var.monitor_log_without_activity_log_alert_for_create_update_nsg_trigger_schedule
+  enabled  = var.monitor_logs_without_activity_log_alert_for_create_update_security_solution_trigger_enabled
+  schedule = var.monitor_logs_without_activity_log_alert_for_create_update_security_solution_trigger_schedule
   database = var.database
-  sql      = local.monitor_log_without_activity_log_alert_for_create_update_nsg_query
+  sql      = local.monitor_logs_without_activity_log_alert_for_create_update_security_solution_query
 
   capture "insert" {
-    pipeline = pipeline.correct_monitor_log_without_activity_log_alert_for_create_update_nsg
+    pipeline = pipeline.correct_monitor_logs_without_activity_log_alert_for_create_update_security_solution
     args = {
       items = self.inserted_rows
     }
   }
 }
 
-pipeline "detect_and_correct_monitor_log_without_activity_log_alert_for_create_update_nsg" {
-  title         = "Detect & correct Monitor Logs without activity log alert for create and update NSG"
-  description   = "Detects Monitor Logs without an activity log alert for create and update NSG and runs your chosen action."
+pipeline "detect_and_correct_monitor_logs_without_activity_log_alert_for_create_update_security_solution" {
+  title         = "Detect & correct Monitor Logs without activity log alert for create and update security solution"
+  description   = "Detects Monitor Logs without an activity log alert for create and update security solution and runs your chosen action."
   tags          = merge(local.monitor_common_tags, { class = "security", type = "featured" })
 
   param "database" {
@@ -116,22 +116,22 @@ pipeline "detect_and_correct_monitor_log_without_activity_log_alert_for_create_u
   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.monitor_log_without_activity_log_alert_for_create_update_nsg_default_action
+    default     = var.monitor_logs_without_activity_log_alert_for_create_update_security_solution_default_action
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.monitor_log_without_activity_log_alert_for_create_update_nsg_enabled_actions
+    default     = var.monitor_logs_without_activity_log_alert_for_create_update_security_solution_enabled_actions
   }
 
   step "query" "detect" {
     database = param.database
-    sql      = local.monitor_log_without_activity_log_alert_for_create_update_nsg_query
+    sql      = local.monitor_logs_without_activity_log_alert_for_create_update_security_solution_query
   }
 
   step "pipeline" "respond" {
-    pipeline = pipeline.correct_monitor_log_without_activity_log_alert_for_create_update_nsg
+    pipeline = pipeline.correct_monitor_logs_without_activity_log_alert_for_create_update_security_solution
     args = {
       items              = step.query.detect.rows
       notifier           = param.notifier
@@ -143,9 +143,9 @@ pipeline "detect_and_correct_monitor_log_without_activity_log_alert_for_create_u
   }
 }
 
-pipeline "correct_monitor_log_without_activity_log_alert_for_create_update_nsg" {
-  title         = "Correct Monitor Logs without activity log alert for create and update NSG"
-  description   = "Runs corrective action on a collection of Monitor Logs without activity log alert for create and update NSG."
+pipeline "correct_monitor_logs_without_activity_log_alert_for_create_update_security_solution" {
+  title         = "Correct Monitor Logs without activity log alert for create and update security solution"
+  description   = "Runs corrective action on a collection of Monitor Logs without activity log alert for create and update security solution."
   tags          = merge(local.monitor_common_tags, { class = "security" })
 
   param "items" {
@@ -181,19 +181,19 @@ pipeline "correct_monitor_log_without_activity_log_alert_for_create_update_nsg" 
   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.monitor_log_without_activity_log_alert_for_create_update_nsg_default_action
+    default     = var.monitor_logs_without_activity_log_alert_for_create_update_security_solution_default_action
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.monitor_log_without_activity_log_alert_for_create_update_nsg_enabled_actions
+    default     = var.monitor_logs_without_activity_log_alert_for_create_update_security_solution_enabled_actions
   }
 
   step "message" "notify_detection_count" {
     if       = var.notification_level == local.level_verbose
     notifier = notifier[param.notifier]
-    text     = "Detected ${length(param.items)} Monitor Logs without activity log alert for create and update NSG."
+    text     = "Detected ${length(param.items)} Monitor Logs without activity log alert for create and update security solution."
   }
 
   step "transform" "items_by_id" {
@@ -203,7 +203,7 @@ pipeline "correct_monitor_log_without_activity_log_alert_for_create_update_nsg" 
   step "pipeline" "correct_item" {
     for_each        = step.transform.items_by_id.value
     max_concurrency = var.max_concurrency
-    pipeline        = pipeline.correct_one_monitor_log_without_activity_log_alert_for_create_update_nsg
+    pipeline        = pipeline.correct_one_monitor_logs_without_activity_log_alert_for_create_update_security_solution
     args = {
       title              = each.value.title
       subscription_id    = each.value.subscription_id
@@ -219,9 +219,9 @@ pipeline "correct_monitor_log_without_activity_log_alert_for_create_update_nsg" 
   }
 }
 
-pipeline "correct_one_monitor_log_without_activity_log_alert_for_create_update_nsg" {
-  title         = "Correct one Monitor Log without activity log alert for create and update NSG"
-  description   = "Runs corrective action on a single Monitor Log without activity log alert for create and update NSG."
+pipeline "correct_one_monitor_logs_without_activity_log_alert_for_create_update_security_solution" {
+  title         = "Correct one Monitor Log without activity log alert for create and update security solution"
+  description   = "Runs corrective action on a single Monitor Log without activity log alert for create and update security solution."
   tags          = merge(local.monitor_common_tags, { class = "security" })
 
   param "title" {
@@ -271,13 +271,13 @@ pipeline "correct_one_monitor_log_without_activity_log_alert_for_create_update_n
   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.monitor_log_without_activity_log_alert_for_create_update_nsg_default_action
+    default     = var.monitor_logs_without_activity_log_alert_for_create_update_security_solution_default_action
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.monitor_log_without_activity_log_alert_for_create_update_nsg_enabled_actions
+    default     = var.monitor_logs_without_activity_log_alert_for_create_update_security_solution_enabled_actions
   }
 
   step "pipeline" "respond" {
@@ -286,7 +286,7 @@ pipeline "correct_one_monitor_log_without_activity_log_alert_for_create_update_n
       notifier           = param.notifier
       notification_level = param.notification_level
       approvers          = param.approvers
-      detect_msg         = "Detected Monitor Log ${param.title} without activity log alert for create and update NSG."
+      detect_msg         = "Detected Monitor Log ${param.title} without activity log alert for create and update security solution."
       default_action     = param.default_action
       enabled_actions    = param.enabled_actions
       actions = {
@@ -298,61 +298,61 @@ pipeline "correct_one_monitor_log_without_activity_log_alert_for_create_update_n
           pipeline_args = {
             notifier = param.notifier
             send     = param.notification_level == local.level_verbose
-            text     = "Skipped subscription ${param.title} without activity log alert for create and update NSG."
+            text     = "Skipped subscription ${param.title} without activity log alert for create and update security solution."
           }
           success_msg = ""
           error_msg   = ""
         },
-        "create_update_nsg_activity_log_alert" = {
-          label        = "Create Update NSG Activity Log Alert"
-          value        = "create_update_nsg_activity_log_alert"
+        "create_update_security_solution_activity_log_alert" = {
+          label        = "Create Update Security Solution Activity Log Alert"
+          value        = "create_update_security_solution_activity_log_alert"
           style        = local.style_alert
-          pipeline_ref = pipeline.create_activity_log_alert_for_create_update_nsg
+          pipeline_ref = pipeline.create_activity_log_alert_for_create_update_security_solution
           pipeline_args = {
             resource_group    = param.resource_group
             subscription_id   = param.subscription_id
-            alert_name        = "alertCreateUpdateNSG"
+            alert_name        = "alertCreateUpdateSecuritySolution"
             level             = "verbose"
             scope             = param.scope
-            action_group_name = "actionGroupCreateUpdatNSG"
+            action_group_name = "actionGroupCreateUpdateSecuritySolution"
             cred              = param.cred
           }
-          success_msg = "Created create and update NSG activity log alert for subscription ${param.title}."
-          error_msg   = "Error creating  create and update NSG activity log alert for subscription ${param.title}."
+          success_msg = "Created create and update security solution activity log alert for subscription ${param.title}."
+          error_msg   = "Error creating  create and update security solution activity log alert for subscription ${param.title}."
         }
       }
     }
   }
 }
 
-variable "monitor_log_without_activity_log_alert_for_create_update_nsg_trigger_enabled" {
+variable "monitor_logs_without_activity_log_alert_for_create_update_security_solution_trigger_enabled" {
   type        = bool
   default     = false
   description = "If true, the trigger is enabled."
 }
 
-variable "monitor_log_without_activity_log_alert_for_create_update_nsg_trigger_schedule" {
+variable "monitor_logs_without_activity_log_alert_for_create_update_security_solution_trigger_schedule" {
   type        = string
   default     = "15m"
   description = "The schedule on which to run the trigger if enabled."
 }
 
-variable "monitor_log_without_activity_log_alert_for_create_update_nsg_default_action" {
+variable "monitor_logs_without_activity_log_alert_for_create_update_security_solution_default_action" {
   type        = string
   description = "The default action to use for the detected item, used if no input is provided."
   default     = "notify"
 }
 
-variable "monitor_log_without_activity_log_alert_for_create_update_nsg_enabled_actions" {
+variable "monitor_logs_without_activity_log_alert_for_create_update_security_solution_enabled_actions" {
   type        = list(string)
   description = "The list of enabled actions to provide to approvers for selection."
-  default     = ["skip", "create_update_nsg_activity_log_alert"]
+  default     = ["skip", "create_update_security_solution_activity_log_alert"]
 }
 
 
-pipeline "create_activity_log_alert_for_create_update_nsg" {
-  title       = "Create Activity Log Alert for create and update NSG"
-  description = "Create an Azure Monitor activity log alert for create and update NSG."
+pipeline "create_activity_log_alert_for_create_update_security_solution" {
+  title       = "Create Activity Log Alert for create and update security solution"
+  description = "Create an Azure Monitor activity log alert for create and update security solution."
 
   param "cred" {
     type        = string
@@ -373,7 +373,7 @@ pipeline "create_activity_log_alert_for_create_update_nsg" {
   param "alert_name" {
     type        = string
     description = "The name of the activity log alert."
-    default     = "createUpdateNSG"
+    default     = "alertCreateUpdateSecuritySolution"
   }
 
   param "level" {
@@ -385,7 +385,7 @@ pipeline "create_activity_log_alert_for_create_update_nsg" {
   param "action_group_name" {
     type        = string
     description = "The name of the action group."
-    default     = "actionGroupCreateUpdateNSG"
+    default     = "actionGroupCreateUpdateSecuritySolution"
   }
 
   param "scope" {
@@ -412,7 +412,7 @@ pipeline "create_activity_log_alert_for_create_update_nsg" {
     cmd   = [
       "monitor", "activity-log", "alert", "create",
       "--resource-group", param.resource_group,
-      "--condition", "category=Administrative and operationName=Microsoft.Network/networkSecurityGroups/write and level=verbose",
+      "--condition", "category=Administrative and operationName=Microsoft.Security/securitySolutions/write and level=verbose",
       "--scope", param.scope,
       "--name", param.alert_name,
       "--subscription", param.subscription_id,

@@ -1,5 +1,5 @@
 locals {
-  monitor_log_without_activity_log_alert_for_create_update_public_ip_address_query = <<-EOQ
+  monitor_logs_without_activity_log_alert_for_delete_security_solution_query = <<-EOQ
     with alert_rule as (
       select
         alert.id as alert_id,
@@ -18,16 +18,16 @@ locals {
         and alert.enabled
         and sc = '/subscriptions/' || alert.subscription_id
         and (
-				(
-					alert.condition -> 'allOf' @> '[{"equals":"Administrative","field":"category"}]'
-					and alert.condition -> 'allOf' @> '[{"field": "operationName", "equals": "Microsoft.Network/publicIPAddresses/write"}]'
+					(
+						alert.condition -> 'allOf' @> '[{"equals":"Security","field":"category"}]'
+						and alert.condition -> 'allOf' @> '[{"field": "operationName", "equals": "Microsoft.Security/securitySolutions/delete"}]'
+					)
+					or (
+						alert.condition -> 'allOf' @> '[{"equals":"Security","field":"category"}]'
+						and alert.condition -> 'allOf' @> '[{"field": "resourceType", "equals": "microsoft.security/securitysolutions"}]'
+						and jsonb_array_length(alert.condition -> 'allOf') = 2
+					)
 				)
-				or (
-					alert.condition -> 'allOf' @> '[{"equals":"Administrative","field":"category"}]'
-					and alert.condition -> 'allOf' @> '[{"field": "resourceType", "equals": "microsoft.network/publicipaddresses"}]'
-					and jsonb_array_length(alert.condition -> 'allOf') = 2
-				)
-			)
       limit
         1
     ), resource_group as (
@@ -66,27 +66,27 @@ locals {
   EOQ
 }
 
-trigger "query" "detect_and_correct_monitor_log_without_activity_log_alert_for_create_update_public_ip_address" {
-  title         = "Detect & correct Monitor Logs without activity log alert for create update public IP address"
-  description   = "Detects Monitor Logs without an activity log alert for create update public IP address and runs your chosen action."
+trigger "query" "detect_and_correct_monitor_logs_without_activity_log_alert_for_delete_security_solution" {
+  title         = "Detect & correct Monitor Logs without activity log alert for delete security solution"
+  description   = "Detects Monitor Logs without an activity log alert for delete security solution and runs your chosen action."
   tags          = merge(local.monitor_common_tags, { class = "security" })
 
-  enabled  = var.monitor_log_without_activity_log_alert_for_create_update_public_ip_address_trigger_enabled
-  schedule = var.monitor_log_without_activity_log_alert_for_create_update_public_ip_address_trigger_schedule
+  enabled  = var.monitor_logs_without_activity_log_alert_for_delete_security_solution_trigger_enabled
+  schedule = var.monitor_logs_without_activity_log_alert_for_delete_security_solution_trigger_schedule
   database = var.database
-  sql      = local.monitor_log_without_activity_log_alert_for_create_update_public_ip_address_query
+  sql      = local.monitor_logs_without_activity_log_alert_for_delete_security_solution_query
 
   capture "insert" {
-    pipeline = pipeline.correct_monitor_log_without_activity_log_alert_for_create_update_public_ip_address
+    pipeline = pipeline.correct_monitor_logs_without_activity_log_alert_for_delete_security_solution
     args = {
       items = self.inserted_rows
     }
   }
 }
 
-pipeline "detect_and_correct_monitor_log_without_activity_log_alert_for_create_update_public_ip_address" {
-  title         = "Detect & correct Monitor Logs without activity log alert for create update public IP address"
-  description   = "Detects Monitor Logs without an activity log alert for create update public IP address and runs your chosen action."
+pipeline "detect_and_correct_monitor_logs_without_activity_log_alert_for_delete_security_solution" {
+  title         = "Detect & correct Monitor Logs without activity log alert for delete security solution"
+  description   = "Detects Monitor Logs without an activity log alert for delete security solution and runs your chosen action."
   tags          = merge(local.monitor_common_tags, { class = "security", type = "featured" })
 
   param "database" {
@@ -116,22 +116,22 @@ pipeline "detect_and_correct_monitor_log_without_activity_log_alert_for_create_u
   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.monitor_log_without_activity_log_alert_for_create_update_public_ip_address_default_action
+    default     = var.monitor_logs_without_activity_log_alert_for_delete_security_solution_default_action
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.monitor_log_without_activity_log_alert_for_create_update_public_ip_address_enabled_actions
+    default     = var.monitor_logs_without_activity_log_alert_for_delete_security_solution_enabled_actions
   }
 
   step "query" "detect" {
     database = param.database
-    sql      = local.monitor_log_without_activity_log_alert_for_create_update_public_ip_address_query
+    sql      = local.monitor_logs_without_activity_log_alert_for_delete_security_solution_query
   }
 
   step "pipeline" "respond" {
-    pipeline = pipeline.correct_monitor_log_without_activity_log_alert_for_create_update_public_ip_address
+    pipeline = pipeline.correct_monitor_logs_without_activity_log_alert_for_delete_security_solution
     args = {
       items              = step.query.detect.rows
       notifier           = param.notifier
@@ -143,9 +143,9 @@ pipeline "detect_and_correct_monitor_log_without_activity_log_alert_for_create_u
   }
 }
 
-pipeline "correct_monitor_log_without_activity_log_alert_for_create_update_public_ip_address" {
-  title         = "Correct Monitor Logs without activity log alert for create update public IP address"
-  description   = "Runs corrective action on a collection of Monitor Logs without activity log alert for create update public IP address."
+pipeline "correct_monitor_logs_without_activity_log_alert_for_delete_security_solution" {
+  title         = "Correct Monitor Logs without activity log alert for delete security solution"
+  description   = "Runs corrective action on a collection of Monitor Logs without activity log alert for delete security solution."
   tags          = merge(local.monitor_common_tags, { class = "security" })
 
   param "items" {
@@ -181,19 +181,19 @@ pipeline "correct_monitor_log_without_activity_log_alert_for_create_update_publi
   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.monitor_log_without_activity_log_alert_for_create_update_public_ip_address_default_action
+    default     = var.monitor_logs_without_activity_log_alert_for_delete_security_solution_default_action
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.monitor_log_without_activity_log_alert_for_create_update_public_ip_address_enabled_actions
+    default     = var.monitor_logs_without_activity_log_alert_for_delete_security_solution_enabled_actions
   }
 
   step "message" "notify_detection_count" {
     if       = var.notification_level == local.level_verbose
     notifier = notifier[param.notifier]
-    text     = "Detected ${length(param.items)} Monitor Logs without activity log alert for create update public IP address."
+    text     = "Detected ${length(param.items)} Monitor Logs without activity log alert for delete security solution."
   }
 
   step "transform" "items_by_id" {
@@ -203,7 +203,7 @@ pipeline "correct_monitor_log_without_activity_log_alert_for_create_update_publi
   step "pipeline" "correct_item" {
     for_each        = step.transform.items_by_id.value
     max_concurrency = var.max_concurrency
-    pipeline        = pipeline.correct_one_monitor_log_without_activity_log_alert_for_create_update_public_ip_address
+    pipeline        = pipeline.correct_one_monitor_logs_without_activity_log_alert_for_delete_security_solution
     args = {
       title              = each.value.title
       subscription_id    = each.value.subscription_id
@@ -219,9 +219,9 @@ pipeline "correct_monitor_log_without_activity_log_alert_for_create_update_publi
   }
 }
 
-pipeline "correct_one_monitor_log_without_activity_log_alert_for_create_update_public_ip_address" {
-  title         = "Correct one Monitor Log without activity log alert for create update public IP address"
-  description   = "Runs corrective action on a single Monitor Log without activity log alert for create update public IP address."
+pipeline "correct_one_monitor_logs_without_activity_log_alert_for_delete_security_solution" {
+  title         = "Correct one Monitor Log without activity log alert for delete security solution"
+  description   = "Runs corrective action on a single Monitor Log without activity log alert for delete security solution."
   tags          = merge(local.monitor_common_tags, { class = "security" })
 
   param "title" {
@@ -271,13 +271,13 @@ pipeline "correct_one_monitor_log_without_activity_log_alert_for_create_update_p
   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.monitor_log_without_activity_log_alert_for_create_update_public_ip_address_default_action
+    default     = var.monitor_logs_without_activity_log_alert_for_delete_security_solution_default_action
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.monitor_log_without_activity_log_alert_for_create_update_public_ip_address_enabled_actions
+    default     = var.monitor_logs_without_activity_log_alert_for_delete_security_solution_enabled_actions
   }
 
   step "pipeline" "respond" {
@@ -286,7 +286,7 @@ pipeline "correct_one_monitor_log_without_activity_log_alert_for_create_update_p
       notifier           = param.notifier
       notification_level = param.notification_level
       approvers          = param.approvers
-      detect_msg         = "Detected Monitor Log ${param.title} without activity log alert for create update public IP address."
+      detect_msg         = "Detected Monitor Log ${param.title} without activity log alert for delete security solution."
       default_action     = param.default_action
       enabled_actions    = param.enabled_actions
       actions = {
@@ -298,61 +298,61 @@ pipeline "correct_one_monitor_log_without_activity_log_alert_for_create_update_p
           pipeline_args = {
             notifier = param.notifier
             send     = param.notification_level == local.level_verbose
-            text     = "Skipped subscription ${param.title} without activity log alert for create update public IP address."
+            text     = "Skipped subscription ${param.title} without activity log alert for delete security solution."
           }
           success_msg = ""
           error_msg   = ""
         },
-        "create_update_public_ip_address_activity_log_alert" = {
-          label        = "Create Update Public IP Address Activity Log Alert"
-          value        = "create_update_public_ip_address_activity_log_alert"
+        "create_delete_security_solution_activity_log_alert" = {
+          label        = "Create delete security solution Activity Log Alert"
+          value        = "create_delete_security_solution_activity_log_alert"
           style        = local.style_alert
-          pipeline_ref = pipeline.create_activity_log_alert_for_create_update_public_ip_address
+          pipeline_ref = pipeline.create_activity_log_alert_for_delete_security_solution
           pipeline_args = {
             resource_group    = param.resource_group
             subscription_id   = param.subscription_id
-            alert_name        = "alertCreateUpdatePublicIPAddress"
+            alert_name        = "alertDeleteSecuritySolution"
             level             = "verbose"
             scope             = param.scope
-            action_group_name = "actionGroupCreateUpdatePublicIPAddres"
+            action_group_name = "actionGroupDeleteSecuritySolution"
             cred              = param.cred
           }
-          success_msg = "Created create and update Public IP Address activity log alert for subscription ${param.title}."
-          error_msg   = "Error creating create and update Public IP Address activity log alert for subscription ${param.title}."
+          success_msg = "Created delete security solution activity log alert for subscription ${param.title}."
+          error_msg   = "Error creating delete security solution activity log alert for subscription ${param.title}."
         }
       }
     }
   }
 }
 
-variable "monitor_log_without_activity_log_alert_for_create_update_public_ip_address_trigger_enabled" {
+variable "monitor_logs_without_activity_log_alert_for_delete_security_solution_trigger_enabled" {
   type        = bool
   default     = false
   description = "If true, the trigger is enabled."
 }
 
-variable "monitor_log_without_activity_log_alert_for_create_update_public_ip_address_trigger_schedule" {
+variable "monitor_logs_without_activity_log_alert_for_delete_security_solution_trigger_schedule" {
   type        = string
   default     = "15m"
   description = "The schedule on which to run the trigger if enabled."
 }
 
-variable "monitor_log_without_activity_log_alert_for_create_update_public_ip_address_default_action" {
+variable "monitor_logs_without_activity_log_alert_for_delete_security_solution_default_action" {
   type        = string
   description = "The default action to use for the detected item, used if no input is provided."
   default     = "notify"
 }
 
-variable "monitor_log_without_activity_log_alert_for_create_update_public_ip_address_enabled_actions" {
+variable "monitor_logs_without_activity_log_alert_for_delete_security_solution_enabled_actions" {
   type        = list(string)
   description = "The list of enabled actions to provide to approvers for selection."
-  default     = ["skip", "create_update_public_ip_address_activity_log_alert"]
+  default     = ["skip", "create_delete_security_solution_activity_log_alert"]
 }
 
 
-pipeline "create_activity_log_alert_for_create_update_public_ip_address" {
-  title       = "Create Activity log alert for create update public IP address"
-  description = "Create an Azure Monitor activity log alert for create update public IP address."
+pipeline "create_activity_log_alert_for_delete_security_solution" {
+  title       = "Create Activity Log Alert for delete security solution"
+  description = "Create an Azure Monitor activity log alert for delete security solution."
 
   param "cred" {
     type        = string
@@ -373,7 +373,7 @@ pipeline "create_activity_log_alert_for_create_update_public_ip_address" {
   param "alert_name" {
     type        = string
     description = "The name of the activity log alert."
-    default     = "alertCreateUpdatePublicIPAddress"
+    default     = "alertDeleteSecuritySolution"
   }
 
   param "level" {
@@ -385,7 +385,7 @@ pipeline "create_activity_log_alert_for_create_update_public_ip_address" {
   param "action_group_name" {
     type        = string
     description = "The name of the action group."
-    default     = "actionGroupCreateUpdatePublicIPAddres"
+    default     = "actionGroupDeleteSecuritySolution"
   }
 
   param "scope" {
@@ -412,7 +412,7 @@ pipeline "create_activity_log_alert_for_create_update_public_ip_address" {
     cmd   = [
       "monitor", "activity-log", "alert", "create",
       "--resource-group", param.resource_group,
-      "--condition", "category=Administrative and operationName=Microsoft.Network/publicIPAddresses/write and level=verbose",
+      "--condition", "category=Administrative and operationName=Microsoft.Security/securitySolutions/delete and level=verbose",
       "--scope", param.scope,
       "--name", param.alert_name,
       "--subscription", param.subscription_id,
