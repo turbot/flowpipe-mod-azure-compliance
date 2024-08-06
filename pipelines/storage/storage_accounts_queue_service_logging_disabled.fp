@@ -1,16 +1,29 @@
 locals {
   storage_accounts_queue_service_logging_disabled_query = <<-EOQ
+    with get_access_key as (
+      select
+        distinct on (id) id,
+        k ->> 'Value' as access_key
+      from
+        azure_storage_account,
+        jsonb_array_elements(access_keys) as k
+      order by
+        id
+    )
     select
       concat(sa.id, ' [', sa.resource_group, '/', sa.subscription_id, ']') as title,
       sa.id as id,
+      k.access_key as access_key,
       sa.name,
       sa.subscription_id,
       sa._ctx ->> 'connection_name' as cred
     from
       azure_storage_account as sa,
+      get_access_key as k,
       azure_subscription as sub
     where
       sub.subscription_id = sa.subscription_id
+      and k.id = sa.id
       and (
         not queue_logging_read
         or not queue_logging_write
@@ -107,6 +120,7 @@ pipeline "correct_storage_accounts_queue_service_logging_disabled" {
       title           = string
       name            = string
       subscription_id = string
+      access_key      = string
       cred            = string
     }))
     description = local.description_items
@@ -160,6 +174,7 @@ pipeline "correct_storage_accounts_queue_service_logging_disabled" {
       title              = each.value.title
       name               = each.value.name
       subscription_id    = each.value.subscription_id
+      access_key         = each.value.access_key
       cred               = each.value.cred
       notifier           = param.notifier
       notification_level = param.notification_level
@@ -188,6 +203,11 @@ pipeline "correct_one_storage_accounts_queue_service_logging_disabled" {
   param "subscription_id" {
     type        = string
     description = local.description_subscription_id
+  }
+
+  param "access_key" {
+    type        = string
+    description = "The access key of the storage account."
   }
 
   param "cred" {
@@ -257,6 +277,7 @@ pipeline "correct_one_storage_accounts_queue_service_logging_disabled" {
           pipeline_args = {
             account_name     = param.name
             subscription_id  = param.subscription_id
+            access_key       = param.access_key
             cred             = param.cred
             services         = "q"
             log              = "rwd"
