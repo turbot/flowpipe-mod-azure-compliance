@@ -10,13 +10,13 @@ locals {
     cis_v210_4_1_4  =  {pipeline = pipeline.manual_control, additional_args = {message = "CIS v2.1.0 4.1.4 is a TODO control."}}
     cis_v210_4_1_5  = {pipeline = pipeline.detect_and_correct_sql_dbs_transparent_data_encryption_disabled, additional_args = {}}
 		cis_v210_4_1_6  = {pipeline = pipeline.manual_control, additional_args = {message = "CIS v2.1.0 4.1.6 is a TODO control."}}
-		cis_v210_4_3_1  = {pipeline = pipeline.detect_and_correct_postgres_db_servers_ssl_disabled, additional_args = {}}
-		cis_v210_4_3_2  = {pipeline = pipeline.detect_and_correct_postgres_db_servers_log_checkpoints_off, additional_args = {}}
-		cis_v210_4_3_3  = {pipeline = pipeline.detect_and_correct_postgres_db_servers_log_connections_off, additional_args = {}}
-		cis_v210_4_3_4  = {pipeline = pipeline.detect_and_correct_postgres_db_servers_log_disconnections_off, additional_args = {}}
-		cis_v210_4_3_5  = {pipeline = pipeline.detect_and_correct_postgres_db_servers_connection_throttling_off, additional_args = {}}
-		cis_v210_4_3_6  = {pipeline = pipeline.detect_and_correct_postgres_db_servers_log_retention_days_less_than_3, additional_args = {}}
-		cis_v210_4_3_7  = {pipeline = pipeline.detect_and_correct_postgres_db_servers_allow_access_to_azure_services_enabled, additional_args = {}}
+		cis_v210_4_3_1  = {pipeline = pipeline.detect_and_correct_postgresql_servers_with_ssl_disabled, additional_args = {}}
+		cis_v210_4_3_2  = {pipeline = pipeline.detect_and_correct_postgresql_servers_with_log_checkpoints_disabled, additional_args = {}}
+		cis_v210_4_3_3  = {pipeline = pipeline.detect_and_correct_postgresql_servers_with_log_connections_disabled, additional_args = {}}
+		cis_v210_4_3_4  = {pipeline = pipeline.detect_and_correct_postgresql_servers_with_log_disconnections_disabled, additional_args = {}}
+		cis_v210_4_3_5  = {pipeline = pipeline.detect_and_correct_postgresql_servers_with_connection_throttling_disabled, additional_args = {}}
+		cis_v210_4_3_6  = {pipeline = pipeline.detect_and_correct_postgresql_servers_with_log_retention_less_than_3_days, additional_args = {}}
+		cis_v210_4_3_7  = {pipeline = pipeline.detect_and_correct_postgresql_servers_with_allow_access_to_azure_services_enabled, additional_args = {}}
 		cis_v210_4_3_8  = {pipeline = pipeline.manual_control, additional_args = {message = "CIS v2.1.0 4.3.8 is a TODO control."}}
 		cis_v210_4_4_1  = {pipeline = pipeline.manual_control, additional_args = {message = "CIS v2.1.0 4.4.1 is a TODO control."}}
 		cis_v210_4_4_2  = {pipeline = pipeline.manual_control, additional_args = {message = "CIS v2.1.0 4.4.1 is a TODO control."}}

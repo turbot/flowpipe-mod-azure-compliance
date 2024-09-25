@@ -1,43 +1,67 @@
 locals {
-  appservice_webapps_authentication_disabled_query = <<-EOQ
+  storage_accounts_with_blob_soft_delete_disabled_query = <<-EOQ
     select
-      concat(app.id, ' [', app.resource_group, '/', app.subscription_id, ']') as title,
-      app.id as id,
-      app.name,
-      app.resource_group,
-      app.subscription_id,
-      app._ctx ->> 'connection_name' as cred
+      concat(sa.id, ' [', sa.resource_group, '/', sa.subscription_id, ']') as title,
+      sa.id as id,
+      sa.name,
+      sa.resource_group,
+      sa.subscription_id,
+      sa._ctx ->> 'connection_name' as cred
     from
-      azure_app_service_web_app as app,
+      azure_storage_account as sa,
       azure_subscription as sub
     where
-      sub.subscription_id = app.subscription_id
-      and not (auth_settings -> 'properties' ->> 'enabled') :: boolean;
+      sub.subscription_id = sa.subscription_id
+			and not blob_soft_delete_enabled;
   EOQ
 }
 
-trigger "query" "detect_and_correct_appservice_webapps_authentication_disabled" {
-  title         = "Detect & correct App Services with web app authentication disabled"
-  description   = "Detects App Services with web app authentication disabled and runs your chosen action."
-  tags          = merge(local.appservice_common_tags, { class = "unused" })
+variable "storage_accounts_with_blob_soft_delete_disabled_trigger_enabled" {
+  type        = bool
+  default     = false
+  description = "If true, the trigger is enabled."
+}
 
-  enabled  = var.appservice_webapps_authentication_disabled_trigger_enabled
-  schedule = var.appservice_webapps_authentication_disabled_trigger_schedule
+variable "storage_accounts_with_blob_soft_delete_disabled_trigger_schedule" {
+  type        = string
+  default     = "15m"
+  description = "If the trigger is enabled, run it on this schedule."
+}
+
+variable "storage_accounts_with_blob_soft_delete_disabled_default_action" {
+  type        = string
+  description = "The default action to use when there are no approvers."
+  default     = "notify"
+}
+
+variable "storage_accounts_with_blob_soft_delete_disabled_enabled_actions" {
+  type        = list(string)
+  description = "The list of enabled actions approvers can select."
+  default     = ["skip", "enable_blob_soft_delete"]
+}
+
+trigger "query" "detect_and_correct_storage_accounts_with_blob_soft_delete_disabled" {
+  title         = "Detect & Correct Storage Accounts With Blob Soft Delete Disabled"
+  description   = "Detect Storage Accounts with blob soft delete disabled and then enable blob soft delete."
+  tags          = merge(local.storage_common_tags, { class = "unused" })
+
+  enabled  = var.storage_accounts_with_blob_soft_delete_disabled_trigger_enabled
+  schedule = var.storage_accounts_with_blob_soft_delete_disabled_trigger_schedule
   database = var.database
-  sql      = local.appservice_webapps_authentication_disabled_query
+  sql      = local.storage_accounts_with_blob_soft_delete_disabled_query
 
   capture "insert" {
-    pipeline = pipeline.correct_appservice_webapps_authentication_disabled
+    pipeline = pipeline.correct_storage_accounts_with_blob_soft_delete_disabled
     args = {
       items = self.inserted_rows
     }
   }
 }
 
-pipeline "detect_and_correct_appservice_webapps_authentication_disabled" {
-  title         = "Detect & correct App Services with web app authentication disabled"
-  description   = "Detects App Services with web app authentication disabled and runs your chosen action."
-  tags          = merge(local.appservice_common_tags, { class = "unused", type = "featured" })
+pipeline "detect_and_correct_storage_accounts_with_blob_soft_delete_disabled" {
+  title         = "Detect & correct Storage Accounts with blob soft delete disabled"
+  description   = "Detects Storage Accounts with blob soft delete disabled and runs your chosen action."
+  tags          = merge(local.storage_common_tags, { class = "unused", type = "featured" })
 
   param "database" {
     type        = string
@@ -66,22 +90,22 @@ pipeline "detect_and_correct_appservice_webapps_authentication_disabled" {
   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.appservice_webapps_authentication_disabled_default_action
+    default     = var.storage_accounts_with_blob_soft_delete_disabled_default_action
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.appservice_webapps_authentication_disabled_enabled_actions
+    default     = var.storage_accounts_with_blob_soft_delete_disabled_enabled_actions
   }
 
   step "query" "detect" {
     database = param.database
-    sql      = local.appservice_webapps_authentication_disabled_query
+    sql      = local.storage_accounts_with_blob_soft_delete_disabled_query
   }
 
   step "pipeline" "respond" {
-    pipeline = pipeline.correct_appservice_webapps_authentication_disabled
+    pipeline = pipeline.correct_storage_accounts_with_blob_soft_delete_disabled
     args = {
       items              = step.query.detect.rows
       notifier           = param.notifier
@@ -93,10 +117,10 @@ pipeline "detect_and_correct_appservice_webapps_authentication_disabled" {
   }
 }
 
-pipeline "correct_appservice_webapps_authentication_disabled" {
-  title         = "Correct App Services with web app authentication disabled"
-  description   = "Runs corrective action on a collection of App Services with web app authentication disabled."
-  tags          = merge(local.appservice_common_tags, { class = "unused" })
+pipeline "correct_storage_accounts_with_blob_soft_delete_disabled" {
+  title         = "Correct Storage Accounts with blob soft delete disabled"
+  description   = "Runs corrective action on a collection of Storage Accounts with blob soft delete disabled."
+  tags          = merge(local.storage_common_tags, { class = "unused" })
 
   param "items" {
     type = list(object({
@@ -131,19 +155,19 @@ pipeline "correct_appservice_webapps_authentication_disabled" {
   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.appservice_webapps_authentication_disabled_default_action
+    default     = var.storage_accounts_with_blob_soft_delete_disabled_default_action
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.appservice_webapps_authentication_disabled_enabled_actions
+    default     = var.storage_accounts_with_blob_soft_delete_disabled_enabled_actions
   }
 
   step "message" "notify_detection_count" {
     if       = var.notification_level == local.level_verbose
     notifier = notifier[param.notifier]
-    text     = "Detected ${length(param.items)} App Services with web app authentication disabled."
+    text     = "Detected ${length(param.items)} Storage Accounts with blob soft delete disabled."
   }
 
   step "transform" "items_by_id" {
@@ -153,7 +177,7 @@ pipeline "correct_appservice_webapps_authentication_disabled" {
   step "pipeline" "correct_item" {
     for_each        = step.transform.items_by_id.value
     max_concurrency = var.max_concurrency
-    pipeline        = pipeline.correct_one_appservice_webapps_authentication_disabled
+    pipeline        = pipeline.correct_one_storage_accounts_with_blob_soft_delete_disabled
     args = {
       title              = each.value.title
       name               = each.value.name
@@ -169,10 +193,10 @@ pipeline "correct_appservice_webapps_authentication_disabled" {
   }
 }
 
-pipeline "correct_one_appservice_webapps_authentication_disabled" {
-  title         = "Correct one App Service with web app authentication disabled"
-  description   = "Runs corrective action on a single App Service with web app authentication disabled."
-  tags          = merge(local.appservice_common_tags, { class = "unused" })
+pipeline "correct_one_storage_accounts_with_blob_soft_delete_disabled" {
+  title         = "Correct one Storage Account with blob soft delete disabled"
+  description   = "Runs corrective action on a single Storage Account with blob soft delete disabled."
+  tags          = merge(local.storage_common_tags, { class = "unused" })
 
   param "title" {
     type        = string
@@ -181,7 +205,7 @@ pipeline "correct_one_appservice_webapps_authentication_disabled" {
 
   param "name" {
     type        = string
-    description = "The name of the App Service."
+    description = "The name of the Storage Account."
   }
 
   param "resource_group" {
@@ -218,16 +242,16 @@ pipeline "correct_one_appservice_webapps_authentication_disabled" {
     default     = var.approvers
   }
 
-  param "default_action" {
+   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.appservice_webapps_authentication_disabled_default_action
+    default     = var.storage_accounts_with_blob_soft_delete_disabled_default_action
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.appservice_webapps_authentication_disabled_enabled_actions
+    default     = var.storage_accounts_with_blob_soft_delete_disabled_enabled_actions
   }
 
   step "pipeline" "respond" {
@@ -236,7 +260,7 @@ pipeline "correct_one_appservice_webapps_authentication_disabled" {
       notifier           = param.notifier
       notification_level = param.notification_level
       approvers          = param.approvers
-      detect_msg         = "Detected App Service ${param.title} with web app authentication disabled."
+      detect_msg         = "Detected Storage Account ${param.title} with blob soft delete disabled."
       default_action     = param.default_action
       enabled_actions    = param.enabled_actions
       actions = {
@@ -248,51 +272,28 @@ pipeline "correct_one_appservice_webapps_authentication_disabled" {
           pipeline_args = {
             notifier = param.notifier
             send     = param.notification_level == local.level_verbose
-            text     = "Skipped App Service ${param.title} with web app authentication disabled."
+            text     = "Skipped Storage Account ${param.title} with blob soft delete disabled."
           }
           success_msg = ""
           error_msg   = ""
         },
-        "enable_webapp_authentication" = {
-          label        = "Enable Web App Authentication"
-          value        = "enable_webapp_authentication"
+        "enable_blob_soft_delete" = {
+          label        = "Enable Blob Soft Delete"
+          value        = "enable_blob_soft_delete"
           style        = local.style_alert
-          pipeline_ref = local.azure_pipeline_update_appservice_webapp_auth
+          pipeline_ref = local.azure_pipeline_update_storage_account_blob_service_properties
           pipeline_args = {
-            resource_group  = param.resource_group
-            subscription_id = param.subscription_id
-            app_name        = param.name
-            cred            = param.cred
-            enabled         = true
+            account_name                      = param.name
+            resource_group                    = param.resource_group
+            subscription_id                   = param.subscription_id
+            cred                              = param.cred
+            enable_container_delete_retention = true
+            container_delete_retention_days   = 30
           }
-          success_msg = "Enabled web app authentication for App Service ${param.title}."
-          error_msg   = "Error enabling web app authentication for App Service ${param.title}."
+          success_msg = "Enabled blob soft delete for Storage Account ${param.title}."
+          error_msg   = "Error enabling blob soft delete for Storage Account ${param.title}."
         }
       }
     }
   }
-}
-
-variable "appservice_webapps_authentication_disabled_trigger_enabled" {
-  type        = bool
-  default     = false
-  description = "If true, the trigger is enabled."
-}
-
-variable "appservice_webapps_authentication_disabled_trigger_schedule" {
-  type        = string
-  default     = "15m"
-  description = "The schedule on which to run the trigger if enabled."
-}
-
-variable "appservice_webapps_authentication_disabled_default_action" {
-  type        = string
-  description = "The default action to use for the detected item, used if no input is provided."
-  default     = "notify"
-}
-
-variable "appservice_webapps_authentication_disabled_enabled_actions" {
-  type        = list(string)
-  description = "The list of enabled actions to provide to approvers for selection."
-  default     = ["skip", "enable_webapp_authentication"]
 }

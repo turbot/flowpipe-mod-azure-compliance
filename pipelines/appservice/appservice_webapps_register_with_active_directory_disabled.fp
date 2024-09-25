@@ -281,12 +281,12 @@ variable "appservice_webapps_register_with_active_directory_disabled_trigger_ena
 variable "appservice_webapps_register_with_active_directory_disabled_trigger_schedule" {
   type        = string
   default     = "15m"
-  description = "The schedule on which to run the trigger if enabled."
+  description = "If the trigger is enabled, run it on this schedule."
 }
 
 variable "appservice_webapps_register_with_active_directory_disabled_default_action" {
   type        = string
-  description = "The default action to use for the detected item, used if no input is provided."
+  description = "The default action to use when there are no approvers."
   default     = "notify"
 }
 

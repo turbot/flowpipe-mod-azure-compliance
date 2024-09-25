@@ -1,43 +1,69 @@
 locals {
-  appservice_webapps_not_using_https_query = <<-EOQ
-    select
-      concat(app.id, ' [', app.resource_group, '/', app.subscription_id, ']') as title,
-      app.id as id,
-      app.name,
-      app.resource_group,
-      app.subscription_id,
-      app._ctx ->> 'connection_name' as cred
-    from
-      azure_app_service_web_app as app,
-      azure_subscription as sub
-    where
-      sub.subscription_id = app.subscription_id
-      and not https_only;
+  postgresql_servers_with_log_duration_disabled_query = <<-EOQ
+		select
+			concat(db.id, ' [', db.subscription_id, '/', db.resource_group, ']') as title,
+			db.id as id,
+			db.name,
+			db.resource_group,
+			db.subscription_id,
+			db._ctx ->> 'connection_name' as cred
+		from
+			azure_postgresql_server as db,
+			jsonb_array_elements(server_configurations) config,
+			azure_subscription as sub
+		where
+			config ->> 'Name' = 'log_duration'
+			and lower(config -> 'ConfigurationProperties' ->> 'value') != 'on'
+			and sub.subscription_id = db.subscription_id;
   EOQ
 }
 
-trigger "query" "detect_and_correct_appservice_webapps_not_using_https" {
-  title         = "Detect & correct App Services not using HTTPS"
-  description   = "Detects App Services not using HTTPS and runs your chosen action."
-  tags          = merge(local.appservice_common_tags, { class = "unused" })
+variable "postgresql_servers_with_log_duration_disabled_trigger_enabled" {
+  type        = bool
+  default     = false
+  description = "If true, the trigger is enabled."
+}
 
-  enabled  = var.appservice_webapps_not_using_https_trigger_enabled
-  schedule = var.appservice_webapps_not_using_https_trigger_schedule
+variable "postgresql_servers_with_log_duration_disabled_trigger_schedule" {
+  type        = string
+  default     = "15m"
+  description = "If the trigger is enabled, run it on this schedule."
+}
+
+variable "postgresql_servers_with_log_duration_disabled_default_action" {
+  type        = string
+  description = "The default action to use when there are no approvers."
+  default     = "notify"
+}
+
+variable "postgresql_servers_with_log_duration_disabled_enabled_actions" {
+  type        = list(string)
+  description = "The list of enabled actions to provide to approvers for selection."
+  default     = ["skip", "enable_logging_duration"]
+}
+
+trigger "query" "f" {
+  title         = "Detect & correct PostgreSQL servers with logging duration disabled"
+  description   = "Detect PostgreSQL servers with logging duration disabled and then enable logging duration."
+  tags          = merge(local.postgres_common_tags, { class = "unused" })
+
+  enabled  = var.postgresql_servers_with_log_duration_disabled_trigger_enabled
+  schedule = var.postgresql_servers_with_log_duration_disabled_trigger_schedule
   database = var.database
-  sql      = local.appservice_webapps_not_using_https_query
+  sql      = local.postgresql_servers_with_log_duration_disabled_query
 
   capture "insert" {
-    pipeline = pipeline.correct_appservice_webapps_not_using_https
+    pipeline = pipeline.correct_postgresql_servers_with_log_duration_disabled
     args = {
       items = self.inserted_rows
     }
   }
 }
 
-pipeline "detect_and_correct_appservice_webapps_not_using_https" {
-  title         = "Detect & correct App Services not using HTTPS"
-  description   = "Detects App Services not using HTTPS and runs your chosen action."
-  tags          = merge(local.appservice_common_tags, { class = "unused", type = "featured" })
+pipeline "detect_and_correct_postgresql_servers_with_log_duration_disabled" {
+  title         = "Detect & correct PostgreSQL servers with logging duration disabled"
+  description   = "Detect PostgreSQL servers with logging duration disabled and then enable logging duration."
+  tags          = merge(local.postgres_common_tags, { class = "unused", type = "featured" })
 
   param "database" {
     type        = string
@@ -66,22 +92,22 @@ pipeline "detect_and_correct_appservice_webapps_not_using_https" {
   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.appservice_webapps_not_using_https_default_action
+    default     = var.postgresql_servers_with_log_duration_disabled_default_action
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.appservice_webapps_not_using_https_enabled_actions
+    default     = var.postgresql_servers_with_log_duration_disabled_enabled_actions
   }
 
   step "query" "detect" {
     database = param.database
-    sql      = local.appservice_webapps_not_using_https_query
+    sql      = local.postgresql_servers_with_log_duration_disabled_query
   }
 
   step "pipeline" "respond" {
-    pipeline = pipeline.correct_appservice_webapps_not_using_https
+    pipeline = pipeline.correct_postgresql_servers_with_log_duration_disabled
     args = {
       items              = step.query.detect.rows
       notifier           = param.notifier
@@ -93,10 +119,10 @@ pipeline "detect_and_correct_appservice_webapps_not_using_https" {
   }
 }
 
-pipeline "correct_appservice_webapps_not_using_https" {
-  title         = "Correct App Services not using HTTPS"
-  description   = "Runs corrective action on a collection of App Services not using HTTPS."
-  tags          = merge(local.appservice_common_tags, { class = "unused" })
+pipeline "correct_postgresql_servers_with_log_duration_disabled" {
+  title         = "Correct PostgreSQL servers with logging duration disabled"
+  description   = "Enable logging duration for PostgreSQL servers with logging duration disabled."
+  tags          = merge(local.postgres_common_tags, { class = "unused" })
 
   param "items" {
     type = list(object({
@@ -131,29 +157,25 @@ pipeline "correct_appservice_webapps_not_using_https" {
   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.appservice_webapps_not_using_https_default_action
+    default     = var.postgresql_servers_with_log_duration_disabled_default_action
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.appservice_webapps_not_using_https_enabled_actions
+    default     = var.postgresql_servers_with_log_duration_disabled_enabled_actions
   }
 
   step "message" "notify_detection_count" {
     if       = var.notification_level == local.level_verbose
     notifier = notifier[param.notifier]
-    text     = "Detected ${length(param.items)} App Services not using HTTPS."
-  }
-
-  step "transform" "items_by_id" {
-    value = { for row in param.items : row.id => row }
+    text     = "Detected ${length(param.items)} PostgreSQL server(s) with logging duration disabled."
   }
 
   step "pipeline" "correct_item" {
-    for_each        = step.transform.items_by_id.value
+    for_each        = { for row in param.items : row.id => row }
     max_concurrency = var.max_concurrency
-    pipeline        = pipeline.correct_one_appservice_webapps_not_using_https
+    pipeline        = pipeline.correct_one_postgresql_server_with_log_duration_disabled
     args = {
       title              = each.value.title
       name               = each.value.name
@@ -169,10 +191,10 @@ pipeline "correct_appservice_webapps_not_using_https" {
   }
 }
 
-pipeline "correct_one_appservice_webapps_not_using_https" {
-  title         = "Correct one App Service not using HTTPS"
-  description   = "Runs corrective action on a single App Service not using HTTPS."
-  tags          = merge(local.appservice_common_tags, { class = "unused" })
+pipeline "correct_one_postgresql_server_with_log_duration_disabled" {
+  title         = "Correct PostgreSQL server with logging duration disabled"
+  description   = "Enable logging duration for a PostgreSQL server with logging duration disabled."
+  tags          = merge(local.postgres_common_tags, { class = "unused" })
 
   param "title" {
     type        = string
@@ -181,7 +203,7 @@ pipeline "correct_one_appservice_webapps_not_using_https" {
 
   param "name" {
     type        = string
-    description = "The name of the App Service."
+    description = "The name of the PostgreSQL server."
   }
 
   param "resource_group" {
@@ -218,16 +240,16 @@ pipeline "correct_one_appservice_webapps_not_using_https" {
     default     = var.approvers
   }
 
-  param "default_action" {
+   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.appservice_webapps_not_using_https_default_action
+    default     = var.postgresql_servers_with_log_duration_disabled_default_action
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.appservice_webapps_not_using_https_enabled_actions
+    default     = var.postgresql_servers_with_log_duration_disabled_enabled_actions
   }
 
   step "pipeline" "respond" {
@@ -236,7 +258,7 @@ pipeline "correct_one_appservice_webapps_not_using_https" {
       notifier           = param.notifier
       notification_level = param.notification_level
       approvers          = param.approvers
-      detect_msg         = "Detected App Service ${param.title} not using HTTPS."
+      detect_msg         = "Detected PostgreSQL server ${param.title} with logging duration disabled."
       default_action     = param.default_action
       enabled_actions    = param.enabled_actions
       actions = {
@@ -248,51 +270,28 @@ pipeline "correct_one_appservice_webapps_not_using_https" {
           pipeline_args = {
             notifier = param.notifier
             send     = param.notification_level == local.level_verbose
-            text     = "Skipped App Service ${param.title} not using HTTPS."
+            text     = "Skipped PostgreSQL server ${param.title}."
           }
           success_msg = ""
           error_msg   = ""
         },
-        "enable_https" = {
-          label        = "Enable HTTPS"
-          value        = "enable_https"
+        "enable_logging_duration" = {
+          label        = "Enable logging duration"
+          value        = "enable_logging_duration"
           style        = local.style_alert
-          pipeline_ref = local.azure_pipeline_update_appservice_webapp
+          pipeline_ref = local.azure_pipeline_set_postgres_server_configuration
           pipeline_args = {
-            resource_group  = param.resource_group
-            subscription_id = param.subscription_id
-            app_name        = param.name
-            cred            = param.cred
-            https_only      = true
+            server_name       = param.name
+            resource_group    = param.resource_group
+            subscription_id   = param.subscription_id
+            cred              = param.cred
+            config_name       = "log_duration"
+            config_value      = "on"
           }
-          success_msg = "Enabled HTTPS for App Service ${param.title}."
-          error_msg   = "Error enabling HTTPS for App Service ${param.title}."
+          success_msg = "Enabled logging duration for PostgreSQL server ${param.title}."
+          error_msg   = "Error enabling logging duration for PostgreSQL server ${param.title}."
         }
       }
     }
   }
-}
-
-variable "appservice_webapps_not_using_https_trigger_enabled" {
-  type        = bool
-  default     = false
-  description = "If true, the trigger is enabled."
-}
-
-variable "appservice_webapps_not_using_https_trigger_schedule" {
-  type        = string
-  default     = "15m"
-  description = "The schedule on which to run the trigger if enabled."
-}
-
-variable "appservice_webapps_not_using_https_default_action" {
-  type        = string
-  description = "The default action to use for the detected item, used if no input is provided."
-  default     = "notify"
-}
-
-variable "appservice_webapps_not_using_https_enabled_actions" {
-  type        = list(string)
-  description = "The list of enabled actions to provide to approvers for selection."
-  default     = ["skip", "enable_https"]
 }

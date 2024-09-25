@@ -1,5 +1,5 @@
 locals {
-  storage_accounts_blob_service_logging_disabled_query = <<-EOQ
+  storage_accounts_with_blob_service_logging_disabled_query = <<-EOQ
     with get_access_key as (
       select
         distinct on (id) id,
@@ -11,7 +11,7 @@ locals {
         id
     )
     select
-      concat(sa.id, ' [', sa.resource_group, '/', sa.subscription_id, ']') as title,
+      concat(sa.id, ' [', sa.subscription_id, '/', sa.resource_group, ']') as title,
       sa.id as id,
       k.access_key as access_key,
       sa.name,
@@ -32,27 +32,51 @@ locals {
   EOQ
 }
 
-trigger "query" "detect_and_correct_storage_accounts_blob_service_logging_disabled" {
-  title         = "Detect & correct Storage Accounts with blob service logging disabled"
-  description   = "Detects Storage Accounts with blob service logging disabled and runs your chosen action."
+variable "storage_accounts_with_blob_service_logging_disabled_trigger_enabled" {
+  type        = bool
+  default     = false
+  description = "If true, the trigger is enabled."
+}
+
+variable "storage_accounts_with_blob_service_logging_disabled_trigger_schedule" {
+  type        = string
+  default     = "15m"
+  description = "If the trigger is enabled, run it on this schedule."
+}
+
+variable "storage_accounts_with_blob_service_logging_disabled_default_action" {
+  type        = string
+  description = "The default action to use when there are no approvers."
+  default     = "notify"
+}
+
+variable "storage_accounts_with_blob_service_logging_disabled_enabled_actions" {
+  type        = list(string)
+  description = "The list of enabled actions approvers can select."
+  default     = ["skip", "enable_blob_service_logging"]
+}
+
+trigger "query" "detect_and_correct_storage_accounts_with_blob_service_logging_disabled" {
+  title         = "Detect & Correct Storage Accounts With Blob Service Logging Disabled"
+  description   = "Detect Storage Accounts with blob service logging disabled and then enable blob service logging."
   tags          = merge(local.storage_common_tags, { class = "unused" })
 
-  enabled  = var.storage_accounts_blob_service_logging_disabled_trigger_enabled
-  schedule = var.storage_accounts_blob_service_logging_disabled_trigger_schedule
+  enabled  = var.storage_accounts_with_blob_service_logging_disabled_trigger_enabled
+  schedule = var.storage_accounts_with_blob_service_logging_disabled_trigger_schedule
   database = var.database
-  sql      = local.storage_accounts_blob_service_logging_disabled_query
+  sql      = local.storage_accounts_with_blob_service_logging_disabled_query
 
   capture "insert" {
-    pipeline = pipeline.correct_storage_accounts_blob_service_logging_disabled
+    pipeline = pipeline.correct_storage_accounts_with_blob_service_logging_disabled
     args = {
       items = self.inserted_rows
     }
   }
 }
 
-pipeline "detect_and_correct_storage_accounts_blob_service_logging_disabled" {
-  title         = "Detect & correct Storage Accounts with blob service logging disabled"
-  description   = "Detects Storage Accounts with blob service logging disabled and runs your chosen action."
+pipeline "detect_and_correct_storage_accounts_with_blob_service_logging_disabled" {
+  title         = "Detect & Correct Storage Accounts With Blob Service Logging Disabled"
+  description   = "Detect Storage Accounts with blob service logging disabled and then enable blob service logging."
   tags          = merge(local.storage_common_tags, { class = "unused", type = "featured" })
 
   param "database" {
@@ -82,22 +106,22 @@ pipeline "detect_and_correct_storage_accounts_blob_service_logging_disabled" {
   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.storage_accounts_blob_service_logging_disabled_default_action
+    default     = var.storage_accounts_with_blob_service_logging_disabled_default_action
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.storage_accounts_blob_service_logging_disabled_enabled_actions
+    default     = var.storage_accounts_with_blob_service_logging_disabled_enabled_actions
   }
 
   step "query" "detect" {
     database = param.database
-    sql      = local.storage_accounts_blob_service_logging_disabled_query
+    sql      = local.storage_accounts_with_blob_service_logging_disabled_query
   }
 
   step "pipeline" "respond" {
-    pipeline = pipeline.correct_storage_accounts_blob_service_logging_disabled
+    pipeline = pipeline.correct_storage_accounts_with_blob_service_logging_disabled
     args = {
       items              = step.query.detect.rows
       notifier           = param.notifier
@@ -109,9 +133,9 @@ pipeline "detect_and_correct_storage_accounts_blob_service_logging_disabled" {
   }
 }
 
-pipeline "correct_storage_accounts_blob_service_logging_disabled" {
-  title         = "Correct Storage Accounts with blob service logging disabled"
-  description   = "Runs corrective action on a collection of Storage Accounts with blob service logging disabled."
+pipeline "correct_storage_accounts_with_blob_service_logging_disabled" {
+  title         = "Correct Storage Accounts With Blob Service Logging Disabled"
+  description   = "Enable blob service logging for Storage Accounts with blob service logging disabled."
   tags          = merge(local.storage_common_tags, { class = "unused" })
 
   param "items" {
@@ -147,19 +171,19 @@ pipeline "correct_storage_accounts_blob_service_logging_disabled" {
   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.storage_accounts_blob_service_logging_disabled_default_action
+    default     = var.storage_accounts_with_blob_service_logging_disabled_default_action
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.storage_accounts_blob_service_logging_disabled_enabled_actions
+    default     = var.storage_accounts_with_blob_service_logging_disabled_enabled_actions
   }
 
   step "message" "notify_detection_count" {
     if       = var.notification_level == local.level_verbose
     notifier = notifier[param.notifier]
-    text     = "Detected ${length(param.items)} Storage Accounts with blob service logging disabled."
+    text     = "Detected ${length(param.items)} Storage Account(s) with blob service logging disabled."
   }
 
   step "transform" "items_by_id" {
@@ -169,7 +193,7 @@ pipeline "correct_storage_accounts_blob_service_logging_disabled" {
   step "pipeline" "correct_item" {
     for_each        = step.transform.items_by_id.value
     max_concurrency = var.max_concurrency
-    pipeline        = pipeline.correct_one_storage_accounts_blob_service_logging_disabled
+    pipeline        = pipeline.correct_one_storage_account_with_blob_service_logging_disabled
     args = {
       title              = each.value.title
       name               = each.value.name
@@ -185,9 +209,9 @@ pipeline "correct_storage_accounts_blob_service_logging_disabled" {
   }
 }
 
-pipeline "correct_one_storage_accounts_blob_service_logging_disabled" {
-  title         = "Correct one Storage Account with blob service logging disabled"
-  description   = "Runs corrective action on a single Storage Account with blob service logging disabled."
+pipeline "correct_one_storage_account_with_blob_service_logging_disabled" {
+  title         = "Correct Storage Account with blob service logging disabled"
+  description   = "Enable blob service logging for Storage Accouns with blob service logging disabled."
   tags          = merge(local.storage_common_tags, { class = "unused" })
 
   param "title" {
@@ -237,13 +261,13 @@ pipeline "correct_one_storage_accounts_blob_service_logging_disabled" {
   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.storage_accounts_blob_service_logging_disabled_default_action
+    default     = var.storage_accounts_with_blob_service_logging_disabled_default_action
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.storage_accounts_blob_service_logging_disabled_enabled_actions
+    default     = var.storage_accounts_with_blob_service_logging_disabled_enabled_actions
   }
 
   step "pipeline" "respond" {
@@ -252,7 +276,7 @@ pipeline "correct_one_storage_accounts_blob_service_logging_disabled" {
       notifier           = param.notifier
       notification_level = param.notification_level
       approvers          = param.approvers
-      detect_msg         = "Detected Storage Account ${param.title} with blob service logging disabled."
+      detect_msg         = "Detected Storage Account with blob service logging disabled ${param.title}."
       default_action     = param.default_action
       enabled_actions    = param.enabled_actions
       actions = {
@@ -264,13 +288,13 @@ pipeline "correct_one_storage_accounts_blob_service_logging_disabled" {
           pipeline_args = {
             notifier = param.notifier
             send     = param.notification_level == local.level_verbose
-            text     = "Skipped Storage Account ${param.title} with blob service logging disabled."
+            text     = "Skipped Storage Account ${param.title}."
           }
           success_msg = ""
           error_msg   = ""
         },
         "enable_blob_service_logging" = {
-          label        = "Enable Blob Service Logging"
+          label        = "Enable blob service logging"
           value        = "enable_blob_service_logging"
           style        = local.style_alert
           pipeline_ref = local.azure_pipeline_update_storage_account_logging
@@ -291,26 +315,3 @@ pipeline "correct_one_storage_accounts_blob_service_logging_disabled" {
   }
 }
 
-variable "storage_accounts_blob_service_logging_disabled_trigger_enabled" {
-  type        = bool
-  default     = false
-  description = "If true, the trigger is enabled."
-}
-
-variable "storage_accounts_blob_service_logging_disabled_trigger_schedule" {
-  type        = string
-  default     = "15m"
-  description = "The schedule on which to run the trigger if enabled."
-}
-
-variable "storage_accounts_blob_service_logging_disabled_default_action" {
-  type        = string
-  description = "The default action to use for the detected item, used if no input is provided."
-  default     = "notify"
-}
-
-variable "storage_accounts_blob_service_logging_disabled_enabled_actions" {
-  type        = list(string)
-  description = "The list of enabled actions to provide to approvers for selection."
-  default     = ["skip", "enable_blob_service_logging"]
-}

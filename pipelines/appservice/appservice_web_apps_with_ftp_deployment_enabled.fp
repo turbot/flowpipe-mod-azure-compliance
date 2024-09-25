@@ -1,45 +1,67 @@
 locals {
-  postgres_db_servers_log_checkpoints_off_query = <<-EOQ
-		select
-			concat(db.id, ' [', db.resource_group, '/', db.subscription_id, ']') as title,
-			db.id as id,
-			db.name,
-			db.resource_group,
-			db.subscription_id,
-			db._ctx ->> 'connection_name' as cred
-		from
-			azure_postgresql_server as db,
-			jsonb_array_elements(server_configurations) config,
-			azure_subscription as sub
-		where
-			config ->> 'Name' = 'log_checkpoints'
-			and lower(config -> 'ConfigurationProperties' ->> 'value') != 'on'
-			and sub.subscription_id = db.subscription_id;
+  appservice_web_apps_with_ftp_deployment_enabled_query = <<-EOQ
+    select
+      concat(app.id, ' [', app.subscription_id, '/', app.resource_group, ']') as title,
+      app.id as id,
+      app.name,
+      app.resource_group,
+      app.subscription_id,
+      app._ctx ->> 'connection_name' as cred
+    from
+      azure_app_service_web_app as app,
+      azure_subscription as sub
+    where
+      sub.subscription_id = app.subscription_id
+      and configuration -> 'properties' ->> 'ftpsState' = 'AllAllowed';
   EOQ
 }
 
-trigger "query" "detect_and_correct_postgres_db_servers_log_checkpoints_off" {
-  title         = "Detect & correct PostgreSQL DB servers with logging checkpoints off"
-  description   = "Detects PostgreSQL database servers with logging checkpoints disabled and runs your chosen action."
-  tags          = merge(local.postgres_common_tags, { class = "unused" })
+variable "appservice_web_apps_with_ftp_deployment_enabled_trigger_enabled" {
+  type        = bool
+  default     = false
+  description = "If true, the trigger is enabled."
+}
 
-  enabled  = var.postgres_db_servers_log_checkpoints_off_trigger_enabled
-  schedule = var.postgres_db_servers_log_checkpoints_off_trigger_schedule
+variable "appservice_web_apps_with_ftp_deployment_enabled_trigger_schedule" {
+  type        = string
+  default     = "15m"
+  description = "If the trigger is enabled, run it on this schedule."
+}
+
+variable "appservice_web_apps_with_ftp_deployment_enabled_default_action" {
+  type        = string
+  description = "The default action to use when there are no approvers."
+  default     = "notify"
+}
+
+variable "appservice_web_apps_with_ftp_deployment_enabled_enabled_actions" {
+  type        = list(string)
+  description = "The list of enabled actions approvers can select."
+  default     = ["skip", "disable_ftp_deployment"]
+}
+
+trigger "query" "detect_and_correct_appservice_web_apps_with_ftp_deployment_enabled" {
+  title         = "Detect & Correct App Service Web Apps With FTP Deployment Enabled"
+  description   = "Detect App Service web apps with FTP deployment enabled and then disable FTP Deployment."
+  tags          = merge(local.appservice_common_tags, { class = "unused" })
+
+  enabled  = var.appservice_web_apps_with_ftp_deployment_enabled_trigger_enabled
+  schedule = var.appservice_web_apps_with_ftp_deployment_enabled_trigger_schedule
   database = var.database
-  sql      = local.postgres_db_servers_log_checkpoints_off_query
+  sql      = local.appservice_web_apps_with_ftp_deployment_enabled_query
 
   capture "insert" {
-    pipeline = pipeline.correct_postgres_db_servers_log_checkpoints_off
+    pipeline = pipeline.correct_appservice_web_apps_with_ftp_deployment_enabled
     args = {
       items = self.inserted_rows
     }
   }
 }
 
-pipeline "detect_and_correct_postgres_db_servers_log_checkpoints_off" {
-  title         = "Detect & correct PostgreSQL DB servers with logging checkpoints off"
-  description   = "Detects PostgreSQL database servers with logging checkpoints disabled and runs your chosen action."
-  tags          = merge(local.postgres_common_tags, { class = "unused", type = "featured" })
+pipeline "detect_and_correct_appservice_web_apps_with_ftp_deployment_enabled" {
+  title         = "Detect & Correct App Service Web Apps With FTP Deployment Enabled"
+  description   = "Detect App Service web apps with FTP deployment enabled and then disable FTP Deployment."
+  tags          = merge(local.appservice_common_tags, { class = "unused", type = "featured" })
 
   param "database" {
     type        = string
@@ -68,22 +90,22 @@ pipeline "detect_and_correct_postgres_db_servers_log_checkpoints_off" {
   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.postgres_db_servers_log_checkpoints_off_default_action
+    default     = var.appservice_web_apps_with_ftp_deployment_enabled_default_action
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.postgres_db_servers_log_checkpoints_off_enabled_actions
+    default     = var.appservice_web_apps_with_ftp_deployment_enabled_enabled_actions
   }
 
   step "query" "detect" {
     database = param.database
-    sql      = local.postgres_db_servers_log_checkpoints_off_query
+    sql      = local.appservice_web_apps_with_ftp_deployment_enabled_query
   }
 
   step "pipeline" "respond" {
-    pipeline = pipeline.correct_postgres_db_servers_log_checkpoints_off
+    pipeline = pipeline.correct_appservice_web_apps_with_ftp_deployment_enabled
     args = {
       items              = step.query.detect.rows
       notifier           = param.notifier
@@ -95,10 +117,10 @@ pipeline "detect_and_correct_postgres_db_servers_log_checkpoints_off" {
   }
 }
 
-pipeline "correct_postgres_db_servers_log_checkpoints_off" {
-  title         = "Correct PostgreSQL DB servers with logging checkpoints off"
-  description   = "Runs corrective action on a collection of PostgreSQL database servers with logging checkpoints disabled."
-  tags          = merge(local.postgres_common_tags, { class = "unused" })
+pipeline "correct_appservice_web_apps_with_ftp_deployment_enabled" {
+  title         = "Correct App Service Web App With FTP Deployment Enabled"
+  description   = "Disable FTP Deployment for App Service web apps with FTP deployment enabled."
+  tags          = merge(local.appservice_common_tags, { class = "unused" })
 
   param "items" {
     type = list(object({
@@ -133,19 +155,19 @@ pipeline "correct_postgres_db_servers_log_checkpoints_off" {
   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.postgres_db_servers_log_checkpoints_off_default_action
+    default     = var.appservice_web_apps_with_ftp_deployment_enabled_default_action
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.postgres_db_servers_log_checkpoints_off_enabled_actions
+    default     = var.appservice_web_apps_with_ftp_deployment_enabled_enabled_actions
   }
 
   step "message" "notify_detection_count" {
     if       = var.notification_level == local.level_verbose
     notifier = notifier[param.notifier]
-    text     = "Detected ${length(param.items)} PostgreSQL DB servers with logging checkpoints disabled."
+    text     = "Detected ${length(param.items)} App Services web app(s) with FTP deployment enabled."
   }
 
   step "transform" "items_by_id" {
@@ -155,7 +177,7 @@ pipeline "correct_postgres_db_servers_log_checkpoints_off" {
   step "pipeline" "correct_item" {
     for_each        = step.transform.items_by_id.value
     max_concurrency = var.max_concurrency
-    pipeline        = pipeline.correct_one_postgres_db_servers_log_checkpoints_off
+    pipeline        = pipeline.correct_one_appservice_web_apps_with_ftp_deployment_enabled
     args = {
       title              = each.value.title
       name               = each.value.name
@@ -171,10 +193,10 @@ pipeline "correct_postgres_db_servers_log_checkpoints_off" {
   }
 }
 
-pipeline "correct_one_postgres_db_servers_log_checkpoints_off" {
-  title         = "Correct one PostgreSQL DB server with logging checkpoints off"
-  description   = "Runs corrective action on a single PostgreSQL database server with logging checkpoints disabled."
-  tags          = merge(local.postgres_common_tags, { class = "unused" })
+pipeline "correct_one_appservice_web_apps_with_ftp_deployment_enabled" {
+  title         = "Correct App Service Web App With FTP Deployment Enabled"
+  description   = "Disable FTP Deployment for a App Service web app with FTP deployment enabled."
+  tags          = merge(local.appservice_common_tags, { class = "unused" })
 
   param "title" {
     type        = string
@@ -183,7 +205,7 @@ pipeline "correct_one_postgres_db_servers_log_checkpoints_off" {
 
   param "name" {
     type        = string
-    description = "The name of the PostgreSQL database server."
+    description = "The name of the App Service."
   }
 
   param "resource_group" {
@@ -220,16 +242,16 @@ pipeline "correct_one_postgres_db_servers_log_checkpoints_off" {
     default     = var.approvers
   }
 
-   param "default_action" {
+  param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.postgres_db_servers_log_checkpoints_off_default_action
+    default     = var.appservice_web_apps_with_ftp_deployment_enabled_default_action
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.postgres_db_servers_log_checkpoints_off_enabled_actions
+    default     = var.appservice_web_apps_with_ftp_deployment_enabled_enabled_actions
   }
 
   step "pipeline" "respond" {
@@ -238,7 +260,7 @@ pipeline "correct_one_postgres_db_servers_log_checkpoints_off" {
       notifier           = param.notifier
       notification_level = param.notification_level
       approvers          = param.approvers
-      detect_msg         = "Detected PostgreSQL DB server ${param.title} with logging checkpoints disabled."
+      detect_msg         = "Detected App Service web app ${param.title} with FTP deployment enabled."
       default_action     = param.default_action
       enabled_actions    = param.enabled_actions
       actions = {
@@ -250,52 +272,29 @@ pipeline "correct_one_postgres_db_servers_log_checkpoints_off" {
           pipeline_args = {
             notifier = param.notifier
             send     = param.notification_level == local.level_verbose
-            text     = "Skipped PostgreSQL DB server ${param.title} with logging checkpoints disabled."
+            text     = "Skipped App Service web app ${param.title}."
           }
           success_msg = ""
           error_msg   = ""
         },
-        "enable_logging_checkpoints" = {
-          label        = "Enable Logging Checkpoints"
-          value        = "enable_logging_checkpoints"
+        "disable_ftp_deployment" = {
+          label        = "Disable FTP deployment"
+          value        = "disable_ftp_deployment"
           style        = local.style_alert
-          pipeline_ref = local.azure_pipeline_set_postgres_server_configuration
+          pipeline_ref = local.azure_pipeline_set_config_appservice_webapp
           pipeline_args = {
-            server_name       = param.name
-            resource_group    = param.resource_group
-            subscription_id   = param.subscription_id
-            cred              = param.cred
-            config_name       = "log_checkpoints"
-            config_value      = "on"
+            resource_group  = param.resource_group
+            subscription_id = param.subscription_id
+            app_name        = param.name
+            cred            = param.cred
+            ftps_state      = "Disabled"
           }
-          success_msg = "Enabled logging checkpoints for PostgreSQL DB server ${param.title}."
-          error_msg   = "Error enabling logging checkpoints for PostgreSQL DB server ${param.title}."
+          success_msg = "Disabled FTP deployment for App Service web app ${param.title}."
+          error_msg   = "Error disabling FTP deployment for App Service web app ${param.title}."
         }
       }
     }
   }
 }
 
-variable "postgres_db_servers_log_checkpoints_off_trigger_enabled" {
-  type        = bool
-  default     = false
-  description = "If true, the trigger is enabled."
-}
 
-variable "postgres_db_servers_log_checkpoints_off_trigger_schedule" {
-  type        = string
-  default     = "15m"
-  description = "The schedule on which to run the trigger if enabled."
-}
-
-variable "postgres_db_servers_log_checkpoints_off_default_action" {
-  type        = string
-  description = "The default action to use for the detected item, used if no input is provided."
-  default     = "notify"
-}
-
-variable "postgres_db_servers_log_checkpoints_off_enabled_actions" {
-  type        = list(string)
-  description = "The list of enabled actions to provide to approvers for selection."
-  default     = ["skip", "enable_logging_checkpoints"]
-}

@@ -4,22 +4,22 @@ locals {
   // })
 
   cis_v210_2_control_mapping = {
-    cis_v210_2_1_1  = {pipeline = pipeline.detect_and_correct_securitycenter_azure_defender_off_for_server, additional_args = {}}
-    cis_v210_2_1_2  = {pipeline = pipeline.detect_and_correct_securitycenter_azure_defender_off_for_appservice, additional_args = {}}
-    cis_v210_2_1_3  = {pipeline = pipeline.detect_and_correct_securitycenter_azure_defender_off_for_sqldb, additional_args = {}}
-    cis_v210_2_1_4  = {pipeline = pipeline.detect_and_correct_securitycenter_azure_defender_off_for_sqlservervm, additional_args = {}}
-    cis_v210_2_1_5  = {pipeline = pipeline.detect_and_correct_securitycenter_azure_defender_off_for_opensource_relational_db, additional_args = {}}
-    cis_v210_2_1_6  = {pipeline = pipeline.detect_and_correct_securitycenter_azure_defender_off_for_cosmosdb, additional_args = {}}
-    cis_v210_2_1_7  = {pipeline = pipeline.detect_and_correct_securitycenter_azure_defender_off_for_storage, additional_args = {}}
-    cis_v210_2_1_8  = {pipeline = pipeline.detect_and_correct_securitycenter_azure_defender_off_for_containerregistry, additional_args = {}}
-    cis_v210_2_1_9  = {pipeline = pipeline.detect_and_correct_securitycenter_azure_defender_off_for_keyvault, additional_args = {}}
-    cis_v210_2_1_10  = {pipeline = pipeline.detect_and_correct_securitycenter_azure_defender_off_for_dns, additional_args = {}}
-    cis_v210_2_1_11  = {pipeline = pipeline.detect_and_correct_securitycenter_azure_defender_off_for_resource_manager, additional_args = {}}
+    cis_v210_2_1_1  = {pipeline = pipeline.detect_and_correct_securitycenters_with_azure_defender_for_server_disabled, additional_args = {}}
+    cis_v210_2_1_2  = {pipeline = pipeline.detect_and_correct_securitycenters_with_azure_defender_for_app_service_disabled, additional_args = {}}
+    cis_v210_2_1_3  = {pipeline = pipeline.detect_and_correct_securitycenters_with_azure_defender_for_sql_db_disabled, additional_args = {}}
+    cis_v210_2_1_4  = {pipeline = pipeline.detect_and_correct_securitycenters_with_azure_defender_for_sql_server_vm_disabled, additional_args = {}}
+    cis_v210_2_1_5  = {pipeline = pipeline.detect_and_correct_securitycenters_with_azure_defender_for_open_source_relational_db_disabled, additional_args = {}}
+    cis_v210_2_1_6  = {pipeline = pipeline.detect_and_correct_securitycenters_with_azure_defender_for_cosmosdb_disabled, additional_args = {}}
+    cis_v210_2_1_7  = {pipeline = pipeline.detect_and_correct_securitycenters_with_azure_defender_for_storage_disabled, additional_args = {}}
+    cis_v210_2_1_8  = {pipeline = pipeline.detect_and_correct_securitycenters_with_azure_defender_for_container_registry_disabled, additional_args = {}}
+    cis_v210_2_1_9  = {pipeline = pipeline.detect_and_correct_securitycenters_with_azure_defender_for_keyvault_disabled, additional_args = {}}
+    cis_v210_2_1_10  = {pipeline = pipeline.detect_and_correct_securitycenters_with_azure_defender_for_dns_disabled, additional_args = {}}
+    cis_v210_2_1_11  = {pipeline = pipeline.detect_and_correct_securitycenters_with_azure_defender_for_resource_manager_disabled, additional_args = {}}
     cis_v210_2_1_12  = {pipeline = pipeline.manual_control, additional_args = {message = "CIS v2.1.0 2.1.12 is a TODO control."}}
     cis_v210_2_1_13  = {pipeline = pipeline.manual_control, additional_args = {message = "CIS v2.1.0 2.1.32 is a manual control."}}
     cis_v210_2_1_14  = {pipeline = pipeline.manual_control, additional_args = {message = "CIS v2.1.0 2.1.14 is a TODO control."}}
     cis_v210_2_1_15  = {pipeline = pipeline.manual_control, additional_args = {message = "CIS v2.1.0 2.1.15 is a manual control."}}
-    cis_v210_2_1_16  = {pipeline = pipeline.detect_and_correct_securitycenter_azure_defender_off_for_containerregistry, additional_args = {}}
+    cis_v210_2_1_16  = {pipeline = pipeline.detect_and_correct_securitycenters_with_azure_defender_for_container_registry_disabled, additional_args = {}}
     cis_v210_2_1_17  = {pipeline = pipeline.manual_control, additional_args = {message = "CIS v2.1.0 2.1.17 is a TODO control."}}
     cis_v210_2_1_18  = {pipeline = pipeline.manual_control, additional_args = {message = "CIS v2.1.0 2.1.18 is a TODO control."}}
     cis_v210_2_1_19  = {pipeline = pipeline.manual_control, additional_args = {message = "CIS v2.1.0 2.1.19 is a TODO control."}}

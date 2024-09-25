@@ -334,12 +334,12 @@ variable "monitor_logs_without_activity_log_alert_for_create_update_security_sol
 variable "monitor_logs_without_activity_log_alert_for_create_update_security_solution_trigger_schedule" {
   type        = string
   default     = "15m"
-  description = "The schedule on which to run the trigger if enabled."
+  description = "If the trigger is enabled, run it on this schedule."
 }
 
 variable "monitor_logs_without_activity_log_alert_for_create_update_security_solution_default_action" {
   type        = string
-  description = "The default action to use for the detected item, used if no input is provided."
+  description = "The default action to use when there are no approvers."
   default     = "notify"
 }
 

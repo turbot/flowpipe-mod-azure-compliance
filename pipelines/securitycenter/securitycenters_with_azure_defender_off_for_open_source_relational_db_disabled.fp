@@ -1,5 +1,5 @@
 locals {
-  securitycenter_azure_defender_off_for_sqldb_query = <<-EOQ
+  securitycenters_with_azure_defender_for_open_source_relational_db_disabled_query = <<-EOQ
     select
       concat(sc.id, ' [', '/', sc.subscription_id, ']') as title,
       sc.id as id,
@@ -11,32 +11,56 @@ locals {
       azure_subscription as sub
     where
       sc.pricing_tier != 'Standard'
-      and sc.name = 'SqlServers'
+      and sc.name = 'OpenSourceRelationalDatabases'
       and sub.subscription_id = sc.subscription_id;
   EOQ
 }
 
-trigger "query" "detect_and_correct_securitycenter_azure_defender_off_for_sqldb" {
-  title         = "Detect & correct Security Center Azure Defender off for SQL Databases"
-  description   = "Detects Security Center Azure Defender turned off for SQL Databases and runs your chosen action."
+variable "securitycenters_with_azure_defender_for_open_source_relational_db_disabled_trigger_enabled" {
+  type        = bool
+  default     = false
+  description = "If true, the trigger is enabled."
+}
+
+variable "securitycenters_with_azure_defender_for_open_source_relational_db_disabled_trigger_schedule" {
+  type        = string
+  default     = "15m"
+  description = "If the trigger is enabled, run it on this schedule."
+}
+
+variable "securitycenters_with_azure_defender_for_open_source_relational_db_disabled_default_action" {
+  type        = string
+  description = "The default action to use when there are no approvers."
+  default     = "notify"
+}
+
+variable "securitycenters_with_azure_defender_for_open_source_relational_db_disabled_enabled_actions" {
+  type        = list(string)
+  description = "The list of enabled actions to provide to approvers for selection."
+  default     = ["skip", "enable_open_source_relational_db_azure_defender"]
+}
+
+trigger "query" "detect_and_correct_securitycenters_with_azure_defender_for_open_source_relational_db_disabled" {
+  title         = "Detect & correct Security Centers with Azure Defender disabled for open-source relational database"
+  description   = "Detect Security Centers with Azure Defender disabled for open-source relational database and then enable Azure Defender for open-source relational database."
   // tags          = merge(local.securitycenter_common_tags, { class = "unused" })
 
-  enabled  = var.securitycenter_azure_defender_off_for_sqldb_trigger_enabled
-  schedule = var.securitycenter_azure_defender_off_for_sqldb_trigger_schedule
+  enabled  = var.securitycenters_with_azure_defender_for_open_source_relational_db_disabled_trigger_enabled
+  schedule = var.securitycenters_with_azure_defender_for_open_source_relational_db_disabled_trigger_schedule
   database = var.database
-  sql      = local.securitycenter_azure_defender_off_for_sqldb_query
+  sql      = local.securitycenters_with_azure_defender_for_open_source_relational_db_disabled_query
 
   capture "insert" {
-    pipeline = pipeline.correct_securitycenter_azure_defender_off_for_sqldb
+    pipeline = pipeline.correct_securitycenters_with_azure_defender_for_open_source_relational_db_disabled
     args = {
       items = self.inserted_rows
     }
   }
 }
 
-pipeline "detect_and_correct_securitycenter_azure_defender_off_for_sqldb" {
-  title         = "Detect & correct Security Center Azure Defender off for SQL Databases"
-  description   = "Detects Security Center Azure Defender turned off for SQL Databases and runs your chosen action."
+pipeline "detect_and_correct_securitycenters_with_azure_defender_for_open_source_relational_db_disabled" {
+  title         = "Detect & correct Security Centers with Azure Defender disabled for open-source relational database"
+  description   = "Detect Security Centers with Azure Defender disabled for open-source relational database and then enable Azure Defender for open-source relational database."
   // tags          = merge(local.securitycenter_common_tags, { class = "unused", type = "featured" })
 
   param "database" {
@@ -66,22 +90,22 @@ pipeline "detect_and_correct_securitycenter_azure_defender_off_for_sqldb" {
   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.securitycenter_azure_defender_off_for_sqldb_default_action
+    default     = var.securitycenters_with_azure_defender_for_open_source_relational_db_disabled_default_action
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.securitycenter_azure_defender_off_for_sqldb_enabled_actions
+    default     = var.securitycenters_with_azure_defender_for_open_source_relational_db_disabled_enabled_actions
   }
 
   step "query" "detect" {
     database = param.database
-    sql      = local.securitycenter_azure_defender_off_for_sqldb_query
+    sql      = local.securitycenters_with_azure_defender_for_open_source_relational_db_disabled_query
   }
 
   step "pipeline" "respond" {
-    pipeline = pipeline.correct_securitycenter_azure_defender_off_for_sqldb
+    pipeline = pipeline.correct_securitycenters_with_azure_defender_for_open_source_relational_db_disabled
     args = {
       items              = step.query.detect.rows
       notifier           = param.notifier
@@ -93,9 +117,9 @@ pipeline "detect_and_correct_securitycenter_azure_defender_off_for_sqldb" {
   }
 }
 
-pipeline "correct_securitycenter_azure_defender_off_for_sqldb" {
-  title         = "Correct Security Center Azure Defender off for SQL Databases"
-  description   = "Runs corrective action on a collection of subscription with Security Center Azure Defender turned off for SQL Databases."
+pipeline "correct_securitycenters_with_azure_defender_for_open_source_relational_db_disabled" {
+  title         = "Correct Security Centers with Azure Defender disabled for open-source relational database"
+  description   = "Enable Azure Defender for open-source relational database in Security Centers with Azure Defender disabled for open-source relational database."
   //  tags          = merge(local.securitycenter_common_tags, { class = "unused" })
 
   param "items" {
@@ -130,29 +154,25 @@ pipeline "correct_securitycenter_azure_defender_off_for_sqldb" {
   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.securitycenter_azure_defender_off_for_sqldb_default_action
+    default     = var.securitycenters_with_azure_defender_for_open_source_relational_db_disabled_default_action
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.securitycenter_azure_defender_off_for_sqldb_enabled_actions
+    default     = var.securitycenters_with_azure_defender_for_open_source_relational_db_disabled_enabled_actions
   }
 
   step "message" "notify_detection_count" {
     if       = var.notification_level == local.level_verbose
     notifier = notifier[param.notifier]
-    text     = "Detected Security Center Azure Defender turned off for SQL Databases."
-  }
-
-  step "transform" "items_by_id" {
-    value = { for row in param.items : row.id => row }
+    text     = "Detected ${length(param.items)} Security Center(s) with Azure Defender disabled for open-source relational database."
   }
 
   step "pipeline" "correct_item" {
-    for_each        = step.transform.items_by_id.value
+    for_each        = { for row in param.items : row.id => row }
     max_concurrency = var.max_concurrency
-    pipeline        = pipeline.correct_one_securitycenter_azure_defender_off_for_sqldb
+    pipeline        = pipeline.correct_one_securitycenter_with_azure_defender_for_open_source_relational_db_disabled
     args = {
       title              = each.value.title
       name               = each.value.name
@@ -168,9 +188,9 @@ pipeline "correct_securitycenter_azure_defender_off_for_sqldb" {
 }
 
 
-pipeline "correct_one_securitycenter_azure_defender_off_for_sqldb" {
-  title         = "Correct one subscription with Security Center Azure Defender turned off for SQL Databases"
-  description   = "Runs corrective action on a subscription with Security Center Azure Defender turned off for SQL Databases."
+pipeline "correct_one_securitycenter_with_azure_defender_for_open_source_relational_db_disabled" {
+  title         = "Correct Security Center with Azure Defender disabled for open-source relational database"
+  description   = "Enable Azure Defender for open-source relational database in Security Center with Azure Defender disabled for open-source relational database."
   // tags          = merge(local.securitycenter_common_tags, { class = "unused" })
 
   param "title" {
@@ -215,13 +235,13 @@ pipeline "correct_one_securitycenter_azure_defender_off_for_sqldb" {
    param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.securitycenter_azure_defender_off_for_sqldb_default_action
+    default     = var.securitycenters_with_azure_defender_for_open_source_relational_db_disabled_default_action
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.securitycenter_azure_defender_off_for_sqldb_enabled_actions
+    default     = var.securitycenters_with_azure_defender_for_open_source_relational_db_disabled_enabled_actions
   }
 
   step "pipeline" "respond" {
@@ -230,7 +250,7 @@ pipeline "correct_one_securitycenter_azure_defender_off_for_sqldb" {
       notifier           = param.notifier
       notification_level = param.notification_level
       approvers          = param.approvers
-      detect_msg         = "Detected Security Center Azure Defender turned off for SQL Databases."
+      detect_msg         = "Detected Security Center ${param.title} with Azure Defender disabled for open-source relational database."
       default_action     = param.default_action
       enabled_actions    = param.enabled_actions
       actions = {
@@ -242,50 +262,27 @@ pipeline "correct_one_securitycenter_azure_defender_off_for_sqldb" {
           pipeline_args = {
             notifier = param.notifier
             send     = param.notification_level == local.level_verbose
-            text     = "Skipped Security Center Azure Defender turned off for SQL Databases."
+            text     = "Skipped Security Center ${param.title} "
           }
           success_msg = ""
           error_msg   = ""
         },
-        "enable_sqldb_azure_defender" = {
-          label        = "Enable SQL Databases Azure Defender"
-          value        = "enable_sqldb_azure_defender"
+        "enable_open_source_relational_db_azure_defender" = {
+          label        = "Enable open-source relational database Azure Defender"
+          value        = "enable_open_source_relational_db_azure_defender"
           style        = local.style_alert
           pipeline_ref = local.azure_pipeline_create_security_pricing
           pipeline_args = {
-            resource_type     = "SqlServers"
+            resource_type     = "OpenSourceRelationalDatabases"
             subscription_id   = param.subscription_id
             cred              = param.cred
             tier              = "Standard"
           }
-          success_msg = "Enabled Security Center Azure Defender for SQL Databases."
-          error_msg   = "Error enabling Security Center Azure Defender for SQL Databases ."
+          success_msg = "Enabled Azure Defender for open-source relational database in Security Center ${param.title}."
+          error_msg   = "Error enabling Azure Defender for open-source relational database in Security Center ${param.title}."
         }
       }
     }
   }
 }
 
-variable "securitycenter_azure_defender_off_for_sqldb_trigger_enabled" {
-  type        = bool
-  default     = false
-  description = "If true, the trigger is enabled."
-}
-
-variable "securitycenter_azure_defender_off_for_sqldb_trigger_schedule" {
-  type        = string
-  default     = "15m"
-  description = "The schedule on which to run the trigger if enabled."
-}
-
-variable "securitycenter_azure_defender_off_for_sqldb_default_action" {
-  type        = string
-  description = "The default action to use for the detected item, used if no input is provided."
-  default     = "enable_sqldb_azure_defender"
-}
-
-variable "securitycenter_azure_defender_off_for_sqldb_enabled_actions" {
-  type        = list(string)
-  description = "The list of enabled actions to provide to approvers for selection."
-  default     = ["skip", "enable_sqldb_azure_defender"]
-}

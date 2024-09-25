@@ -1,7 +1,7 @@
 locals {
-  postgres_db_servers_connection_throttling_off_query = <<-EOQ
+  postgresql_servers_with_log_disconnections_disabled_query = <<-EOQ
 		select
-			concat(db.id, ' [', db.resource_group, '/', db.subscription_id, ']') as title,
+			concat(db.id, ' [', db.subscription_id, '/', db.resource_group, ']') as title,
 			db.id as id,
 			db.name,
 			db.resource_group,
@@ -12,33 +12,57 @@ locals {
 			jsonb_array_elements(server_configurations) config,
 			azure_subscription as sub
 		where
-			config ->> 'Name' = 'connection_throttling'
+			config ->> 'Name' = 'log_disconnections'
 			and lower(config -> 'ConfigurationProperties' ->> 'value') != 'on'
 			and sub.subscription_id = db.subscription_id;
   EOQ
 }
 
-trigger "query" "detect_and_correct_postgres_db_servers_connection_throttling_off" {
-  title         = "Detect & correct PostgreSQL DB servers with connection throttling off"
-  description   = "Detects PostgreSQL database servers with connection throttling disabled and runs your chosen action."
+variable "postgresql_servers_with_log_disconnections_disabled_trigger_enabled" {
+  type        = bool
+  default     = false
+  description = "If true, the trigger is enabled."
+}
+
+variable "postgresql_servers_with_log_disconnections_disabled_trigger_schedule" {
+  type        = string
+  default     = "15m"
+  description = "If the trigger is enabled, run it on this schedule."
+}
+
+variable "postgresql_servers_with_log_disconnections_disabled_default_action" {
+  type        = string
+  description = "The default action to use when there are no approvers."
+  default     = "notify"
+}
+
+variable "postgresql_servers_with_log_disconnections_disabled_enabled_actions" {
+  type        = list(string)
+  description = "The list of enabled actions to provide to approvers for selection."
+  default     = ["skip", "enable_logging_disconnections"]
+}
+
+trigger "query" "detect_and_correct_postgresql_servers_with_log_disconnections_disabled" {
+  title         = "Detect & correct PostgreSQL servers with logging disconnections disabled"
+  description   = "Detect PostgreSQL servers with logging disconnections disabled and then enable logging disconnections."
   tags          = merge(local.postgres_common_tags, { class = "unused" })
 
-  enabled  = var.postgres_db_servers_connection_throttling_off_trigger_enabled
-  schedule = var.postgres_db_servers_connection_throttling_off_trigger_schedule
+  enabled  = var.postgresql_servers_with_log_disconnections_disabled_trigger_enabled
+  schedule = var.postgresql_servers_with_log_disconnections_disabled_trigger_schedule
   database = var.database
-  sql      = local.postgres_db_servers_connection_throttling_off_query
+  sql      = local.postgresql_servers_with_log_disconnections_disabled_query
 
   capture "insert" {
-    pipeline = pipeline.correct_postgres_db_servers_connection_throttling_off
+    pipeline = pipeline.correct_postgresql_servers_with_log_disconnections_disabled
     args = {
       items = self.inserted_rows
     }
   }
 }
 
-pipeline "detect_and_correct_postgres_db_servers_connection_throttling_off" {
-  title         = "Detect & correct PostgreSQL DB servers with connection throttling off"
-  description   = "Detects PostgreSQL database servers with connection throttling disabled and runs your chosen action."
+pipeline "detect_and_correct_postgresql_servers_with_log_disconnections_disabled" {
+  title         = "Detect & correct PostgreSQL servers with logging disconnections disabled"
+  description   = "Detects PostgreSQL servers with logging disconnections disabled and then enable logging disconnections."
   tags          = merge(local.postgres_common_tags, { class = "unused", type = "featured" })
 
   param "database" {
@@ -68,22 +92,22 @@ pipeline "detect_and_correct_postgres_db_servers_connection_throttling_off" {
   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.postgres_db_servers_connection_throttling_off_default_action
+    default     = var.postgresql_servers_with_log_disconnections_disabled_default_action
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.postgres_db_servers_connection_throttling_off_enabled_actions
+    default     = var.postgresql_servers_with_log_disconnections_disabled_enabled_actions
   }
 
   step "query" "detect" {
     database = param.database
-    sql      = local.postgres_db_servers_connection_throttling_off_query
+    sql      = local.postgresql_servers_with_log_disconnections_disabled_query
   }
 
   step "pipeline" "respond" {
-    pipeline = pipeline.correct_postgres_db_servers_connection_throttling_off
+    pipeline = pipeline.correct_postgresql_servers_with_log_disconnections_disabled
     args = {
       items              = step.query.detect.rows
       notifier           = param.notifier
@@ -95,9 +119,9 @@ pipeline "detect_and_correct_postgres_db_servers_connection_throttling_off" {
   }
 }
 
-pipeline "correct_postgres_db_servers_connection_throttling_off" {
-  title         = "Correct PostgreSQL DB servers with connection throttling off"
-  description   = "Runs corrective action on a collection of PostgreSQL database servers with connection throttling disabled."
+pipeline "correct_postgresql_servers_with_log_disconnections_disabled" {
+  title         = "Correct PostgreSQL servers with logging disconnections disabled"
+  description   = "Enable logging disconnections for PostgreSQL servers with logging disconnections disabled."
   tags          = merge(local.postgres_common_tags, { class = "unused" })
 
   param "items" {
@@ -133,29 +157,25 @@ pipeline "correct_postgres_db_servers_connection_throttling_off" {
   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.postgres_db_servers_connection_throttling_off_default_action
+    default     = var.postgresql_servers_with_log_disconnections_disabled_default_action
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.postgres_db_servers_connection_throttling_off_enabled_actions
+    default     = var.postgresql_servers_with_log_disconnections_disabled_enabled_actions
   }
 
   step "message" "notify_detection_count" {
     if       = var.notification_level == local.level_verbose
     notifier = notifier[param.notifier]
-    text     = "Detected ${length(param.items)} PostgreSQL DB servers with connection throttling disabled."
-  }
-
-  step "transform" "items_by_id" {
-    value = { for row in param.items : row.id => row }
+    text     = "Detected ${length(param.items)} PostgreSQL server(s) with logging disconnections disabled."
   }
 
   step "pipeline" "correct_item" {
-    for_each        = step.transform.items_by_id.value
+    for_each        = { for row in param.items : row.id => row }
     max_concurrency = var.max_concurrency
-    pipeline        = pipeline.correct_one_postgres_db_servers_connection_throttling_off
+    pipeline        = pipeline.correct_one_postgresql_server_with_log_disconnections_disabled
     args = {
       title              = each.value.title
       name               = each.value.name
@@ -171,9 +191,9 @@ pipeline "correct_postgres_db_servers_connection_throttling_off" {
   }
 }
 
-pipeline "correct_one_postgres_db_servers_connection_throttling_off" {
-  title         = "Correct one PostgreSQL DB server with connection throttling off"
-  description   = "Runs corrective action on a single PostgreSQL database server with connection throttling disabled."
+pipeline "correct_one_postgresql_server_with_log_disconnections_disabled" {
+  title         = "Correct PostgreSQL server with logging disconnections disabled"
+  description   = "Enable logging disconnections for a PostgreSQL server with logging disconnections disabled."
   tags          = merge(local.postgres_common_tags, { class = "unused" })
 
   param "title" {
@@ -183,7 +203,7 @@ pipeline "correct_one_postgres_db_servers_connection_throttling_off" {
 
   param "name" {
     type        = string
-    description = "The name of the PostgreSQL database server."
+    description = "The name of the PostgreSQL server."
   }
 
   param "resource_group" {
@@ -223,13 +243,13 @@ pipeline "correct_one_postgres_db_servers_connection_throttling_off" {
    param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.postgres_db_servers_connection_throttling_off_default_action
+    default     = var.postgresql_servers_with_log_disconnections_disabled_default_action
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.postgres_db_servers_connection_throttling_off_enabled_actions
+    default     = var.postgresql_servers_with_log_disconnections_disabled_enabled_actions
   }
 
   step "pipeline" "respond" {
@@ -238,7 +258,7 @@ pipeline "correct_one_postgres_db_servers_connection_throttling_off" {
       notifier           = param.notifier
       notification_level = param.notification_level
       approvers          = param.approvers
-      detect_msg         = "Detected PostgreSQL DB server ${param.title} with connection throttling disabled."
+      detect_msg         = "Detected PostgreSQL server ${param.title} with logging disconnections disabled."
       default_action     = param.default_action
       enabled_actions    = param.enabled_actions
       actions = {
@@ -250,14 +270,14 @@ pipeline "correct_one_postgres_db_servers_connection_throttling_off" {
           pipeline_args = {
             notifier = param.notifier
             send     = param.notification_level == local.level_verbose
-            text     = "Skipped PostgreSQL DB server ${param.title} with connection throttling disabled."
+            text     = "Skipped PostgreSQL server ${param.title}."
           }
           success_msg = ""
           error_msg   = ""
         },
-        "enable_connection_throttling" = {
-          label        = "Enable Connection Throttling"
-          value        = "enable_connection_throttling"
+        "enable_logging_disconnections" = {
+          label        = "Enable logging disconnections"
+          value        = "enable_logging_disconnections"
           style        = local.style_alert
           pipeline_ref = local.azure_pipeline_set_postgres_server_configuration
           pipeline_args = {
@@ -265,37 +285,13 @@ pipeline "correct_one_postgres_db_servers_connection_throttling_off" {
             resource_group    = param.resource_group
             subscription_id   = param.subscription_id
             cred              = param.cred
-            config_name       = "connection_throttling"
+            config_name       = "log_disconnections"
             config_value      = "on"
           }
-          success_msg = "Enabled connection throttling for PostgreSQL DB server ${param.title}."
-          error_msg   = "Error enabling connection throttling for PostgreSQL DB server ${param.title}."
+          success_msg = "Enabled logging disconnections for PostgreSQL server ${param.title}."
+          error_msg   = "Error enabling logging disconnections for PostgreSQL server ${param.title}."
         }
       }
     }
   }
-}
-
-variable "postgres_db_servers_connection_throttling_off_trigger_enabled" {
-  type        = bool
-  default     = false
-  description = "If true, the trigger is enabled."
-}
-
-variable "postgres_db_servers_connection_throttling_off_trigger_schedule" {
-  type        = string
-  default     = "15m"
-  description = "The schedule on which to run the trigger if enabled."
-}
-
-variable "postgres_db_servers_connection_throttling_off_default_action" {
-  type        = string
-  description = "The default action to use for the detected item, used if no input is provided."
-  default     = "enable_connection_throttling"
-}
-
-variable "postgres_db_servers_connection_throttling_off_enabled_actions" {
-  type        = list(string)
-  description = "The list of enabled actions to provide to approvers for selection."
-  default     = ["skip", "enable_connection_throttling"]
 }

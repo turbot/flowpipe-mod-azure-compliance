@@ -282,12 +282,12 @@ variable "keyvault_vaults_non_recoverable_trigger_enabled" {
 variable "keyvault_vaults_non_recoverable_trigger_schedule" {
   type        = string
   default     = "15m"
-  description = "The schedule on which to run the trigger if enabled."
+  description = "If the trigger is enabled, run it on this schedule."
 }
 
 variable "keyvault_vaults_non_recoverable_default_action" {
   type        = string
-  description = "The default action to use for the detected item, used if no input is provided."
+  description = "The default action to use when there are no approvers."
   default     = "notify"
 }
 
