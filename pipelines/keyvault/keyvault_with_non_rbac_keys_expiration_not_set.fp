@@ -1,13 +1,13 @@
 locals {
   keyvault_with_non_rbac_keys_expiration_not_set_query = <<-EOQ
     with non_rbac_vault as (
-			select
-				name
-			from
-				azure_key_vault
-			where
-				not enable_rbac_authorization
-		)
+	    select
+        name
+      from
+        azure_key_vault
+      where
+      not enable_rbac_authorization
+    )
     select
       concat(kvk.id, ' [', kvk.resource_group, '/', kvk.subscription_id, ']') as title,
       kvk.id as id,
@@ -17,10 +17,10 @@ locals {
       kvk._ctx ->> 'connection_name' as cred
     from
 			azure_key_vault_key kvk
-			left join non_rbac_vault as v on v.name = kvk.vault_name
-			left join azure_subscription sub on sub.subscription_id = kvk.subscription_id
-		where
-			enabled and expires_at is null;
+	    left join non_rbac_vault as v on v.name = kvk.vault_name
+      left join azure_subscription sub on sub.subscription_id = kvk.subscription_id
+    where
+	    enabled and expires_at is null;
   EOQ
 }
 

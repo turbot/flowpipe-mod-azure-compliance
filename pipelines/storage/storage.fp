@@ -1,5 +1,5 @@
 locals {
   storage_common_tags = merge(local.azure_compliance_common_tags, {
-    service = "AWS/Storage"
+    service = "Azure/Storage"
   })
 }
