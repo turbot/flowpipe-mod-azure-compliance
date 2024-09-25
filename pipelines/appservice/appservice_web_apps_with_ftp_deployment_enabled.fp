@@ -41,7 +41,7 @@ variable "appservice_web_apps_with_ftp_deployment_enabled_enabled_actions" {
 }
 
 trigger "query" "detect_and_correct_appservice_web_apps_with_ftp_deployment_enabled" {
-  title         = "Detect & Correct App Service Web Apps With FTP Deployment Enabled"
+  title         = "Detect & Correct App Service web apps with FTP deployment enabled"
   description   = "Detect App Service web apps with FTP deployment enabled and then disable FTP Deployment."
   tags          = merge(local.appservice_common_tags, { class = "unused" })
 
@@ -59,7 +59,7 @@ trigger "query" "detect_and_correct_appservice_web_apps_with_ftp_deployment_enab
 }
 
 pipeline "detect_and_correct_appservice_web_apps_with_ftp_deployment_enabled" {
-  title         = "Detect & Correct App Service Web Apps With FTP Deployment Enabled"
+  title         = "Detect & Correct App Service web apps with FTP deployment enabled"
   description   = "Detect App Service web apps with FTP deployment enabled and then disable FTP Deployment."
   tags          = merge(local.appservice_common_tags, { class = "unused", type = "featured" })
 
@@ -118,7 +118,7 @@ pipeline "detect_and_correct_appservice_web_apps_with_ftp_deployment_enabled" {
 }
 
 pipeline "correct_appservice_web_apps_with_ftp_deployment_enabled" {
-  title         = "Correct App Service Web App With FTP Deployment Enabled"
+  title         = "Correct App Service Web App with FTP deployment enabled"
   description   = "Disable FTP Deployment for App Service web apps with FTP deployment enabled."
   tags          = merge(local.appservice_common_tags, { class = "unused" })
 
@@ -170,14 +170,10 @@ pipeline "correct_appservice_web_apps_with_ftp_deployment_enabled" {
     text     = "Detected ${length(param.items)} App Services web app(s) with FTP deployment enabled."
   }
 
-  step "transform" "items_by_id" {
-    value = { for row in param.items : row.id => row }
-  }
-
   step "pipeline" "correct_item" {
-    for_each        = step.transform.items_by_id.value
+    for_each        = { for row in param.items : row.id => row }
     max_concurrency = var.max_concurrency
-    pipeline        = pipeline.correct_one_appservice_web_apps_with_ftp_deployment_enabled
+    pipeline        = pipeline.correct_one_appservice_web_app_with_ftp_deployment_enabled
     args = {
       title              = each.value.title
       name               = each.value.name
@@ -193,8 +189,8 @@ pipeline "correct_appservice_web_apps_with_ftp_deployment_enabled" {
   }
 }
 
-pipeline "correct_one_appservice_web_apps_with_ftp_deployment_enabled" {
-  title         = "Correct App Service Web App With FTP Deployment Enabled"
+pipeline "correct_one_appservice_web_app_with_ftp_deployment_enabled" {
+  title         = "Correct App Service web app with FTP deployment enabled"
   description   = "Disable FTP Deployment for a App Service web app with FTP deployment enabled."
   tags          = merge(local.appservice_common_tags, { class = "unused" })
 
@@ -205,7 +201,7 @@ pipeline "correct_one_appservice_web_apps_with_ftp_deployment_enabled" {
 
   param "name" {
     type        = string
-    description = "The name of the App Service."
+    description = "The name of the App Service web app."
   }
 
   param "resource_group" {

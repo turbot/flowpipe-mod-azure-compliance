@@ -42,7 +42,7 @@ variable "appservice_web_apps_not_using_https_enabled_actions" {
 
 trigger "query" "detect_and_correct_appservice_web_apps_not_using_https" {
   title         = "Detect & correct App Service web apps not using HTTPS"
-  description   = "Detects App Services not using HTTPS and runs your chosen action."
+  description   = "Detects App Services not using HTTPS and then enable HTTPS."
   tags          = merge(local.appservice_common_tags, { class = "unused" })
 
   enabled  = var.appservice_web_apps_not_using_https_trigger_enabled
@@ -59,8 +59,8 @@ trigger "query" "detect_and_correct_appservice_web_apps_not_using_https" {
 }
 
 pipeline "detect_and_correct_appservice_web_apps_not_using_https" {
-  title         = "Detect & correct App Services not using HTTPS"
-  description   = "Detects App Services not using HTTPS and runs your chosen action."
+  title         = "Detect & correct App Service web apps not using HTTPS"
+  description   = "Detects App Service web apps not using HTTPS and then enable HTTPS."
   tags          = merge(local.appservice_common_tags, { class = "unused", type = "featured" })
 
   param "database" {
@@ -118,8 +118,8 @@ pipeline "detect_and_correct_appservice_web_apps_not_using_https" {
 }
 
 pipeline "correct_appservice_web_apps_not_using_https" {
-  title         = "Correct App Services not using HTTPS"
-  description   = "Runs corrective action on a collection of App Services not using HTTPS."
+   title         = "Correct App Service web apps not using HTTPS"
+  description   = "Enable HTTPS for App Service web apps not using HTTPS."
   tags          = merge(local.appservice_common_tags, { class = "unused" })
 
   param "items" {
@@ -167,17 +167,13 @@ pipeline "correct_appservice_web_apps_not_using_https" {
   step "message" "notify_detection_count" {
     if       = var.notification_level == local.level_verbose
     notifier = notifier[param.notifier]
-    text     = "Detected ${length(param.items)} App Services not using HTTPS."
-  }
-
-  step "transform" "items_by_id" {
-    value = { for row in param.items : row.id => row }
+    text     = "Detected ${length(param.items)} App Service web app(s) not using HTTPS."
   }
 
   step "pipeline" "correct_item" {
-    for_each        = step.transform.items_by_id.value
+    for_each        = { for row in param.items : row.id => row }
     max_concurrency = var.max_concurrency
-    pipeline        = pipeline.correct_one_appservice_web_apps_not_using_https
+    pipeline        = pipeline.correct_one_appservice_web_app_not_using_https
     args = {
       title              = each.value.title
       name               = each.value.name
@@ -193,9 +189,9 @@ pipeline "correct_appservice_web_apps_not_using_https" {
   }
 }
 
-pipeline "correct_one_appservice_web_apps_not_using_https" {
-  title         = "Correct one App Service not using HTTPS"
-  description   = "Runs corrective action on a single App Service not using HTTPS."
+pipeline "correct_one_appservice_web_app_not_using_https" {
+  title         = "Correct App Service web app not using HTTPS"
+  description   = "Enable HTTPS for a App Service web app not using HTTPS."
   tags          = merge(local.appservice_common_tags, { class = "unused" })
 
   param "title" {
@@ -260,7 +256,7 @@ pipeline "correct_one_appservice_web_apps_not_using_https" {
       notifier           = param.notifier
       notification_level = param.notification_level
       approvers          = param.approvers
-      detect_msg         = "Detected App Service ${param.title} not using HTTPS."
+      detect_msg         = "Detected App Service web app ${param.title} not using HTTPS."
       default_action     = param.default_action
       enabled_actions    = param.enabled_actions
       actions = {
@@ -272,7 +268,7 @@ pipeline "correct_one_appservice_web_apps_not_using_https" {
           pipeline_args = {
             notifier = param.notifier
             send     = param.notification_level == local.level_verbose
-            text     = "Skipped App Service ${param.title} not using HTTPS."
+            text     = "Skipped App Service web app ${param.title}."
           }
           success_msg = ""
           error_msg   = ""
@@ -289,8 +285,8 @@ pipeline "correct_one_appservice_web_apps_not_using_https" {
             cred            = param.cred
             https_only      = true
           }
-          success_msg = "Enabled HTTPS for App Service ${param.title}."
-          error_msg   = "Error enabling HTTPS for App Service ${param.title}."
+          success_msg = "Enabled HTTPS for App Service web app ${param.title}."
+          error_msg   = "Error enabling HTTPS for App Service web app ${param.title}."
         }
       }
     }
