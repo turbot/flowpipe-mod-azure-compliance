@@ -5,10 +5,10 @@ locals {
 
   cis_v210_4_control_mapping = {
     cis_v210_4_1_1  = {pipeline = pipeline.manual_control, additional_args = {message = "CIS v2.1.0 4.1.1 is a TODO control."}}
-    cis_v210_4_1_2  = {pipeline = pipeline.detect_and_correct_sql_databases_allow_internet_access, additional_args = {}}
+    cis_v210_4_1_2  = {pipeline = pipeline.detect_and_correct_sql_databases_when_publicly_accessible, additional_args = {}}
     cis_v210_4_1_3  = {pipeline = pipeline.manual_control, additional_args = {message = "CIS v2.1.0 4.1.3 is a TODO control."}}
     cis_v210_4_1_4  =  {pipeline = pipeline.manual_control, additional_args = {message = "CIS v2.1.0 4.1.4 is a TODO control."}}
-    cis_v210_4_1_5  = {pipeline = pipeline.detect_and_correct_sql_dbs_transparent_data_encryption_disabled, additional_args = {}}
+    cis_v210_4_1_5  = {pipeline = pipeline.detect_and_correct_sql_databases_with_transparent_data_encryption_disabled, additional_args = {}}
 		cis_v210_4_1_6  = {pipeline = pipeline.manual_control, additional_args = {message = "CIS v2.1.0 4.1.6 is a TODO control."}}
 		cis_v210_4_3_1  = {pipeline = pipeline.detect_and_correct_postgresql_servers_with_ssl_disabled, additional_args = {}}
 		cis_v210_4_3_2  = {pipeline = pipeline.detect_and_correct_postgresql_servers_with_log_checkpoints_disabled, additional_args = {}}

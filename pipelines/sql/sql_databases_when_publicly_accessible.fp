@@ -1,7 +1,7 @@
 locals {
-  sql_databases_allow_internet_access_query = <<-EOQ
+  sql_databases_when_publicly_accessible_query = <<-EOQ
 		select
-			distinct concat(s.id, ' [', s.resource_group, '/', s.subscription_id, '/firewallrule/', f ->> 'name',']') as title,
+			distinct concat(s.id, ' [', s.subscription_id, '/', s.resource_group, '/firewallrule/', f ->> 'name',']') as title,
 				s.id as id,
 				s.name,
 				f ->> 'name' as firewall_rule_name,
@@ -22,27 +22,51 @@ locals {
   EOQ
 }
 
-trigger "query" "detect_and_correct_sql_databases_allow_internet_access" {
-  title         = "Detect & correct SQL Databases allowing internet access"
-  description   = "Detects SQL Databases allowing internet access and runs your chosen action."
+variable "sql_databases_when_publicly_accessible_trigger_enabled" {
+  type        = bool
+  default     = false
+  description = "If true, the trigger is enabled."
+}
+
+variable "sql_databases_when_publicly_accessible_trigger_schedule" {
+  type        = string
+  default     = "15m"
+  description = "If the trigger is enabled, run it on this schedule."
+}
+
+variable "sql_databases_when_publicly_accessible_default_action" {
+  type        = string
+  description = "The default action to use when there are no approvers."
+  default     = "notify"
+}
+
+variable "sql_databases_when_publicly_accessible_enabled_actions" {
+  type        = list(string)
+  description = "The list of enabled actions to provide to approvers for selection."
+  default     = ["skip", "delete_firewall_rule"]
+}
+
+trigger "query" "detect_and_correct_sql_databases_when_publicly_accessible" {
+  title         = "Detect & correct SQL Databases when publicly accessible"
+  description   = "Detect SQL Databases firewall rules allowing public access and then delete the firewall rules."
   tags          = merge(local.sql_common_tags, { class = "security" })
 
-  enabled  = var.sql_databases_allow_internet_access_trigger_enabled
-  schedule = var.sql_databases_allow_internet_access_trigger_schedule
+  enabled  = var.sql_databases_when_publicly_accessible_trigger_enabled
+  schedule = var.sql_databases_when_publicly_accessible_trigger_schedule
   database = var.database
-  sql      = local.sql_databases_allow_internet_access_query
+  sql      = local.sql_databases_when_publicly_accessible_query
 
   capture "insert" {
-    pipeline = pipeline.correct_sql_databases_allow_internet_access
+    pipeline = pipeline.correct_sql_databases_when_publicly_accessible
     args = {
       items = self.inserted_rows
     }
   }
 }
 
-pipeline "detect_and_correct_sql_databases_allow_internet_access" {
-  title         = "Detect & correct SQL Databases allowing internet access"
-  description   = "Detects SQL Databases allowing internet access and runs your chosen action."
+pipeline "detect_and_correct_sql_databases_when_publicly_accessible" {
+  title         = "Detect & correct SQL Databases when publicly accessible"
+  description   = "Detect SQL Databases firewall rules allowing public access and then delete the firewall rules."
   tags          = merge(local.sql_common_tags, { class = "security", type = "featured" })
 
   param "database" {
@@ -72,22 +96,22 @@ pipeline "detect_and_correct_sql_databases_allow_internet_access" {
   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.sql_databases_allow_internet_access_default_action
+    default     = var.sql_databases_when_publicly_accessible_default_action
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.sql_databases_allow_internet_access_enabled_actions
+    default     = var.sql_databases_when_publicly_accessible_enabled_actions
   }
 
   step "query" "detect" {
     database = param.database
-    sql      = local.sql_databases_allow_internet_access_query
+    sql      = local.sql_databases_when_publicly_accessible_query
   }
 
   step "pipeline" "respond" {
-    pipeline = pipeline.correct_sql_databases_allow_internet_access
+    pipeline = pipeline.correct_sql_databases_when_publicly_accessible
     args = {
       items              = step.query.detect.rows
       notifier           = param.notifier
@@ -99,9 +123,9 @@ pipeline "detect_and_correct_sql_databases_allow_internet_access" {
   }
 }
 
-pipeline "correct_sql_databases_allow_internet_access" {
-  title         = "Correct SQL Databases allowing internet access"
-  description   = "Runs corrective action on a collection of SQL Databases allowing internet access."
+pipeline "correct_sql_databases_when_publicly_accessible" {
+  title         = "Correct SQL Databases when publicly accessible"
+  description   = "Delete firewall rule for SQL Databases allowing public access."
   tags          = merge(local.sql_common_tags, { class = "security" })
 
   param "items" {
@@ -138,29 +162,25 @@ pipeline "correct_sql_databases_allow_internet_access" {
   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.sql_databases_allow_internet_access_default_action
+    default     = var.sql_databases_when_publicly_accessible_default_action
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.sql_databases_allow_internet_access_enabled_actions
+    default     = var.sql_databases_when_publicly_accessible_enabled_actions
   }
 
   step "message" "notify_detection_count" {
     if       = var.notification_level == local.level_verbose
     notifier = notifier[param.notifier]
-    text     = "Detected ${length(param.items)} SQL Databases allowing internet access."
-  }
-
-  step "transform" "items_by_id" {
-    value = { for row in param.items : row.title => row }
+    text     = "Detected ${length(param.items)} SQL Database(s) allowing public access."
   }
 
   step "pipeline" "correct_item" {
-    for_each        = step.transform.items_by_id.value
+    for_each        = { for row in param.items : row.title => row }
     max_concurrency = var.max_concurrency
-    pipeline        = pipeline.correct_one_sql_databases_allow_internet_access
+    pipeline        = pipeline.correct_one_sql_database_when_publicly_accessible
     args = {
       title              = each.value.title
       name               = each.value.name
@@ -177,9 +197,9 @@ pipeline "correct_sql_databases_allow_internet_access" {
   }
 }
 
-pipeline "correct_one_sql_databases_allow_internet_access" {
-  title         = "Correct one SQL Database allowing internet access"
-  description   = "Runs corrective action on a single SQL Database allowing internet access."
+pipeline "correct_one_sql_database_when_publicly_accessible" {
+  title         = "Correct SQL Database when publicly accessible"
+  description   = "Delete firewall rule fora  SQL Database allowing public access."
   tags          = merge(local.sql_common_tags, { class = "security" })
 
   param "title" {
@@ -234,13 +254,13 @@ pipeline "correct_one_sql_databases_allow_internet_access" {
   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.sql_databases_allow_internet_access_default_action
+    default     = var.sql_databases_when_publicly_accessible_default_action
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.sql_databases_allow_internet_access_enabled_actions
+    default     = var.sql_databases_when_publicly_accessible_enabled_actions
   }
 
   step "pipeline" "respond" {
@@ -249,7 +269,7 @@ pipeline "correct_one_sql_databases_allow_internet_access" {
       notifier           = param.notifier
       notification_level = param.notification_level
       approvers          = param.approvers
-      detect_msg         = "Detected SQL Database ${param.title} allowing internet access."
+      detect_msg         = "Detected SQL Database ${param.title} allowing public access."
       default_action     = param.default_action
       enabled_actions    = param.enabled_actions
       actions = {
@@ -261,7 +281,7 @@ pipeline "correct_one_sql_databases_allow_internet_access" {
           pipeline_args = {
             notifier = param.notifier
             send     = param.notification_level == local.level_verbose
-            text     = "Skipped SQL Database ${param.title} allowing internet access."
+            text     = "Skipped SQL Database ${param.title}."
           }
           success_msg = ""
           error_msg   = ""
@@ -278,34 +298,10 @@ pipeline "correct_one_sql_databases_allow_internet_access" {
             cred               = param.cred
             firewall_rule_name = param.firewall_rule_name
           }
-          success_msg = "Removed firewall rule allowing internet access for SQL Database ${param.title}."
-          error_msg   = "Error removing firewall rule allowing internet access for SQL Database ${param.title}."
+          success_msg = "Deleted firewall rule allowing public access for SQL Database ${param.title}."
+          error_msg   = "Error deleting firewall rule allowing public access for SQL Database ${param.title}."
         }
       }
     }
   }
-}
-
-variable "sql_databases_allow_internet_access_trigger_enabled" {
-  type        = bool
-  default     = false
-  description = "If true, the trigger is enabled."
-}
-
-variable "sql_databases_allow_internet_access_trigger_schedule" {
-  type        = string
-  default     = "15m"
-  description = "If the trigger is enabled, run it on this schedule."
-}
-
-variable "sql_databases_allow_internet_access_default_action" {
-  type        = string
-  description = "The default action to use when there are no approvers."
-  default     = "notify"
-}
-
-variable "sql_databases_allow_internet_access_enabled_actions" {
-  type        = list(string)
-  description = "The list of enabled actions to provide to approvers for selection."
-  default     = ["skip", "delete_firewall_rule"]
 }

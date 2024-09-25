@@ -198,7 +198,7 @@ pipeline "correct_postgresql_servers_with_log_retention_less_than_3_days" {
 }
 
 pipeline "correct_one_postgresql_server_with_log_retention_less_than_3_days" {
-  title         = "Correct PostgreSQ server with log retention less than 3 days"
+  title         = "Correct PostgreSQL server with log retention less than 3 days"
   description   = "Update log retention days to 3 or more for a PostgreSQL server with log retention less than 3 days."
   tags          = merge(local.postgres_common_tags, { class = "unused" })
 

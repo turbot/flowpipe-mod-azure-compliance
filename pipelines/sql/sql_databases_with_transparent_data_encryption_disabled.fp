@@ -1,7 +1,7 @@
 locals {
-  sql_dbs_transparent_data_encryption_disabled_query = <<-EOQ
+  sql_databases_with_transparent_data_encryption_disabled_query = <<-EOQ
     select
-      concat(s.id, ' [', s.resource_group, '/', s.subscription_id, ']') as title,
+      concat(s.id, ' [', s.subscription_id, '/', s.resource_group, ']') as title,
       s.id as id,
       s.server_name as server_name,
       s.name as name,
@@ -18,27 +18,51 @@ locals {
   EOQ
 }
 
-trigger "query" "detect_and_correct_sql_dbs_transparent_data_encryption_disabled" {
-  title         = "Detect & correct SQL Databases with Transparent Data Encryption disabled"
-  description   = "Detects SQL Databases with Transparent Data Encryption disabled and runs your chosen action."
+variable "sql_databases_with_transparent_data_encryption_disabled_trigger_enabled" {
+  type        = bool
+  default     = false
+  description = "If true, the trigger is enabled."
+}
+
+variable "sql_databases_with_transparent_data_encryption_disabled_trigger_schedule" {
+  type        = string
+  default     = "15m"
+  description = "If the trigger is enabled, run it on this schedule."
+}
+
+variable "sql_databases_with_transparent_data_encryption_disabled_default_action" {
+  type        = string
+  description = "The default action to use when there are no approvers."
+  default     = "notify"
+}
+
+variable "sql_databases_with_transparent_data_encryption_disabled_enabled_actions" {
+  type        = list(string)
+  description = "The list of enabled actions to provide to approvers for selection."
+  default     = ["skip", "enable_sql_db_tde"]
+}
+
+trigger "query" "detect_and_correct_sql_databases_with_transparent_data_encryption_disabled" {
+  title         = "Detect & correct SQL Databases with transparent data encryption disabled"
+  description   = "Detect SQL Databases with transparent data encryption disabled and enable transparent data encryption."
   tags          = merge(local.sql_common_tags, { class = "security" })
 
-  enabled  = var.sql_dbs_transparent_data_encryption_disabled_trigger_enabled
-  schedule = var.sql_dbs_transparent_data_encryption_disabled_trigger_schedule
+  enabled  = var.sql_databases_with_transparent_data_encryption_disabled_trigger_enabled
+  schedule = var.sql_databases_with_transparent_data_encryption_disabled_trigger_schedule
   database = var.database
-  sql      = local.sql_dbs_transparent_data_encryption_disabled_query
+  sql      = local.sql_databases_with_transparent_data_encryption_disabled_query
 
   capture "insert" {
-    pipeline = pipeline.correct_sql_dbs_transparent_data_encryption_disabled
+    pipeline = pipeline.correct_sql_databases_with_transparent_data_encryption_disabled
     args = {
       items = self.inserted_rows
     }
   }
 }
 
-pipeline "detect_and_correct_sql_dbs_transparent_data_encryption_disabled" {
-  title         = "Detect & correct SQL Databases with Transparent Data Encryption disabled"
-  description   = "Detects SQL Databases with Transparent Data Encryption disabled and runs your chosen action."
+pipeline "detect_and_correct_sql_databases_with_transparent_data_encryption_disabled" {
+  title         = "Detect & correct SQL Databases with transparent data encryption disabled"
+  description   = "Detect SQL Databases with transparent data encryption disabled and enable transparent data encryption."
   tags          = merge(local.sql_common_tags, { class = "security", type = "featured" })
 
   param "database" {
@@ -68,22 +92,22 @@ pipeline "detect_and_correct_sql_dbs_transparent_data_encryption_disabled" {
   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.sql_dbs_transparent_data_encryption_disabled_default_action
+    default     = var.sql_databases_with_transparent_data_encryption_disabled_default_action
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.sql_dbs_transparent_data_encryption_disabled_enabled_actions
+    default     = var.sql_databases_with_transparent_data_encryption_disabled_enabled_actions
   }
 
   step "query" "detect" {
     database = param.database
-    sql      = local.sql_dbs_transparent_data_encryption_disabled_query
+    sql      = local.sql_databases_with_transparent_data_encryption_disabled_query
   }
 
   step "pipeline" "respond" {
-    pipeline = pipeline.correct_sql_dbs_transparent_data_encryption_disabled
+    pipeline = pipeline.correct_sql_databases_with_transparent_data_encryption_disabled
     args = {
       items              = step.query.detect.rows
       notifier           = param.notifier
@@ -95,9 +119,9 @@ pipeline "detect_and_correct_sql_dbs_transparent_data_encryption_disabled" {
   }
 }
 
-pipeline "correct_sql_dbs_transparent_data_encryption_disabled" {
-  title         = "Correct SQL Databases with Transparent Data Encryption disabled"
-  description   = "Runs corrective action on a collection of SQL Databases with Transparent Data Encryption disabled."
+pipeline "correct_sql_databases_with_transparent_data_encryption_disabled" {
+  title         = "Correct SQL Databases with transparent data encryption disabled"
+  description   = "Enable transparent data encryption for SQL Databases with transparent data encryption disabled."
   tags          = merge(local.sql_common_tags, { class = "security" })
 
   param "items" {
@@ -134,29 +158,25 @@ pipeline "correct_sql_dbs_transparent_data_encryption_disabled" {
   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.sql_dbs_transparent_data_encryption_disabled_default_action
+    default     = var.sql_databases_with_transparent_data_encryption_disabled_default_action
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.sql_dbs_transparent_data_encryption_disabled_enabled_actions
+    default     = var.sql_databases_with_transparent_data_encryption_disabled_enabled_actions
   }
 
   step "message" "notify_detection_count" {
     if       = var.notification_level == local.level_verbose
     notifier = notifier[param.notifier]
-    text     = "Detected ${length(param.items)} SQL Databases with Transparent Data Encryption disabled."
-  }
-
-  step "transform" "items_by_id" {
-    value = { for row in param.items : row.title => row }
+    text     = "Detected ${length(param.items)} SQL Database(s) with transparent data encryption disabled."
   }
 
   step "pipeline" "correct_item" {
-    for_each        = step.transform.items_by_id.value
+    for_each        = { for row in param.items : row.title => row }
     max_concurrency = var.max_concurrency
-    pipeline        = pipeline.correct_one_sql_dbs_transparent_data_encryption_disabled
+    pipeline        = pipeline.correct_one_sql_database_with_transparent_data_encryption_disabled
     args = {
       title              = each.value.title
       server_name        = each.value.server_name
@@ -173,9 +193,9 @@ pipeline "correct_sql_dbs_transparent_data_encryption_disabled" {
   }
 }
 
-pipeline "correct_one_sql_dbs_transparent_data_encryption_disabled" {
-  title         = "Correct one SQL Database with Transparent Data Encryption disabled"
-  description   = "Runs corrective action on a single SQL Database with Transparent Data Encryption disabled."
+pipeline "correct_one_sql_database_with_transparent_data_encryption_disabled" {
+  title         = "Correct SQL Database with transparent data encryption disabled"
+  description   = "Enable transparent data encryption for a SQL Database with transparent data encryption disabled."
   tags          = merge(local.sql_common_tags, { class = "security" })
 
   param "title" {
@@ -230,13 +250,13 @@ pipeline "correct_one_sql_dbs_transparent_data_encryption_disabled" {
   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.sql_dbs_transparent_data_encryption_disabled_default_action
+    default     = var.sql_databases_with_transparent_data_encryption_disabled_default_action
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.sql_dbs_transparent_data_encryption_disabled_enabled_actions
+    default     = var.sql_databases_with_transparent_data_encryption_disabled_enabled_actions
   }
 
   step "pipeline" "respond" {
@@ -257,7 +277,7 @@ pipeline "correct_one_sql_dbs_transparent_data_encryption_disabled" {
           pipeline_args = {
             notifier = param.notifier
             send     = param.notification_level == local.level_verbose
-            text     = "Skipped SQL Database ${param.title} with Transparent Data Encryption disabled."
+            text     = "Skipped SQL Database ${param.title}."
           }
           success_msg = ""
           error_msg   = ""
@@ -275,34 +295,10 @@ pipeline "correct_one_sql_dbs_transparent_data_encryption_disabled" {
             cred            = param.cred
 						status          = "Enabled"
           }
-          success_msg = "Enabled Transparent Data Encryption for SQL Database ${param.title}."
-          error_msg   = "Error enabling Transparent Data Encryption for SQL Database ${param.title}."
+          success_msg = "Enabled transparent data tncryption for SQL Database ${param.title}."
+          error_msg   = "Error enabling transparent data encryption for SQL Database ${param.title}."
         }
       }
     }
   }
-}
-
-variable "sql_dbs_transparent_data_encryption_disabled_trigger_enabled" {
-  type        = bool
-  default     = false
-  description = "If true, the trigger is enabled."
-}
-
-variable "sql_dbs_transparent_data_encryption_disabled_trigger_schedule" {
-  type        = string
-  default     = "15m"
-  description = "If the trigger is enabled, run it on this schedule."
-}
-
-variable "sql_dbs_transparent_data_encryption_disabled_default_action" {
-  type        = string
-  description = "The default action to use when there are no approvers."
-  default     = "notify"
-}
-
-variable "sql_dbs_transparent_data_encryption_disabled_enabled_actions" {
-  type        = list(string)
-  description = "The list of enabled actions to provide to approvers for selection."
-  default     = ["skip", "enable_sql_db_tde"]
 }
