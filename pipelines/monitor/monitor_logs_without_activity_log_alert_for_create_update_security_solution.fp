@@ -66,6 +66,30 @@ locals {
   EOQ
 }
 
+variable "monitor_logs_without_activity_log_alert_for_create_update_security_solution_trigger_enabled" {
+  type        = bool
+  default     = false
+  description = "If true, the trigger is enabled."
+}
+
+variable "monitor_logs_without_activity_log_alert_for_create_update_security_solution_trigger_schedule" {
+  type        = string
+  default     = "15m"
+  description = "If the trigger is enabled, run it on this schedule."
+}
+
+variable "monitor_logs_without_activity_log_alert_for_create_update_security_solution_default_action" {
+  type        = string
+  description = "The default action to use when there are no approvers."
+  default     = "notify"
+}
+
+variable "monitor_logs_without_activity_log_alert_for_create_update_security_solution_enabled_actions" {
+  type        = list(string)
+  description = "The list of enabled actions to provide to approvers for selection."
+  default     = ["skip", "create_update_security_solution_activity_log_alert"]
+}
+
 trigger "query" "detect_and_correct_monitor_logs_without_activity_log_alert_for_create_update_security_solution" {
   title         = "Detect & correct Monitor Logs without activity log alert for create and update security solution"
   description   = "Detects Monitor Logs without an activity log alert for create and update security solution and runs your chosen action."
@@ -320,31 +344,6 @@ pipeline "correct_one_monitor_logs_without_activity_log_alert_for_create_update_
     }
   }
 }
-
-variable "monitor_logs_without_activity_log_alert_for_create_update_security_solution_trigger_enabled" {
-  type        = bool
-  default     = false
-  description = "If true, the trigger is enabled."
-}
-
-variable "monitor_logs_without_activity_log_alert_for_create_update_security_solution_trigger_schedule" {
-  type        = string
-  default     = "15m"
-  description = "If the trigger is enabled, run it on this schedule."
-}
-
-variable "monitor_logs_without_activity_log_alert_for_create_update_security_solution_default_action" {
-  type        = string
-  description = "The default action to use when there are no approvers."
-  default     = "notify"
-}
-
-variable "monitor_logs_without_activity_log_alert_for_create_update_security_solution_enabled_actions" {
-  type        = list(string)
-  description = "The list of enabled actions to provide to approvers for selection."
-  default     = ["skip", "create_update_security_solution_activity_log_alert"]
-}
-
 
 pipeline "create_activity_log_alert_for_create_update_security_solution" {
   title       = "Create Activity Log Alert for create and update security solution"

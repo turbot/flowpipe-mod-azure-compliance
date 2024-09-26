@@ -2,14 +2,14 @@ locals {
   keyvault_with_non_rbac_secrets_expiration_not_set_query = <<-EOQ
     with non_rbac_vault as (
       select
-				name
-			from
-				azure_key_vault
-			where
-				not enable_rbac_authorization
+        name
+      from
+        azure_key_vault
+      where
+        not enable_rbac_authorization
     )
     select
-      concat(kvs.id, ' [', kvs.resource_group, '/', kvs.subscription_id, ']') as title,
+      concat(kvs.id, ' [', kvs.subscription_id, '/', kvs.resource_group, ']') as title,
       kvs.id as id,
       kvs.name,
       kvs.subscription_id,
@@ -26,6 +26,30 @@ locals {
 
 locals {
   non_rbac_secrets_expiration_date = formatdate("YYYY-MM-DD'T'HH:mm:ss'Z'", timeadd(timestamp(), "2160h"))
+}
+
+variable "keyvault_with_non_rbac_secrets_expiration_not_set_trigger_enabled" {
+  type        = bool
+  default     = false
+  description = "If true, the trigger is enabled."
+}
+
+variable "keyvault_with_non_rbac_secrets_expiration_not_set_trigger_schedule" {
+  type        = string
+  default     = "15m"
+  description = "If the trigger is enabled, run it on this schedule."
+}
+
+variable "keyvault_with_non_rbac_secrets_expiration_not_set_default_action" {
+  type        = string
+  description = "The default action to use when there are no approvers."
+  default     = "notify"
+}
+
+variable "keyvault_with_non_rbac_secrets_expiration_not_set_enabled_actions" {
+  type        = list(string)
+  description = "The list of enabled actions to provide to approvers for selection."
+  default     = ["skip", "set_secret_expiration"]
 }
 
 trigger "query" "detect_and_correct_keyvault_with_non_rbac_secrets_expiration_not_set" {
@@ -279,28 +303,4 @@ pipeline "correct_one_keyvault_with_non_rbac_secrets_expiration_not_set" {
       }
     }
   }
-}
-
-variable "keyvault_with_non_rbac_secrets_expiration_not_set_trigger_enabled" {
-  type        = bool
-  default     = false
-  description = "If true, the trigger is enabled."
-}
-
-variable "keyvault_with_non_rbac_secrets_expiration_not_set_trigger_schedule" {
-  type        = string
-  default     = "15m"
-  description = "If the trigger is enabled, run it on this schedule."
-}
-
-variable "keyvault_with_non_rbac_secrets_expiration_not_set_default_action" {
-  type        = string
-  description = "The default action to use when there are no approvers."
-  default     = "notify"
-}
-
-variable "keyvault_with_non_rbac_secrets_expiration_not_set_enabled_actions" {
-  type        = list(string)
-  description = "The list of enabled actions to provide to approvers for selection."
-  default     = ["skip", "set_secret_expiration"]
 }

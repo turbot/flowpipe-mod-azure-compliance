@@ -66,6 +66,30 @@ locals {
   EOQ
 }
 
+variable "monitor_logs_without_activity_log_alert_for_delete_sql_servers_firewall_rule_trigger_enabled" {
+  type        = bool
+  default     = false
+  description = "If true, the trigger is enabled."
+}
+
+variable "monitor_logs_without_activity_log_alert_for_delete_sql_servers_firewall_rule_trigger_schedule" {
+  type        = string
+  default     = "15m"
+  description = "If the trigger is enabled, run it on this schedule."
+}
+
+variable "monitor_logs_without_activity_log_alert_for_delete_sql_servers_firewall_rule_default_action" {
+  type        = string
+  description = "The default action to use when there are no approvers."
+  default     = "notify"
+}
+
+variable "monitor_logs_without_activity_log_alert_for_delete_sql_servers_firewall_rule_enabled_actions" {
+  type        = list(string)
+  description = "The list of enabled actions to provide to approvers for selection."
+  default     = ["skip", "create_delete_sql_servers_firewall_rule_activity_log_alert"]
+}
+
 trigger "query" "detect_and_correct_monitor_logs_without_activity_log_alert_for_delete_sql_servers_firewall_rule" {
   title         = "Detect & correct Monitor Logs without activity log alert for delete SQL servers firewall rule"
   description   = "Detects Monitor Logs without an activity log alert for delete SQL servers firewall rule and runs your chosen action."
@@ -320,31 +344,6 @@ pipeline "correct_one_monitor_logs_without_activity_log_alert_for_delete_sql_ser
     }
   }
 }
-
-variable "monitor_logs_without_activity_log_alert_for_delete_sql_servers_firewall_rule_trigger_enabled" {
-  type        = bool
-  default     = false
-  description = "If true, the trigger is enabled."
-}
-
-variable "monitor_logs_without_activity_log_alert_for_delete_sql_servers_firewall_rule_trigger_schedule" {
-  type        = string
-  default     = "15m"
-  description = "If the trigger is enabled, run it on this schedule."
-}
-
-variable "monitor_logs_without_activity_log_alert_for_delete_sql_servers_firewall_rule_default_action" {
-  type        = string
-  description = "The default action to use when there are no approvers."
-  default     = "notify"
-}
-
-variable "monitor_logs_without_activity_log_alert_for_delete_sql_servers_firewall_rule_enabled_actions" {
-  type        = list(string)
-  description = "The list of enabled actions to provide to approvers for selection."
-  default     = ["skip", "create_delete_sql_servers_firewall_rule_activity_log_alert"]
-}
-
 
 pipeline "create_activity_log_alert_for_delete_sql_servers_firewall_rule" {
   title       = "Create Activity Log Alert for delete SQL servers firewall rule"

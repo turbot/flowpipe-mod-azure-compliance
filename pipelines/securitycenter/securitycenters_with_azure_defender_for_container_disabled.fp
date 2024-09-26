@@ -60,7 +60,7 @@ trigger "query" "detect_and_correct_securitycenters_with_azure_defender_for_cont
 pipeline "detect_and_correct_securitycenters_with_azure_defender_for_container_disabled" {
   title         = "Detect & correct Security Centers with Azure Defender disabled for Container"
   description   = "Detect Security Centers with Azure Defender disabled for Container and then enable Azure Defender for Container."
-  
+
   param "database" {
     type        = string
     description = local.description_database

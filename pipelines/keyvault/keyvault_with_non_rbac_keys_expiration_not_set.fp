@@ -1,7 +1,7 @@
 locals {
   keyvault_with_non_rbac_keys_expiration_not_set_query = <<-EOQ
     with non_rbac_vault as (
-	    select
+      select
         name
       from
         azure_key_vault
@@ -9,23 +9,47 @@ locals {
       not enable_rbac_authorization
     )
     select
-      concat(kvk.id, ' [', kvk.resource_group, '/', kvk.subscription_id, ']') as title,
+      concat(kvk.id, ' [', kvk.subscription_id, '/', kvk.resource_group, ']') as title,
       kvk.id as id,
       kvk.name,
       kvk.subscription_id,
-			kvk.vault_name as vault_name,
+      kvk.vault_name as vault_name,
       kvk._ctx ->> 'connection_name' as cred
     from
-			azure_key_vault_key kvk
-	    left join non_rbac_vault as v on v.name = kvk.vault_name
+      azure_key_vault_key kvk
+      left join non_rbac_vault as v on v.name = kvk.vault_name
       left join azure_subscription sub on sub.subscription_id = kvk.subscription_id
     where
-	    enabled and expires_at is null;
+      enabled and expires_at is null;
   EOQ
 }
 
 locals {
   non_rbac_keys_expiration_date = formatdate("YYYY-MM-DD'T'HH:mm:ss'Z'", timeadd(timestamp(), "2160h"))
+}
+
+variable "keyvault_with_non_rbac_keys_expiration_not_set_trigger_enabled" {
+  type        = bool
+  default     = false
+  description = "If true, the trigger is enabled."
+}
+
+variable "keyvault_with_non_rbac_keys_expiration_not_set_trigger_schedule" {
+  type        = string
+  default     = "15m"
+  description = "If the trigger is enabled, run it on this schedule."
+}
+
+variable "keyvault_with_non_rbac_keys_expiration_not_set_default_action" {
+  type        = string
+  description = "The default action to use when there are no approvers."
+  default     = "notify"
+}
+
+variable "keyvault_with_non_rbac_keys_expiration_not_set_enabled_actions" {
+  type        = list(string)
+  description = "The list of enabled actions to provide to approvers for selection."
+  default     = ["skip", "set_key_expiration"]
 }
 
 trigger "query" "detect_and_correct_keyvault_with_non_rbac_keys_expiration_not_set" {
@@ -279,28 +303,4 @@ pipeline "correct_one_keyvault_with_non_rbac_keys_expiration_not_set" {
       }
     }
   }
-}
-
-variable "keyvault_with_non_rbac_keys_expiration_not_set_trigger_enabled" {
-  type        = bool
-  default     = false
-  description = "If true, the trigger is enabled."
-}
-
-variable "keyvault_with_non_rbac_keys_expiration_not_set_trigger_schedule" {
-  type        = string
-  default     = "15m"
-  description = "If the trigger is enabled, run it on this schedule."
-}
-
-variable "keyvault_with_non_rbac_keys_expiration_not_set_default_action" {
-  type        = string
-  description = "The default action to use when there are no approvers."
-  default     = "notify"
-}
-
-variable "keyvault_with_non_rbac_keys_expiration_not_set_enabled_actions" {
-  type        = list(string)
-  description = "The list of enabled actions to provide to approvers for selection."
-  default     = ["skip", "set_key_expiration"]
 }

@@ -15,6 +15,30 @@ locals {
   EOQ
 }
 
+variable "storage_accounts_secure_transfer_required_disabled_trigger_enabled" {
+  type        = bool
+  default     = false
+  description = "If true, the trigger is enabled."
+}
+
+variable "storage_accounts_secure_transfer_required_disabled_trigger_schedule" {
+  type        = string
+  default     = "15m"
+  description = "If the trigger is enabled, run it on this schedule."
+}
+
+variable "storage_accounts_secure_transfer_required_disabled_default_action" {
+  type        = string
+  description = "The default action to use when there are no approvers."
+  default     = "notify"
+}
+
+variable "storage_accounts_secure_transfer_required_disabled_enabled_actions" {
+  type        = list(string)
+  description = "The list of enabled actions to provide to approvers for selection."
+  default     = ["skip", "enable_secure_transfer"]
+}
+
 trigger "query" "detect_and_correct_storage_accounts_secure_transfer_required_disabled" {
   title         = "Detect & correct Storage Accounts with secure transfer required disabled"
   description   = "Detects Storage Accounts with secure transfer required disabled and runs your chosen action."
@@ -35,7 +59,6 @@ trigger "query" "detect_and_correct_storage_accounts_secure_transfer_required_di
 pipeline "detect_and_correct_storage_accounts_secure_transfer_required_disabled" {
   title         = "Detect & correct Storage Accounts with secure transfer required disabled"
   description   = "Detects Storage Accounts with secure transfer required disabled and runs your chosen action."
-  // documentation = file("./storage/docs/detect_and_correct_storage_accounts_secure_transfer_required_disabled.md")
 
   param "database" {
     type        = string
@@ -267,28 +290,4 @@ pipeline "correct_one_storage_accounts_secure_transfer_required_disabled" {
       }
     }
   }
-}
-
-variable "storage_accounts_secure_transfer_required_disabled_trigger_enabled" {
-  type        = bool
-  default     = false
-  description = "If true, the trigger is enabled."
-}
-
-variable "storage_accounts_secure_transfer_required_disabled_trigger_schedule" {
-  type        = string
-  default     = "15m"
-  description = "If the trigger is enabled, run it on this schedule."
-}
-
-variable "storage_accounts_secure_transfer_required_disabled_default_action" {
-  type        = string
-  description = "The default action to use when there are no approvers."
-  default     = "notify"
-}
-
-variable "storage_accounts_secure_transfer_required_disabled_enabled_actions" {
-  type        = list(string)
-  description = "The list of enabled actions to provide to approvers for selection."
-  default     = ["skip", "enable_secure_transfer"]
 }

@@ -13,7 +13,7 @@ locals {
       azure_subscription sub
     where
       sub.subscription_id = s.subscription_id
-			and s.name <> 'master'
+      and s.name <> 'master'
       and (transparent_data_encryption ->> 'status' <> 'Enabled' or transparent_data_encryption ->> 'state' = 'Enabled');
   EOQ
 }

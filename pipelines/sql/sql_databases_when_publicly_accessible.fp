@@ -1,24 +1,24 @@
 locals {
   sql_databases_when_publicly_accessible_query = <<-EOQ
-		select
-			distinct concat(s.id, ' [', s.subscription_id, '/', s.resource_group, '/firewallrule/', f ->> 'name',']') as title,
-				s.id as id,
-				s.name,
-				f ->> 'name' as firewall_rule_name,
-				s.resource_group,
-				s.subscription_id,
-				s._ctx ->> 'connection_name' as cred
-		from
-			azure_sql_server s,
-			jsonb_array_elements(firewall_rules) as f,
-			azure_subscription sub
-		where
-			sub.subscription_id = s.subscription_id
-			and (
-				(f -> 'properties' ->>  'endIpAddress' = '0.0.0.0' and f -> 'properties' ->>  'startIpAddress' = '0.0.0.0')
-				or
-				( f -> 'properties' ->>  'endIpAddress' = '255.255.255.255' and f -> 'properties' ->>  'startIpAddress' = '0.0.0.0')
-		);
+    select
+      distinct concat(s.id, ' [', s.subscription_id, '/', s.resource_group, '/firewallrule/', f ->> 'name',']') as title,
+        s.id as id,
+        s.name,
+        f ->> 'name' as firewall_rule_name,
+        s.resource_group,
+        s.subscription_id,
+        s._ctx ->> 'connection_name' as cred
+    from
+      azure_sql_server s,
+      jsonb_array_elements(firewall_rules) as f,
+      azure_subscription sub
+    where
+      sub.subscription_id = s.subscription_id
+      and (
+        (f -> 'properties' ->>  'endIpAddress' = '0.0.0.0' and f -> 'properties' ->>  'startIpAddress' = '0.0.0.0')
+        or
+        ( f -> 'properties' ->>  'endIpAddress' = '255.255.255.255' and f -> 'properties' ->>  'startIpAddress' = '0.0.0.0')
+    );
   EOQ
 }
 

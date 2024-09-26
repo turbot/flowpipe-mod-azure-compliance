@@ -25,10 +25,10 @@ locals {
       sub.subscription_id = sa.subscription_id
       and k.id = sa.id
       and (
-				not (sa.blob_service_logging ->> 'Read') :: boolean
-				or not (sa.blob_service_logging ->> 'Write') :: boolean
-				or not (sa.blob_service_logging ->> 'Delete') :: boolean
-			)
+        not (sa.blob_service_logging ->> 'Read') :: boolean
+        or not (sa.blob_service_logging ->> 'Write') :: boolean
+        or not (sa.blob_service_logging ->> 'Delete') :: boolean
+      )
   EOQ
 }
 

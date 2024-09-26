@@ -42,7 +42,7 @@ variable "appservice_web_apps_not_using_https_enabled_actions" {
 
 trigger "query" "detect_and_correct_appservice_web_apps_not_using_https" {
   title         = "Detect & correct App Service web apps not using HTTPS"
-  description   = "Detects App Services not using HTTPS and then enable HTTPS.")
+  description   = "Detects App Services not using HTTPS and then enable HTTPS."
 
   enabled  = var.appservice_web_apps_not_using_https_trigger_enabled
   schedule = var.appservice_web_apps_not_using_https_trigger_schedule

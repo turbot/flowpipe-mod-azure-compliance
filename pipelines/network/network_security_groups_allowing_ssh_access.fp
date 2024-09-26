@@ -1,7 +1,7 @@
 locals {
   network_security_groups_allowing_ssh_access_query = <<-EOQ
     select
-      concat(nsg.id, ' [', nsg.resource_group, '/', nsg.subscription_id, '/', sg ->> 'name', ']') as title,
+      concat(nsg.id, ' [', nsg.subscription_id, '/', nsg.resource_group, '/', sg ->> 'name', ']') as title,
       sg ->> 'name' as rule_name,
       nsg.name as sg_name,
       nsg.resource_group,
@@ -39,8 +39,32 @@ locals {
         and split_part(dport, '-', 1) :: integer <= 22
         and split_part(dport, '-', 2) :: integer >= 22
       )
-    )
+  )
   EOQ
+}
+
+variable "network_security_groups_allowing_ssh_access_trigger_enabled" {
+  type        = bool
+  default     = false
+  description = "If true, the trigger is enabled."
+}
+
+variable "network_security_groups_allowing_ssh_access_trigger_schedule" {
+  type        = string
+  default     = "15m"
+  description = "If the trigger is enabled, run it on this schedule."
+}
+
+variable "network_security_groups_allowing_ssh_access_default_action" {
+  type        = string
+  description = "The default action to use when there are no approvers."
+  default     = "notify"
+}
+
+variable "network_security_groups_allowing_ssh_access_enabled_actions" {
+  type        = list(string)
+  description = "The list of enabled actions to provide to approvers for selection."
+  default     = ["skip", "delete_ssh_nsg_rule"]
 }
 
 trigger "query" "detect_and_correct_network_security_groups_allowing_ssh_access" {
@@ -198,7 +222,7 @@ pipeline "correct_network_security_groups_allowing_ssh_access" {
 pipeline "correct_one_network_security_groups_allowing_ssh_access" {
   title         = "Correct one NSG allowing SSH access"
   description   = "Runs corrective action on a single NSG allowing SSH access."
-  
+
   param "title" {
     type        = string
     description = local.description_title
@@ -301,28 +325,4 @@ pipeline "correct_one_network_security_groups_allowing_ssh_access" {
       }
     }
   }
-}
-
-variable "network_security_groups_allowing_ssh_access_trigger_enabled" {
-  type        = bool
-  default     = false
-  description = "If true, the trigger is enabled."
-}
-
-variable "network_security_groups_allowing_ssh_access_trigger_schedule" {
-  type        = string
-  default     = "15m"
-  description = "If the trigger is enabled, run it on this schedule."
-}
-
-variable "network_security_groups_allowing_ssh_access_default_action" {
-  type        = string
-  description = "The default action to use when there are no approvers."
-  default     = "notify"
-}
-
-variable "network_security_groups_allowing_ssh_access_enabled_actions" {
-  type        = list(string)
-  description = "The list of enabled actions to provide to approvers for selection."
-  default     = ["skip", "delete_ssh_nsg_rule"]
 }

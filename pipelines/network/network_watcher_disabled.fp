@@ -4,15 +4,15 @@ locals {
       concat(loc.id, ' [', '/', loc.subscription_id, ']') as title,
       loc.id as id,
       loc.name as region,
-			concat(loc.name, 'NetworkWatcherRG') as resource_group,
+      concat(loc.name, 'NetworkWatcherRG') as resource_group,
       loc.subscription_id,
       loc._ctx ->> 'connection_name' as cred
-		from
-			azure_location loc
-			left join azure_network_watcher watcher on watcher.region = loc.name
-			left join azure_subscription sub on sub.subscription_id = loc.subscription_id
-		where
-			watcher.id is null;
+    from
+      azure_location loc
+      left join azure_network_watcher watcher on watcher.region = loc.name
+      left join azure_subscription sub on sub.subscription_id = loc.subscription_id
+    where
+      watcher.id is null;
   EOQ
 }
 

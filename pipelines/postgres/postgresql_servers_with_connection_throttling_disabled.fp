@@ -1,20 +1,20 @@
 locals {
   postgresql_servers_with_connection_throttling_disabled_query = <<-EOQ
     select
-	    concat(db.id, ' [', db.subscription_id, '/', db.resource_group, ']') as title,
-	    db.id as id,
-	    db.name,
-	    db.resource_group,
-	    db.subscription_id,
-	    db._ctx ->> 'connection_name' as cred
-	  from
-	    azure_postgresql_server as db,
-	    jsonb_array_elements(server_configurations) config,
-	    azure_subscription as sub
-	  where
-	    config ->> 'Name' = 'connection_throttling'
-	    and lower(config -> 'ConfigurationProperties' ->> 'value') != 'on'
-	    and sub.subscription_id = db.subscription_id;
+      concat(db.id, ' [', db.subscription_id, '/', db.resource_group, ']') as title,
+      db.id as id,
+      db.name,
+      db.resource_group,
+      db.subscription_id,
+      db._ctx ->> 'connection_name' as cred
+    from
+      azure_postgresql_server as db,
+      jsonb_array_elements(server_configurations) config,
+      azure_subscription as sub
+    where
+      config ->> 'Name' = 'connection_throttling'
+      and lower(config -> 'ConfigurationProperties' ->> 'value') != 'on'
+      and sub.subscription_id = db.subscription_id;
   EOQ
 }
 

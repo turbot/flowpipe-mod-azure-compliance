@@ -1,7 +1,7 @@
 locals {
   keyvault_vaults_non_recoverable_query = <<-EOQ
     select
-      concat(vault.id, ' [', vault.resource_group, '/', vault.subscription_id, ']') as title,
+      concat(vault.id, ' [', vault.subscription_id, '/', vault.resource_group, ']') as title,
       vault.id as id,
       vault.name,
       vault.resource_group,
@@ -14,6 +14,30 @@ locals {
       sub.subscription_id = vault.subscription_id
       and not (soft_delete_enabled and purge_protection_enabled);
   EOQ
+}
+
+variable "keyvault_vaults_non_recoverable_trigger_enabled" {
+  type        = bool
+  default     = false
+  description = "If true, the trigger is enabled."
+}
+
+variable "keyvault_vaults_non_recoverable_trigger_schedule" {
+  type        = string
+  default     = "15m"
+  description = "If the trigger is enabled, run it on this schedule."
+}
+
+variable "keyvault_vaults_non_recoverable_default_action" {
+  type        = string
+  description = "The default action to use when there are no approvers."
+  default     = "notify"
+}
+
+variable "keyvault_vaults_non_recoverable_enabled_actions" {
+  type        = list(string)
+  description = "The list of enabled actions to provide to approvers for selection."
+  default     = ["skip", "enable_purge_protection"]
 }
 
 trigger "query" "detect_and_correct_keyvault_vaults_non_recoverable" {
@@ -267,28 +291,4 @@ pipeline "correct_one_keyvault_vaults_non_recoverable" {
       }
     }
   }
-}
-
-variable "keyvault_vaults_non_recoverable_trigger_enabled" {
-  type        = bool
-  default     = false
-  description = "If true, the trigger is enabled."
-}
-
-variable "keyvault_vaults_non_recoverable_trigger_schedule" {
-  type        = string
-  default     = "15m"
-  description = "If the trigger is enabled, run it on this schedule."
-}
-
-variable "keyvault_vaults_non_recoverable_default_action" {
-  type        = string
-  description = "The default action to use when there are no approvers."
-  default     = "notify"
-}
-
-variable "keyvault_vaults_non_recoverable_enabled_actions" {
-  type        = list(string)
-  description = "The list of enabled actions to provide to approvers for selection."
-  default     = ["skip", "enable_purge_protection"]
 }

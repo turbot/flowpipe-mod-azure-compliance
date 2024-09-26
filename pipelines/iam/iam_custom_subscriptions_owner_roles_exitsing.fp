@@ -1,19 +1,43 @@
 locals {
   iam_custom_subscriptions_owner_roles_existing_query = <<-EOQ
     select
-      concat(id, ' [', role_name, '/', subscription_id, ']') as title,
+      concat(id, ' [', subscription_id, '/', role_name, ']') as title,
       id as id,
       role_name as name,
       subscription_id,
       _ctx ->> 'connection_name' as cred
     from
-			azure_role_definition,
-			jsonb_array_elements(permissions) as s,
-			jsonb_array_elements_text(s -> 'actions') as action
-		where
-			role_type = 'CustomRole'
-			and action in ('*', '*:*');
+      azure_role_definition,
+      jsonb_array_elements(permissions) as s,
+      jsonb_array_elements_text(s -> 'actions') as action
+    where
+      role_type = 'CustomRole'
+      and action in ('*', '*:*');
   EOQ
+}
+
+variable "iam_custom_subscriptions_owner_roles_existing_trigger_enabled" {
+  type        = bool
+  default     = false
+  description = "If true, the trigger is enabled."
+}
+
+variable "iam_custom_subscriptions_owner_roles_existing_trigger_schedule" {
+  type        = string
+  default     = "15m"
+  description = "If the trigger is enabled, run it on this schedule."
+}
+
+variable "iam_custom_subscriptions_owner_roles_existing_default_action" {
+  type        = string
+  description = "The default action to use when there are no approvers."
+  default     = "notify"
+}
+
+variable "iam_custom_subscriptions_owner_roles_existing_enabled_actions" {
+  type        = list(string)
+  description = "The list of enabled actions to provide to approvers for selection."
+  default     = ["skip", "delete_custom_role"]
 }
 
 trigger "query" "detect_and_correct_iam_custom_subscriptions_owner_roles_existing" {
@@ -259,28 +283,4 @@ pipeline "correct_one_iam_custom_subscriptions_owner_role_existing" {
       }
     }
   }
-}
-
-variable "iam_custom_subscriptions_owner_roles_existing_trigger_enabled" {
-  type        = bool
-  default     = false
-  description = "If true, the trigger is enabled."
-}
-
-variable "iam_custom_subscriptions_owner_roles_existing_trigger_schedule" {
-  type        = string
-  default     = "15m"
-  description = "If the trigger is enabled, run it on this schedule."
-}
-
-variable "iam_custom_subscriptions_owner_roles_existing_default_action" {
-  type        = string
-  description = "The default action to use when there are no approvers."
-  default     = "notify"
-}
-
-variable "iam_custom_subscriptions_owner_roles_existing_enabled_actions" {
-  type        = list(string)
-  description = "The list of enabled actions to provide to approvers for selection."
-  default     = ["skip", "delete_custom_role"]
 }

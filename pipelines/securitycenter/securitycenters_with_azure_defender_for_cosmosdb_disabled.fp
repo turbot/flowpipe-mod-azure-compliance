@@ -118,7 +118,7 @@ pipeline "detect_and_correct_securitycenters_with_azure_defender_for_cosmosdb_di
 pipeline "correct_securitycenters_with_azure_defender_for_cosmosdb_disabled" {
   title         = "Correct Security Centers with Azure Defender disabled for Cosmos DB"
   description   = "Enable Azure Defender for Cosmos DB in Security Centers with Azure Defender disabled for Cosmos DB."
-  
+
   param "items" {
     type = list(object({
       id              = string

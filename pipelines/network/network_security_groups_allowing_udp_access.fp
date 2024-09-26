@@ -1,7 +1,7 @@
 locals {
   network_security_groups_allowing_udp_access_query = <<-EOQ
     select
-      concat(nsg.id, ' [', nsg.resource_group, '/', nsg.subscription_id, '/', sg ->> 'name', ']') as title,
+      concat(nsg.id, ' [', nsg.subscription_id, '/', nsg.resource_group, '/', sg ->> 'name', ']') as title,
       sg ->> 'name' as rule_name,
       nsg.name as sg_name,
       nsg.resource_group,
@@ -48,6 +48,30 @@ locals {
       )
     )
   EOQ
+}
+
+variable "network_security_groups_allowing_udp_access_trigger_enabled" {
+  type        = bool
+  default     = false
+  description = "If true, the trigger is enabled."
+}
+
+variable "network_security_groups_allowing_udp_access_trigger_schedule" {
+  type        = string
+  default     = "15m"
+  description = "If the trigger is enabled, run it on this schedule."
+}
+
+variable "network_security_groups_allowing_udp_access_default_action" {
+  type        = string
+  description = "The default action to use when there are no approvers."
+  default     = "notify"
+}
+
+variable "network_security_groups_allowing_udp_access_enabled_actions" {
+  type        = list(string)
+  description = "The list of enabled actions to provide to approvers for selection."
+  default     = ["skip", "delete_udp_nsg_rule"]
 }
 
 trigger "query" "detect_and_correct_network_security_groups_allowing_udp_access" {
@@ -309,28 +333,4 @@ pipeline "correct_one_network_security_groups_allowing_udp_access" {
       }
     }
   }
-}
-
-variable "network_security_groups_allowing_udp_access_trigger_enabled" {
-  type        = bool
-  default     = false
-  description = "If true, the trigger is enabled."
-}
-
-variable "network_security_groups_allowing_udp_access_trigger_schedule" {
-  type        = string
-  default     = "15m"
-  description = "If the trigger is enabled, run it on this schedule."
-}
-
-variable "network_security_groups_allowing_udp_access_default_action" {
-  type        = string
-  description = "The default action to use when there are no approvers."
-  default     = "notify"
-}
-
-variable "network_security_groups_allowing_udp_access_enabled_actions" {
-  type        = list(string)
-  description = "The list of enabled actions to provide to approvers for selection."
-  default     = ["skip", "delete_udp_nsg_rule"]
 }
