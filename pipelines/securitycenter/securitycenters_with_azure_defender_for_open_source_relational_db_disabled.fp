@@ -43,7 +43,6 @@ variable "securitycenters_with_azure_defender_for_open_source_relational_db_disa
 trigger "query" "detect_and_correct_securitycenters_with_azure_defender_for_open_source_relational_db_disabled" {
   title         = "Detect & correct Security Centers with Azure Defender disabled for open-source relational database"
   description   = "Detect Security Centers with Azure Defender disabled for open-source relational database and then enable Azure Defender for open-source relational database."
-  // tags          = merge(local.securitycenter_common_tags, { class = "unused" })
 
   enabled  = var.securitycenters_with_azure_defender_for_open_source_relational_db_disabled_trigger_enabled
   schedule = var.securitycenters_with_azure_defender_for_open_source_relational_db_disabled_trigger_schedule
@@ -61,7 +60,6 @@ trigger "query" "detect_and_correct_securitycenters_with_azure_defender_for_open
 pipeline "detect_and_correct_securitycenters_with_azure_defender_for_open_source_relational_db_disabled" {
   title         = "Detect & correct Security Centers with Azure Defender disabled for open-source relational database"
   description   = "Detect Security Centers with Azure Defender disabled for open-source relational database and then enable Azure Defender for open-source relational database."
-  // tags          = merge(local.securitycenter_common_tags, { class = "unused", type = "featured" })
 
   param "database" {
     type        = string
@@ -120,7 +118,6 @@ pipeline "detect_and_correct_securitycenters_with_azure_defender_for_open_source
 pipeline "correct_securitycenters_with_azure_defender_for_open_source_relational_db_disabled" {
   title         = "Correct Security Centers with Azure Defender disabled for open-source relational database"
   description   = "Enable Azure Defender for open-source relational database in Security Centers with Azure Defender disabled for open-source relational database."
-  //  tags          = merge(local.securitycenter_common_tags, { class = "unused" })
 
   param "items" {
     type = list(object({
@@ -191,7 +188,6 @@ pipeline "correct_securitycenters_with_azure_defender_for_open_source_relational
 pipeline "correct_one_securitycenter_with_azure_defender_for_open_source_relational_db_disabled" {
   title         = "Correct Security Center with Azure Defender disabled for open-source relational database"
   description   = "Enable Azure Defender for open-source relational database in Security Center with Azure Defender disabled for open-source relational database."
-  // tags          = merge(local.securitycenter_common_tags, { class = "unused" })
 
   param "title" {
     type        = string

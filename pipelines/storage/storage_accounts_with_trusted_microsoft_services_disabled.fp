@@ -1,5 +1,5 @@
 locals {
-  storage_accounts_no_min_tls_1_2_query = <<-EOQ
+  storage_accounts_with_trusted_microsoft_services_disabled_query = <<-EOQ
     select
       concat(sa.id, ' [', sa.resource_group, '/', sa.subscription_id, ']') as title,
       sa.id as id,
@@ -11,33 +11,55 @@ locals {
       azure_storage_account as sa,
       azure_subscription as sub
     where
-      sa.minimum_tls_version <> 'TLS1_2'
-      and sub.subscription_id = sa.subscription_id;
+      sub.subscription_id = sa.subscription_id
+      and network_rule_bypass not like '%AzureServices%';
   EOQ
 }
 
-trigger "query" "detect_and_correct_storage_accounts_no_min_tls_1_2" {
-  title         = "Detect & correct Storage Accounts with minimum TLS version less than 1.2"
-  description   = "Detects Storage Accounts with minimum TLS version less than 1.2 and runs your chosen action."
-  tags          = merge(local.storage_common_tags, { class = "unused" })
+variable "storage_accounts_with_trusted_microsoft_services_disabled_trigger_enabled" {
+  type        = bool
+  default     = false
+  description = "If true, the trigger is enabled."
+}
 
-  enabled  = var.storage_accounts_no_min_tls_1_2_trigger_enabled
-  schedule = var.storage_accounts_no_min_tls_1_2_trigger_schedule
+variable "storage_accounts_with_trusted_microsoft_services_disabled_trigger_schedule" {
+  type        = string
+  default     = "15m"
+  description = "If the trigger is enabled, run it on this schedule."
+}
+
+variable "storage_accounts_with_trusted_microsoft_services_disabled_default_action" {
+  type        = string
+  description = "The default action to use when there are no approvers."
+  default     = "notify"
+}
+
+variable "storage_accounts_with_trusted_microsoft_services_disabled_enabled_actions" {
+  type        = list(string)
+  description = "The list of enabled actions to provide to approvers for selection."
+  default     = ["skip", "enable_trusted_microsoft_services"]
+}
+
+trigger "query" "detect_and_correct_storage_accounts_with_trusted_microsoft_services_disabled" {
+  title         = "Detect & correct Storage Accounts with trusted Microsoft services access disabled"
+  description   = "Detect Storage Accounts with trusted Microsoft services access disabled and then enable trusted Microsoft services."
+
+  enabled  = var.storage_accounts_with_trusted_microsoft_services_disabled_trigger_enabled
+  schedule = var.storage_accounts_with_trusted_microsoft_services_disabled_trigger_schedule
   database = var.database
-  sql      = local.storage_accounts_no_min_tls_1_2_query
+  sql      = local.storage_accounts_with_trusted_microsoft_services_disabled_query
 
   capture "insert" {
-    pipeline = pipeline.correct_storage_accounts_no_min_tls_1_2
+    pipeline = pipeline.correct_storage_accounts_with_trusted_microsoft_services_disabled
     args = {
       items = self.inserted_rows
     }
   }
 }
 
-pipeline "detect_and_correct_storage_accounts_no_min_tls_1_2" {
-  title         = "Detect & correct Storage Accounts with minimum TLS version less than 1.2"
-  description   = "Detects Storage Accounts with minimum TLS version less than 1.2 and runs your chosen action."
-  tags          = merge(local.storage_common_tags, { class = "unused", type = "featured" })
+pipeline "detect_and_correct_storage_accounts_with_trusted_microsoft_services_disabled" {
+  title         = "Detect & correct Storage Accounts with trusted Microsoft services access disabled"
+  description   = "Detect Storage Accounts with trusted Microsoft services access disabled and then enable trusted Microsoft services."
 
   param "database" {
     type        = string
@@ -66,22 +88,22 @@ pipeline "detect_and_correct_storage_accounts_no_min_tls_1_2" {
   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.storage_accounts_no_min_tls_1_2_default_action
+    default     = var.storage_accounts_with_trusted_microsoft_services_disabled_default_action
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.storage_accounts_no_min_tls_1_2_enabled_actions
+    default     = var.storage_accounts_with_trusted_microsoft_services_disabled_enabled_actions
   }
 
   step "query" "detect" {
     database = param.database
-    sql      = local.storage_accounts_no_min_tls_1_2_query
+    sql      = local.storage_accounts_with_trusted_microsoft_services_disabled_query
   }
 
   step "pipeline" "respond" {
-    pipeline = pipeline.correct_storage_accounts_no_min_tls_1_2
+    pipeline = pipeline.correct_storage_accounts_with_trusted_microsoft_services_disabled
     args = {
       items              = step.query.detect.rows
       notifier           = param.notifier
@@ -93,10 +115,9 @@ pipeline "detect_and_correct_storage_accounts_no_min_tls_1_2" {
   }
 }
 
-pipeline "correct_storage_accounts_no_min_tls_1_2" {
-  title         = "Correct Storage Accounts with minimum TLS version less than 1.2"
-  description   = "Runs corrective action on a collection of Storage Accounts with minimum TLS version less than 1.2."
-  tags          = merge(local.storage_common_tags, { class = "unused" })
+pipeline "correct_storage_accounts_with_trusted_microsoft_services_disabled" {
+  title         = "Correct Storage Accounts with trusted Microsoft services access disabled"
+  description   = "Enable trusted Microsoft services for Storage Accounts with trusted Microsoft services access disabled."
 
   param "items" {
     type = list(object({
@@ -131,29 +152,25 @@ pipeline "correct_storage_accounts_no_min_tls_1_2" {
   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.storage_accounts_no_min_tls_1_2_default_action
+    default     = var.storage_accounts_with_trusted_microsoft_services_disabled_default_action
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.storage_accounts_no_min_tls_1_2_enabled_actions
+    default     = var.storage_accounts_with_trusted_microsoft_services_disabled_enabled_actions
   }
 
   step "message" "notify_detection_count" {
     if       = var.notification_level == local.level_verbose
     notifier = notifier[param.notifier]
-    text     = "Detected ${length(param.items)} Storage Accounts with minimum TLS version less than 1.2."
-  }
-
-  step "transform" "items_by_id" {
-    value = { for row in param.items : row.id => row }
+    text     = "Detected ${length(param.items)} Storage Account(s) with trusted Microsoft services access disabled."
   }
 
   step "pipeline" "correct_item" {
-    for_each        = step.transform.items_by_id.value
+    for_each        = { for row in param.items : row.id => row }
     max_concurrency = var.max_concurrency
-    pipeline        = pipeline.correct_one_storage_accounts_no_min_tls_1_2
+    pipeline        = pipeline.correct_one_storage_account_with_trusted_microsoft_services_disabled
     args = {
       title              = each.value.title
       name               = each.value.name
@@ -169,10 +186,9 @@ pipeline "correct_storage_accounts_no_min_tls_1_2" {
   }
 }
 
-pipeline "correct_one_storage_accounts_no_min_tls_1_2" {
-  title         = "Correct one Storage Account with minimum TLS version less than 1.2"
-  description   = "Runs corrective action on a single Storage Account with minimum TLS version less than 1.2."
-  tags          = merge(local.storage_common_tags, { class = "unused" })
+pipeline "correct_one_storage_account_with_trusted_microsoft_services_disabled" {
+  title         = "Correct Storage Account with trusted Microsoft services access disabled"
+  description   = "Enable trusted Microsoft services for a Storage Account with trusted Microsoft services access disabled."
 
   param "title" {
     type        = string
@@ -218,16 +234,16 @@ pipeline "correct_one_storage_accounts_no_min_tls_1_2" {
     default     = var.approvers
   }
 
-   param "default_action" {
+  param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.storage_accounts_no_min_tls_1_2_default_action
+    default     = var.storage_accounts_with_trusted_microsoft_services_disabled_default_action
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.storage_accounts_no_min_tls_1_2_enabled_actions
+    default     = var.storage_accounts_with_trusted_microsoft_services_disabled_enabled_actions
   }
 
   step "pipeline" "respond" {
@@ -236,7 +252,7 @@ pipeline "correct_one_storage_accounts_no_min_tls_1_2" {
       notifier           = param.notifier
       notification_level = param.notification_level
       approvers          = param.approvers
-      detect_msg         = "Detected Storage Account ${param.title} with minimum TLS version less than 1.2."
+      detect_msg         = "Detected Storage Account ${param.title} with trusted Microsoft services access disabled."
       default_action     = param.default_action
       enabled_actions    = param.enabled_actions
       actions = {
@@ -248,51 +264,27 @@ pipeline "correct_one_storage_accounts_no_min_tls_1_2" {
           pipeline_args = {
             notifier = param.notifier
             send     = param.notification_level == local.level_verbose
-            text     = "Skipped Storage Account ${param.title} with minimum TLS version less than 1.2."
+            text     = "Skipped Storage Account ${param.title}."
           }
           success_msg = ""
           error_msg   = ""
         },
-        "enable_min_tls_1_2" = {
-          label        = "Enable Minimum TLS 1.2"
-          value        = "enable_min_tls_1_2"
+        "enable_trusted_microsoft_services" = {
+          label        = "Enable trusted microsoft services"
+          value        = "enable_trusted_microsoft_services"
           style        = local.style_alert
-          pipeline_ref = local.azure_pipeline_update_storage_account_minimum_tls
+          pipeline_ref = local.azure_pipeline_update_storage_account_bypass_azure_services
           pipeline_args = {
-            account_name        = param.name
-            resource_group      = param.resource_group
-            subscription_id     = param.subscription_id
-            cred                = param.cred
-            minimum_tls_version = "TLS1_2"
+            account_name                      = param.name
+            resource_group                    = param.resource_group
+            subscription_id                   = param.subscription_id
+            cred                              = param.cred
           }
-          success_msg = "Enabled minimum TLS 1.2 for Storage Account ${param.title}."
-          error_msg   = "Error enabling minimum TLS 1.2 for Storage Account ${param.title}."
+          success_msg = "Enabled trusted Microsoft services access for Storage Account ${param.title}."
+          error_msg   = "Error enabling trusted Microsoft services access for Storage Account ${param.title}."
         }
       }
     }
   }
 }
 
-variable "storage_accounts_no_min_tls_1_2_trigger_enabled" {
-  type        = bool
-  default     = false
-  description = "If true, the trigger is enabled."
-}
-
-variable "storage_accounts_no_min_tls_1_2_trigger_schedule" {
-  type        = string
-  default     = "15m"
-  description = "If the trigger is enabled, run it on this schedule."
-}
-
-variable "storage_accounts_no_min_tls_1_2_default_action" {
-  type        = string
-  description = "The default action to use when there are no approvers."
-  default     = "notify"
-}
-
-variable "storage_accounts_no_min_tls_1_2_enabled_actions" {
-  type        = list(string)
-  description = "The list of enabled actions to provide to approvers for selection."
-  default     = ["skip", "enable_min_tls_1_2"]
-}

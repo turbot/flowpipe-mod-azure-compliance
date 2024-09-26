@@ -54,7 +54,6 @@ variable "postgresql_servers_with_allow_access_to_azure_services_enabled_enabled
 trigger "query" "detect_and_correct_postgresql_servers_with_allow_access_to_azure_services_enabled" {
   title         = "Detect & correct PostgreSQL servers allowing access to Azure services"
   description   = "Detect PostgreSQL servers allowing access to Azure services and then disable access to Azure services."
-  tags          = merge(local.postgres_common_tags, { class = "unused" })
 
   enabled  = var.postgresql_servers_with_allow_access_to_azure_services_enabled_trigger_enabled
   schedule = var.postgresql_servers_with_allow_access_to_azure_services_enabled_trigger_schedule
@@ -72,7 +71,6 @@ trigger "query" "detect_and_correct_postgresql_servers_with_allow_access_to_azur
 pipeline "detect_and_correct_postgresql_servers_with_allow_access_to_azure_services_enabled" {
   title         = "Detect & correct PostgreSQL servers allowing access to Azure services"
   description   = "Detect PostgreSQL servers allowing access to Azure services and then disable access to Azure services."
-  tags          = merge(local.postgres_common_tags, { class = "unused", type = "featured" })
 
   param "database" {
     type        = string
@@ -131,7 +129,6 @@ pipeline "detect_and_correct_postgresql_servers_with_allow_access_to_azure_servi
 pipeline "correct_postgresql_servers_with_allow_access_to_azure_services_enabled" {
   title         = "Correct PostgreSQL servers allowing access to Azure services"
   description   = "Disable access to Azure services for PostgreSQL servers with enabled access to Azure services."
-  tags          = merge(local.postgres_common_tags, { class = "unused" })
 
   param "items" {
     type = list(object({
@@ -203,7 +200,6 @@ pipeline "correct_postgresql_servers_with_allow_access_to_azure_services_enabled
 pipeline "correct_one_postgresql_servers_with_allow_access_to_azure_services_enabled" {
   title         = "Correct PostgreSQL server allowing access to Azure services"
   description   = "Disable access to Azure services for a PostgreSQL server with enabled access to Azure services."
-  tags          = merge(local.postgres_common_tags, { class = "unused" })
 
   param "title" {
     type        = string

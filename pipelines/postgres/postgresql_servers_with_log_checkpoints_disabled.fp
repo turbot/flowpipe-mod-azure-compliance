@@ -45,7 +45,6 @@ variable "postgresql_servers_with_log_checkpoints_disabled_enabled_actions" {
 trigger "query" "detect_and_correct_postgresql_servers_with_log_checkpoints_disabled" {
   title         = "Detect & correct PostgreSQL servers with log checkpoints disabled"
   description   = "Detect PostgreSQL servers with log checkpoints disabled and then enable log checkpoints."
-  tags          = merge(local.postgres_common_tags, { class = "unused" })
 
   enabled  = var.postgresql_servers_with_log_checkpoints_disabled_trigger_enabled
   schedule = var.postgresql_servers_with_log_checkpoints_disabled_trigger_schedule
@@ -63,7 +62,6 @@ trigger "query" "detect_and_correct_postgresql_servers_with_log_checkpoints_disa
 pipeline "detect_and_correct_postgresql_servers_with_log_checkpoints_disabled" {
   title         = "Detect & correct PostgreSQL servers with log checkpoints disabled"
   description   = "Detect PostgreSQL servers with log checkpoints disabled and then enable log checkpoints."
-  tags          = merge(local.postgres_common_tags, { class = "unused", type = "featured" })
 
   param "database" {
     type        = string
@@ -122,7 +120,6 @@ pipeline "detect_and_correct_postgresql_servers_with_log_checkpoints_disabled" {
 pipeline "correct_postgresql_servers_with_log_checkpoints_disabled" {
   title         = "Correct PostgreSQL servers with log checkpoints disabled"
   description   = "Enable log checkpoints for PostgreSQL servers with log checkpoints disabled."
-  tags          = merge(local.postgres_common_tags, { class = "unused" })
 
   param "items" {
     type = list(object({
@@ -194,7 +191,6 @@ pipeline "correct_postgresql_servers_with_log_checkpoints_disabled" {
 pipeline "correct_one_postgresql_servers_with_log_checkpoints_disabled" {
   title         = "Correct PostgreSQL server with log checkpoints disabled"
   description   = "Enable log checkpoints for a PostgreSQL server with log checkpoints disabled."
-  tags          = merge(local.postgres_common_tags, { class = "unused" })
 
   param "title" {
     type        = string

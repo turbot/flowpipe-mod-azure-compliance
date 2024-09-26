@@ -187,7 +187,6 @@ pipeline "correct_securitycenters_with_azure_defender_for_storage_disabled" {
 pipeline "correct_one_securitycenter_with_azure_defender_for_storage_disabled" {
   title         = "Correct Security Center with Azure Defender disabled for Storage"
   description   = "Enable Azure Defender for Storage in Security Center with Azure Defender disabled for Storage."
-  // tags          = merge(local.securitycenter_common_tags, { class = "unused" })
 
   param "title" {
     type        = string

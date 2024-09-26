@@ -43,7 +43,6 @@ variable "securitycenters_with_azure_defender_for_resource_manager_disabled_enab
 trigger "query" "detect_and_correct_securitycenters_with_azure_defender_for_resource_manager_disabled" {
   title         = "Detect & correct Security Centers with Azure Defender disabled for Resource Manager"
   description   = "Detect Security Centers with Azure Defender disabled for Resource Manager and then enable Azure Defender for Resource Manager."
-  // tags          = merge(local.securitycenter_common_tags, { class = "unused" })
 
   enabled  = var.securitycenters_with_azure_defender_for_resource_manager_disabled_trigger_enabled
   schedule = var.securitycenters_with_azure_defender_for_resource_manager_disabled_trigger_schedule
@@ -61,7 +60,6 @@ trigger "query" "detect_and_correct_securitycenters_with_azure_defender_for_reso
 pipeline "detect_and_correct_securitycenters_with_azure_defender_for_resource_manager_disabled" {
   title         = "Detect & correct Security Centers with Azure Defender disabled for Resource Manager"
   description   = "Detect Security Centers with Azure Defender disabled for Resource Manager and then enable Azure Defender for Resource Manager."
-  // tags          = merge(local.securitycenter_common_tags, { class = "unused", type = "featured" })
 
   param "database" {
     type        = string
@@ -120,7 +118,6 @@ pipeline "detect_and_correct_securitycenters_with_azure_defender_for_resource_ma
 pipeline "correct_securitycenters_with_azure_defender_for_resource_manager_disabled" {
   title         = "Correct Security Centers with Azure Defender disabled for Resource Manager"
   description   = "Enable Azure Defender for Resource Manager in Security Centers with Azure Defender disabled for Resource Manager."
-  //  tags          = merge(local.securitycenter_common_tags, { class = "unused" })
 
   param "items" {
     type = list(object({
@@ -190,7 +187,6 @@ pipeline "correct_securitycenters_with_azure_defender_for_resource_manager_disab
 pipeline "correct_one_securitycenter_with_azure_defender_for_resource_manager_disabled" {
   title         = "Correct Security Center with Azure Defender disabled for Resource Manager"
   description   = "Enable Azure Defender for Resource Manager in Security Center with Azure Defender disabled for Resource Manager."
-  // tags          = merge(local.securitycenter_common_tags, { class = "unused" })
 
   param "title" {
     type        = string

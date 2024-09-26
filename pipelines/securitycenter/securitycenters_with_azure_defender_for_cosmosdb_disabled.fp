@@ -43,7 +43,6 @@ variable "securitycenters_with_azure_defender_for_cosmosdb_disabled_enabled_acti
 trigger "query" "detect_and_correct_securitycenters_with_azure_defender_for_cosmosdb_disabled" {
   title         = "Detect & correct Security Centers with Azure Defender disabled for Cosmos DB"
   description   = "Detect Security Centers with Azure Defender disabled for Cosmos DB and then enable Azure Defender for Cosmos DB."
-  // tags          = merge(local.securitycenter_common_tags, { class = "unused" })
 
   enabled  = var.securitycenters_with_azure_defender_for_cosmosdb_disabled_trigger_enabled
   schedule = var.securitycenters_with_azure_defender_for_cosmosdb_disabled_trigger_schedule
@@ -61,7 +60,6 @@ trigger "query" "detect_and_correct_securitycenters_with_azure_defender_for_cosm
 pipeline "detect_and_correct_securitycenters_with_azure_defender_for_cosmosdb_disabled" {
   title         = "Detect & correct Security Centers with Azure Defender disabled for Cosmos DB"
   description   = "Detect Security Centers with Azure Defender disabled for Cosmos DB and then enable Azure Defender for Cosmos DB."
-  // tags          = merge(local.securitycenter_common_tags, { class = "unused", type = "featured" })
 
   param "database" {
     type        = string
@@ -120,8 +118,7 @@ pipeline "detect_and_correct_securitycenters_with_azure_defender_for_cosmosdb_di
 pipeline "correct_securitycenters_with_azure_defender_for_cosmosdb_disabled" {
   title         = "Correct Security Centers with Azure Defender disabled for Cosmos DB"
   description   = "Enable Azure Defender for Cosmos DB in Security Centers with Azure Defender disabled for Cosmos DB."
-  //  tags          = merge(local.securitycenter_common_tags, { class = "unused" })
-
+  
   param "items" {
     type = list(object({
       id              = string
@@ -190,7 +187,6 @@ pipeline "correct_securitycenters_with_azure_defender_for_cosmosdb_disabled" {
 pipeline "correct_one_securitycenter_with_azure_defender_for_cosmosdb_disabled" {
   title         = "Correct Security Center with Azure Defender disabled for Cosmos DB"
   description   = "Enable Azure Defender for Cosmos DB in Security Center with Azure Defender disabled for Cosmos DB."
-  // tags          = merge(local.securitycenter_common_tags, { class = "unused" })
 
   param "title" {
     type        = string

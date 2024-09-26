@@ -45,7 +45,6 @@ variable "sql_databases_with_transparent_data_encryption_disabled_enabled_action
 trigger "query" "detect_and_correct_sql_databases_with_transparent_data_encryption_disabled" {
   title         = "Detect & correct SQL Databases with transparent data encryption disabled"
   description   = "Detect SQL Databases with transparent data encryption disabled and enable transparent data encryption."
-  tags          = merge(local.sql_common_tags, { class = "security" })
 
   enabled  = var.sql_databases_with_transparent_data_encryption_disabled_trigger_enabled
   schedule = var.sql_databases_with_transparent_data_encryption_disabled_trigger_schedule
@@ -63,7 +62,6 @@ trigger "query" "detect_and_correct_sql_databases_with_transparent_data_encrypti
 pipeline "detect_and_correct_sql_databases_with_transparent_data_encryption_disabled" {
   title         = "Detect & correct SQL Databases with transparent data encryption disabled"
   description   = "Detect SQL Databases with transparent data encryption disabled and enable transparent data encryption."
-  tags          = merge(local.sql_common_tags, { class = "security", type = "featured" })
 
   param "database" {
     type        = string
@@ -122,7 +120,6 @@ pipeline "detect_and_correct_sql_databases_with_transparent_data_encryption_disa
 pipeline "correct_sql_databases_with_transparent_data_encryption_disabled" {
   title         = "Correct SQL Databases with transparent data encryption disabled"
   description   = "Enable transparent data encryption for SQL Databases with transparent data encryption disabled."
-  tags          = merge(local.sql_common_tags, { class = "security" })
 
   param "items" {
     type = list(object({
@@ -196,7 +193,6 @@ pipeline "correct_sql_databases_with_transparent_data_encryption_disabled" {
 pipeline "correct_one_sql_database_with_transparent_data_encryption_disabled" {
   title         = "Correct SQL Database with transparent data encryption disabled"
   description   = "Enable transparent data encryption for a SQL Database with transparent data encryption disabled."
-  tags          = merge(local.sql_common_tags, { class = "security" })
 
   param "title" {
     type        = string

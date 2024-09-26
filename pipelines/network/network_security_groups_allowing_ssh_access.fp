@@ -46,7 +46,6 @@ locals {
 trigger "query" "detect_and_correct_network_security_groups_allowing_ssh_access" {
   title         = "Detect & correct NSGs allowing SSH access"
   description   = "Detects NSGs allowing SSH access and runs your chosen action."
-  tags          = merge(local.network_common_tags, { class = "security" })
 
   enabled  = var.network_security_groups_allowing_ssh_access_trigger_enabled
   schedule = var.network_security_groups_allowing_ssh_access_trigger_schedule
@@ -64,7 +63,6 @@ trigger "query" "detect_and_correct_network_security_groups_allowing_ssh_access"
 pipeline "detect_and_correct_network_security_groups_allowing_ssh_access" {
   title         = "Detect & correct NSGs allowing SSH access"
   description   = "Detects NSGs allowing SSH access and runs your chosen action."
-  tags          = merge(local.network_common_tags, { class = "security", type = "featured" })
 
   param "database" {
     type        = string
@@ -123,7 +121,6 @@ pipeline "detect_and_correct_network_security_groups_allowing_ssh_access" {
 pipeline "correct_network_security_groups_allowing_ssh_access" {
   title         = "Correct NSGs allowing SSH access"
   description   = "Runs corrective action on a collection of NSGs allowing SSH access."
-  tags          = merge(local.network_common_tags, { class = "security" })
 
   param "items" {
     type = list(object({
@@ -201,8 +198,7 @@ pipeline "correct_network_security_groups_allowing_ssh_access" {
 pipeline "correct_one_network_security_groups_allowing_ssh_access" {
   title         = "Correct one NSG allowing SSH access"
   description   = "Runs corrective action on a single NSG allowing SSH access."
-  tags          = merge(local.network_common_tags, { class = "security" })
-
+  
   param "title" {
     type        = string
     description = local.description_title

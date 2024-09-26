@@ -43,7 +43,6 @@ variable "appservice_web_apps_with_authentication_disabled_enabled_actions" {
 trigger "query" "detect_and_correct_appservice_web_apps_with_authentication_disabled" {
   title         = "Detect & Correct App Service web apps with authentication sisabled"
   description   = "Detects App Service web apps with authentication disabled and then enable authentication."
-  tags          = merge(local.appservice_common_tags, { class = "unused" })
 
   enabled  = var.appservice_web_apps_with_authentication_disabled_trigger_enabled
   schedule = var.appservice_web_apps_with_authentication_disabled_trigger_schedule
@@ -61,7 +60,6 @@ trigger "query" "detect_and_correct_appservice_web_apps_with_authentication_disa
 pipeline "detect_and_correct_appservice_web_apps_with_authentication_disabled" {
   title         = "Detect & Correct App Service web apps with authentication sisabled"
   description   = "Detects App Service web apps with authentication disabled and then enable authentication."
-  tags          = merge(local.appservice_common_tags, { class = "unused", type = "featured" })
 
   param "database" {
     type        = string
@@ -120,7 +118,6 @@ pipeline "detect_and_correct_appservice_web_apps_with_authentication_disabled" {
 pipeline "correct_appservice_web_apps_with_authentication_disabled" {
   title         = "Correct App Service web apps with authentication disabled"
   description   = "Enable authentication for App Service web apps with authentication disabled."
-  tags          = merge(local.appservice_common_tags, { class = "unused" })
 
   param "items" {
     type = list(object({
@@ -196,7 +193,6 @@ pipeline "correct_appservice_web_apps_with_authentication_disabled" {
 pipeline "correct_one_appservice_webapp_with_authentication_disabled" {
   title         = "Correct App Service web app with authentication disabled"
   description   = "Enable authentication for a App Service web app with authentication disabled."
-  tags          = merge(local.appservice_common_tags, { class = "unused" })
 
   param "title" {
     type        = string

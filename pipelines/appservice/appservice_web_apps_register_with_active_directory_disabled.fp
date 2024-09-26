@@ -43,7 +43,6 @@ variable "appservice_web_apps_register_with_active_directory_disabled_enabled_ac
 trigger "query" "detect_and_correct_appservice_web_apps_register_with_active_directory_disabled" {
   title         = "Detect & correct App Service web apps register with Active Directory disabled"
   description   = "Detects App Service web apps register with Active Directory disabled and then register with Active Directory."
-  tags          = merge(local.appservice_common_tags, { class = "unused" })
 
   enabled  = var.appservice_web_apps_register_with_active_directory_disabled_trigger_enabled
   schedule = var.appservice_web_apps_register_with_active_directory_disabled_trigger_schedule
@@ -61,7 +60,6 @@ trigger "query" "detect_and_correct_appservice_web_apps_register_with_active_dir
 pipeline "detect_and_correct_appservice_web_apps_register_with_active_directory_disabled" {
   title         = "Detect & correct App Service web apps register with Active Directory disabled"
   description   = "Detects App Service web apps register with Active Directory disabled and then register with Active Directory."
-  tags          = merge(local.appservice_common_tags, { class = "unused", type = "featured" })
 
   param "database" {
     type        = string
@@ -120,7 +118,6 @@ pipeline "detect_and_correct_appservice_web_apps_register_with_active_directory_
 pipeline "correct_appservice_web_apps_register_with_active_directory_disabled" {
   title         = "Correct App Services not registered with Active Directory"
   description   = "Runs corrective action on a collection of App Services not registered with Active Directory."
-  tags          = merge(local.appservice_common_tags, { class = "unused" })
 
   param "items" {
     type = list(object({
@@ -196,7 +193,6 @@ pipeline "correct_appservice_web_apps_register_with_active_directory_disabled" {
 pipeline "correct_one_appservice_web_apps_register_with_active_directory_disabled" {
   title         = "Correct one App Service not registered with Active Directory"
   description   = "Runs corrective action on a single App Service not registered with Active Directory."
-  tags          = merge(local.appservice_common_tags, { class = "unused" })
 
   param "title" {
     type        = string

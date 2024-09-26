@@ -49,7 +49,6 @@ variable "sql_databases_when_publicly_accessible_enabled_actions" {
 trigger "query" "detect_and_correct_sql_databases_when_publicly_accessible" {
   title         = "Detect & correct SQL Databases when publicly accessible"
   description   = "Detect SQL Databases firewall rules allowing public access and then delete the firewall rules."
-  tags          = merge(local.sql_common_tags, { class = "security" })
 
   enabled  = var.sql_databases_when_publicly_accessible_trigger_enabled
   schedule = var.sql_databases_when_publicly_accessible_trigger_schedule
@@ -67,7 +66,6 @@ trigger "query" "detect_and_correct_sql_databases_when_publicly_accessible" {
 pipeline "detect_and_correct_sql_databases_when_publicly_accessible" {
   title         = "Detect & correct SQL Databases when publicly accessible"
   description   = "Detect SQL Databases firewall rules allowing public access and then delete the firewall rules."
-  tags          = merge(local.sql_common_tags, { class = "security", type = "featured" })
 
   param "database" {
     type        = string
@@ -126,7 +124,6 @@ pipeline "detect_and_correct_sql_databases_when_publicly_accessible" {
 pipeline "correct_sql_databases_when_publicly_accessible" {
   title         = "Correct SQL Databases when publicly accessible"
   description   = "Delete firewall rule for SQL Databases allowing public access."
-  tags          = merge(local.sql_common_tags, { class = "security" })
 
   param "items" {
     type = list(object({
@@ -200,7 +197,6 @@ pipeline "correct_sql_databases_when_publicly_accessible" {
 pipeline "correct_one_sql_database_when_publicly_accessible" {
   title         = "Correct SQL Database when publicly accessible"
   description   = "Delete firewall rule fora  SQL Database allowing public access."
-  tags          = merge(local.sql_common_tags, { class = "security" })
 
   param "title" {
     type        = string

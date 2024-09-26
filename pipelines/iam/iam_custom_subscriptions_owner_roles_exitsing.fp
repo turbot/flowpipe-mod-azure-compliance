@@ -19,7 +19,6 @@ locals {
 trigger "query" "detect_and_correct_iam_custom_subscriptions_owner_roles_existing" {
   title         = "Detect & correct custom subscription owner roles existing"
   description   = "Detects custom subscription owner roles that exist and runs your chosen action."
-  tags          = merge(local.iam_common_tags, { class = "security" })
 
   enabled  = var.iam_custom_subscriptions_owner_roles_existing_trigger_enabled
   schedule = var.iam_custom_subscriptions_owner_roles_existing_trigger_schedule
@@ -37,7 +36,6 @@ trigger "query" "detect_and_correct_iam_custom_subscriptions_owner_roles_existin
 pipeline "detect_and_correct_iam_custom_subscriptions_owner_roles_existing" {
   title         = "Detect & correct custom subscription owner roles existing"
   description   = "Detects custom subscription owner roles that exist and runs your chosen action."
-  tags          = merge(local.iam_common_tags, { class = "security", type = "featured" })
 
   param "database" {
     type        = string
@@ -96,7 +94,6 @@ pipeline "detect_and_correct_iam_custom_subscriptions_owner_roles_existing" {
 pipeline "correct_iam_custom_subscriptions_owner_roles_existing" {
   title         = "Correct custom subscription owner roles existing"
   description   = "Runs corrective action on a collection of custom subscription owner roles that exist."
-  tags          = merge(local.iam_common_tags, { class = "security" })
 
   param "items" {
     type = list(object({
@@ -170,7 +167,6 @@ pipeline "correct_iam_custom_subscriptions_owner_roles_existing" {
 pipeline "correct_one_iam_custom_subscriptions_owner_role_existing" {
   title         = "Correct one custom subscription owner role existing"
   description   = "Runs corrective action on a single custom subscription owner role that exists."
-  tags          = merge(local.iam_common_tags, { class = "security" })
 
   param "title" {
     type        = string

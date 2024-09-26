@@ -43,7 +43,6 @@ locals {
 trigger "query" "detect_and_correct_network_security_groups_allowing_https_access" {
   title         = "Detect & correct NSGs allowing HTTPS access"
   description   = "Detects NSGs allowing HTTPS access and runs your chosen action."
-  tags          = merge(local.network_common_tags, { class = "security" })
 
   enabled  = var.network_security_groups_allowing_https_access_trigger_enabled
   schedule = var.network_security_groups_allowing_https_access_trigger_schedule
@@ -61,7 +60,6 @@ trigger "query" "detect_and_correct_network_security_groups_allowing_https_acces
 pipeline "detect_and_correct_network_security_groups_allowing_https_access" {
   title         = "Detect & correct NSGs allowing HTTPS access"
   description   = "Detects NSGs allowing HTTPS access and runs your chosen action."
-  tags          = merge(local.network_common_tags, { class = "security", type = "featured" })
 
   param "database" {
     type        = string
@@ -120,7 +118,6 @@ pipeline "detect_and_correct_network_security_groups_allowing_https_access" {
 pipeline "correct_network_security_groups_allowing_https_access" {
   title         = "Correct NSGs allowing HTTPS access"
   description   = "Runs corrective action on a collection of NSGs allowing HTTPS access."
-  tags          = merge(local.network_common_tags, { class = "security" })
 
   param "items" {
     type = list(object({
@@ -198,7 +195,6 @@ pipeline "correct_network_security_groups_allowing_https_access" {
 pipeline "correct_one_network_security_groups_allowing_https_access" {
   title         = "Correct one NSG allowing HTTPS access"
   description   = "Runs corrective action on a single NSG allowing HTTPS access."
-  tags          = merge(local.network_common_tags, { class = "security" })
 
   param "title" {
     type        = string

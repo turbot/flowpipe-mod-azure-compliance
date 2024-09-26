@@ -51,7 +51,6 @@ variable "log_retention_days" {
 trigger "query" "detect_and_correct_postgresql_servers_with_log_retention_less_than_3_days" {
   title         = "Detect & correct PostgreSQL servers with log retention less than 3 days"
   description   = "Detect PostgreSQL servers with log retention less than 3 and then sets log retention to 3 or more than 3 days."
-  tags          = merge(local.postgres_common_tags, { class = "unused" })
 
   enabled  = var.postgresql_servers_with_log_retention_less_than_3_days_trigger_enabled
   schedule = var.postgresql_servers_with_log_retention_less_than_3_days_trigger_schedule
@@ -69,7 +68,6 @@ trigger "query" "detect_and_correct_postgresql_servers_with_log_retention_less_t
 pipeline "detect_and_correct_postgresql_servers_with_log_retention_less_than_3_days" {
   title         = "Detect & correct PostgreSQL servers with log retention less than 3 days"
   description   = "Detect PostgreSQL servers with log retention less than 3 and then sets log retention to 3 or more than 3 days."
-  tags          = merge(local.postgres_common_tags, { class = "unused", type = "featured" })
 
   param "database" {
     type        = string
@@ -128,7 +126,6 @@ pipeline "detect_and_correct_postgresql_servers_with_log_retention_less_than_3_d
 pipeline "correct_postgresql_servers_with_log_retention_less_than_3_days" {
   title         = "Correct PostgreSQL servers with log retention less than 3 days"
   description   = "Update log retention days to 3 or more for PostgreSQL servers with log retention less than 3 days."
-  tags          = merge(local.postgres_common_tags, { class = "unused" })
 
   param "items" {
     type = list(object({
@@ -200,7 +197,6 @@ pipeline "correct_postgresql_servers_with_log_retention_less_than_3_days" {
 pipeline "correct_one_postgresql_server_with_log_retention_less_than_3_days" {
   title         = "Correct PostgreSQL server with log retention less than 3 days"
   description   = "Update log retention days to 3 or more for a PostgreSQL server with log retention less than 3 days."
-  tags          = merge(local.postgres_common_tags, { class = "unused" })
 
   param "title" {
     type        = string

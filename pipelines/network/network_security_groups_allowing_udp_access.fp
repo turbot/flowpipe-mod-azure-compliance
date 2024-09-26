@@ -53,7 +53,6 @@ locals {
 trigger "query" "detect_and_correct_network_security_groups_allowing_udp_access" {
   title         = "Detect & correct NSGs allowing UDP access"
   description   = "Detects NSGs allowing UDP access and runs your chosen action."
-  tags          = merge(local.network_common_tags, { class = "security" })
 
   enabled  = var.network_security_groups_allowing_udp_access_trigger_enabled
   schedule = var.network_security_groups_allowing_udp_access_trigger_schedule
@@ -72,7 +71,6 @@ pipeline "detect_and_correct_network_security_groups_allowing_udp_access" {
   title         = "Detect & correct NSGs allowing UDP access"
   description   = "Detects NSGs allowing UDP access and runs your chosen action."
 
-  tags          = merge(local.network_common_tags, { class = "security", type = "featured" })
 
   param "database" {
     type        = string
@@ -131,7 +129,6 @@ pipeline "detect_and_correct_network_security_groups_allowing_udp_access" {
 pipeline "correct_network_security_groups_allowing_udp_access" {
   title         = "Correct NSGs allowing UDP access"
   description   = "Runs corrective action on a collection of NSGs allowing UDP access."
-  tags          = merge(local.network_common_tags, { class = "security" })
 
   param "items" {
     type = list(object({
@@ -209,7 +206,6 @@ pipeline "correct_network_security_groups_allowing_udp_access" {
 pipeline "correct_one_network_security_groups_allowing_udp_access" {
   title         = "Correct one NSG allowing UDP access"
   description   = "Runs corrective action on a single NSG allowing UDP access."
-  tags          = merge(local.network_common_tags, { class = "security" })
 
   param "title" {
     type        = string

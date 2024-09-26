@@ -1,7 +1,7 @@
 locals {
   storage_accounts_with_blob_soft_delete_disabled_query = <<-EOQ
     select
-      concat(sa.id, ' [', sa.resource_group, '/', sa.subscription_id, ']') as title,
+      concat(sa.id, ' [', sa.subscription_id, '/', sa.resource_group, ']') as title,
       sa.id as id,
       sa.name,
       sa.resource_group,
@@ -41,9 +41,8 @@ variable "storage_accounts_with_blob_soft_delete_disabled_enabled_actions" {
 }
 
 trigger "query" "detect_and_correct_storage_accounts_with_blob_soft_delete_disabled" {
-  title         = "Detect & Correct Storage Accounts With Blob Soft Delete Disabled"
+  title         = "Detect & correct Storage Accounts with blob soft delete disabled"
   description   = "Detect Storage Accounts with blob soft delete disabled and then enable blob soft delete."
-  tags          = merge(local.storage_common_tags, { class = "unused" })
 
   enabled  = var.storage_accounts_with_blob_soft_delete_disabled_trigger_enabled
   schedule = var.storage_accounts_with_blob_soft_delete_disabled_trigger_schedule
@@ -60,8 +59,7 @@ trigger "query" "detect_and_correct_storage_accounts_with_blob_soft_delete_disab
 
 pipeline "detect_and_correct_storage_accounts_with_blob_soft_delete_disabled" {
   title         = "Detect & correct Storage Accounts with blob soft delete disabled"
-  description   = "Detects Storage Accounts with blob soft delete disabled and runs your chosen action."
-  tags          = merge(local.storage_common_tags, { class = "unused", type = "featured" })
+  description   = "Detects Storage Accounts with blob soft delete disabled and then enable blob soft delete."
 
   param "database" {
     type        = string
@@ -119,8 +117,7 @@ pipeline "detect_and_correct_storage_accounts_with_blob_soft_delete_disabled" {
 
 pipeline "correct_storage_accounts_with_blob_soft_delete_disabled" {
   title         = "Correct Storage Accounts with blob soft delete disabled"
-  description   = "Runs corrective action on a collection of Storage Accounts with blob soft delete disabled."
-  tags          = merge(local.storage_common_tags, { class = "unused" })
+  description   = "Enable blob soft delete for Storage Accounts with blob soft delete disabled."
 
   param "items" {
     type = list(object({
@@ -167,17 +164,13 @@ pipeline "correct_storage_accounts_with_blob_soft_delete_disabled" {
   step "message" "notify_detection_count" {
     if       = var.notification_level == local.level_verbose
     notifier = notifier[param.notifier]
-    text     = "Detected ${length(param.items)} Storage Accounts with blob soft delete disabled."
-  }
-
-  step "transform" "items_by_id" {
-    value = { for row in param.items : row.id => row }
+    text     = "Detected ${length(param.items)} Storage Account(s) with blob soft delete disabled."
   }
 
   step "pipeline" "correct_item" {
-    for_each        = step.transform.items_by_id.value
+    for_each        = { for row in param.items : row.id => row }
     max_concurrency = var.max_concurrency
-    pipeline        = pipeline.correct_one_storage_accounts_with_blob_soft_delete_disabled
+    pipeline        = pipeline.correct_one_storage_account_with_blob_soft_delete_disabled
     args = {
       title              = each.value.title
       name               = each.value.name
@@ -193,10 +186,9 @@ pipeline "correct_storage_accounts_with_blob_soft_delete_disabled" {
   }
 }
 
-pipeline "correct_one_storage_accounts_with_blob_soft_delete_disabled" {
-  title         = "Correct one Storage Account with blob soft delete disabled"
-  description   = "Runs corrective action on a single Storage Account with blob soft delete disabled."
-  tags          = merge(local.storage_common_tags, { class = "unused" })
+pipeline "correct_one_storage_account_with_blob_soft_delete_disabled" {
+  title         = "Correct Storage Account with blob soft delete disabled"
+  description   = "Enable blob soft delete for a Storage Account with blob soft delete disabled."
 
   param "title" {
     type        = string
@@ -272,7 +264,7 @@ pipeline "correct_one_storage_accounts_with_blob_soft_delete_disabled" {
           pipeline_args = {
             notifier = param.notifier
             send     = param.notification_level == local.level_verbose
-            text     = "Skipped Storage Account ${param.title} with blob soft delete disabled."
+            text     = "Skipped Storage Account ${param.title}."
           }
           success_msg = ""
           error_msg   = ""

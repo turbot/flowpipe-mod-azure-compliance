@@ -187,7 +187,6 @@ pipeline "correct_securitycenters_with_azure_defender_for_app_service_disabled" 
 pipeline "correct_one_securitycenters_with_azure_defender_for_app_service_disabled" {
   title         = "Correct Security Center with Azure Defender disabled for App Service"
   description   = "Enable Azure Defender for App Service in Security Center with  Azure Defender disabled for App Service."
-  // tags          = merge(local.securitycenter_common_tags, { class = "unused" })
 
   param "title" {
     type        = string

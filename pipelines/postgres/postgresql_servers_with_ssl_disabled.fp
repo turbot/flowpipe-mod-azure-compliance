@@ -43,7 +43,6 @@ variable "postgresql_servers_with_ssl_disabled_enabled_actions" {
 trigger "query" "detect_and_correct_postgresql_servers_with_ssl_disabled" {
   title         = "Detect & correct PostgreSQL servers with SSL disabled"
   description   = "Detect PostgreSQL servers with SSL disabled and then enable SSL."
-  tags          = merge(local.postgres_common_tags, { class = "unused" })
 
   enabled  = var.postgresql_servers_with_ssl_disabled_trigger_enabled
   schedule = var.postgresql_servers_with_ssl_disabled_trigger_schedule
@@ -61,7 +60,6 @@ trigger "query" "detect_and_correct_postgresql_servers_with_ssl_disabled" {
 pipeline "detect_and_correct_postgresql_servers_with_ssl_disabled" {
   title         = "Detect & correct PostgreSQL servers with SSL disabled"
   description   = "Detect PostgreSQL servers with SSL disabled and then enable SSL."
-  tags          = merge(local.postgres_common_tags, { class = "unused", type = "featured" })
 
   param "database" {
     type        = string
@@ -120,7 +118,6 @@ pipeline "detect_and_correct_postgresql_servers_with_ssl_disabled" {
 pipeline "correct_postgresql_servers_with_ssl_disabled" {
   title         = "Correct PostgreSQL servers with SSL disabled"
   description   = "Enable SSL for PostgreSQL servers with SSL disabled."
-  tags          = merge(local.postgres_common_tags, { class = "unused" })
 
   param "items" {
     type = list(object({
@@ -192,7 +189,6 @@ pipeline "correct_postgresql_servers_with_ssl_disabled" {
 pipeline "correct_one_postgresql_server_with_ssl_disabled" {
   title         = "Correct PostgreSQL server with SSL disabled"
   description   = "Enable SSL for a PostgreSQL server with SSL disabled"
-  tags          = merge(local.postgres_common_tags, { class = "unused" })
 
   param "title" {
     type        = string

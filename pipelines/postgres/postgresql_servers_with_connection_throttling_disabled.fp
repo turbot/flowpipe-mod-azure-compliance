@@ -45,7 +45,6 @@ variable "postgresql_servers_with_connection_throttling_disabled_enabled_actions
 trigger "query" "detect_and_correct_postgresql_servers_with_connection_throttling_disabled" {
   title         = "Detect & correct PostgreSQL servers with connection throttling disabled"
   description   = "Detect PostgreSQL servers with connection throttling disabled and then enable connection throttling."
-  tags          = merge(local.postgres_common_tags, { class = "unused" })
 
   enabled  = var.postgresql_servers_with_connection_throttling_disabled_trigger_enabled
   schedule = var.postgresql_servers_with_connection_throttling_disabled_trigger_schedule
@@ -63,7 +62,6 @@ trigger "query" "detect_and_correct_postgresql_servers_with_connection_throttlin
 pipeline "detect_and_correct_postgresql_servers_with_connection_throttling_disabled" {
   title         = "Detect & correct PostgreSQL servers with connection throttling disabled"
   description   = "Detect PostgreSQL servers with connection throttling disabled and then enable connection throttling"
-  tags          = merge(local.postgres_common_tags, { class = "unused", type = "featured" })
 
   param "database" {
     type        = string
@@ -122,7 +120,6 @@ pipeline "detect_and_correct_postgresql_servers_with_connection_throttling_disab
 pipeline "correct_postgresql_servers_with_connection_throttling_disabled" {
   title         = "Correct PostgreSQL servers with connection throttling disabled"
   description   = "Enable connection throttling for PostgreSQL servers with connection throttling disabled."
-  tags          = merge(local.postgres_common_tags, { class = "unused" })
 
   param "items" {
     type = list(object({
@@ -194,7 +191,6 @@ pipeline "correct_postgresql_servers_with_connection_throttling_disabled" {
 pipeline "correct_one_postgresql_server_with_connection_throttling_disabled" {
   title         = "Correct PostgreSQL server with connection throttling disabled"
   description   = "Enable connection throttling for a PostgreSQL server with connection throttling disabled."
-  tags          = merge(local.postgres_common_tags, { class = "unused" })
 
   param "title" {
     type        = string

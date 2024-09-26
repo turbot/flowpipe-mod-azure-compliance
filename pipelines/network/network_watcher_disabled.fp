@@ -19,7 +19,6 @@ locals {
 trigger "query" "detect_and_correct_network_watcher_disabled" {
   title         = "Detect & correct disabled Network Watchers"
   description   = "Detects disabled Network Watchers and runs your chosen action."
-  tags          = merge(local.network_common_tags, { class = "security" })
 
   enabled  = var.network_watcher_disabled_trigger_enabled
   schedule = var.network_watcher_disabled_trigger_schedule
@@ -37,7 +36,6 @@ trigger "query" "detect_and_correct_network_watcher_disabled" {
 pipeline "detect_and_correct_network_watcher_disabled" {
   title         = "Detect & correct disabled Network Watchers"
   description   = "Detects disabled Network Watchers and runs your chosen action."
-  tags          = merge(local.network_common_tags, { class = "security", type = "featured" })
 
   param "database" {
     type        = string
@@ -96,7 +94,6 @@ pipeline "detect_and_correct_network_watcher_disabled" {
 pipeline "correct_network_watcher_disabled" {
   title         = "Correct disabled Network Watchers"
   description   = "Runs corrective action on a collection of disabled Network Watchers."
-  tags          = merge(local.network_common_tags, { class = "security" })
 
   param "items" {
     type = list(object({
@@ -172,7 +169,6 @@ pipeline "correct_network_watcher_disabled" {
 pipeline "correct_one_network_watcher_disabled" {
   title         = "Correct one disabled Network Watcher"
   description   = "Runs corrective action on a single disabled Network Watcher."
-  tags          = merge(local.network_common_tags, { class = "security" })
 
   param "title" {
     type        = string

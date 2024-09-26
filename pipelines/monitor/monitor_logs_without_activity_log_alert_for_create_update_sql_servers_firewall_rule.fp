@@ -69,7 +69,6 @@ locals {
 trigger "query" "detect_and_correct_monitor_logs_without_activity_log_alert_for_create_update_sql_servers_firewall_rule" {
   title         = "Detect & correct Monitor Logs without activity log alert for create and update SQL servers firewall rule"
   description   = "Detects Monitor Logs without an activity log alert for create and update SQL servers firewall rule and runs your chosen action."
-  tags          = merge(local.monitor_common_tags, { class = "security" })
 
   enabled  = var.monitor_logs_without_activity_log_alert_for_create_update_sql_servers_firewall_rule_trigger_enabled
   schedule = var.monitor_logs_without_activity_log_alert_for_create_update_sql_servers_firewall_rule_trigger_schedule
@@ -87,7 +86,6 @@ trigger "query" "detect_and_correct_monitor_logs_without_activity_log_alert_for_
 pipeline "detect_and_correct_monitor_logs_without_activity_log_alert_for_create_update_sql_servers_firewall_rule" {
   title         = "Detect & correct Monitor Logs without activity log alert for create and update SQL servers firewall rule"
   description   = "Detects Monitor Logs without an activity log alert for create and update SQL servers firewall rule and runs your chosen action."
-  tags          = merge(local.monitor_common_tags, { class = "security", type = "featured" })
 
   param "database" {
     type        = string
@@ -146,7 +144,6 @@ pipeline "detect_and_correct_monitor_logs_without_activity_log_alert_for_create_
 pipeline "correct_monitor_logs_without_activity_log_alert_for_create_update_sql_servers_firewall_rule" {
   title         = "Correct Monitor Logs without activity log alert for create and update SQL servers firewall rule"
   description   = "Runs corrective action on a collection of Monitor Logs without activity log alert for create and update SQL servers firewall rule."
-  tags          = merge(local.monitor_common_tags, { class = "security" })
 
   param "items" {
     type = list(object({
@@ -222,7 +219,6 @@ pipeline "correct_monitor_logs_without_activity_log_alert_for_create_update_sql_
 pipeline "correct_one_monitor_logs_without_activity_log_alert_for_create_update_sql_servers_firewall_rule" {
   title         = "Correct one Monitor Log without activity log alert for create and update SQL servers firewall rule"
   description   = "Runs corrective action on a single Monitor Log without activity log alert for create and update SQL servers firewall rule."
-  tags          = merge(local.monitor_common_tags, { class = "security" })
 
   param "title" {
     type        = string

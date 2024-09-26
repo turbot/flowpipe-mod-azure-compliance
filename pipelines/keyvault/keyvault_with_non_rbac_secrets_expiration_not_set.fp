@@ -31,7 +31,6 @@ locals {
 trigger "query" "detect_and_correct_keyvault_with_non_rbac_secrets_expiration_not_set" {
   title         = "Detect & correct Key Vaults with non-RBAC secrets without expiration date"
   description   = "Detects Key Vaults with non-RBAC secrets that do not have an expiration date set and runs your chosen action."
-  tags          = merge(local.keyvault_common_tags, { class = "security" })
 
   enabled  = var.keyvault_with_non_rbac_secrets_expiration_not_set_trigger_enabled
   schedule = var.keyvault_with_non_rbac_secrets_expiration_not_set_trigger_schedule
@@ -49,7 +48,6 @@ trigger "query" "detect_and_correct_keyvault_with_non_rbac_secrets_expiration_no
 pipeline "detect_and_correct_keyvault_with_non_rbac_secrets_expiration_not_set" {
   title         = "Detect & correct Key Vaults with non-RBAC secrets without expiration date"
   description   = "Detects Key Vaults with non-RBAC secrets that do not have an expiration date set and runs your chosen action."
-  tags          = merge(local.keyvault_common_tags, { class = "security", type = "featured" })
 
   param "database" {
     type        = string
@@ -108,7 +106,6 @@ pipeline "detect_and_correct_keyvault_with_non_rbac_secrets_expiration_not_set" 
 pipeline "correct_keyvault_with_non_rbac_secrets_expiration_not_set" {
   title         = "Correct Key Vaults with non-RBAC secrets without expiration date"
   description   = "Runs corrective action on a collection of Key Vaults with non-RBAC secrets without expiration date."
-  tags          = merge(local.keyvault_common_tags, { class = "security" })
 
   param "items" {
     type = list(object({
@@ -184,7 +181,6 @@ pipeline "correct_keyvault_with_non_rbac_secrets_expiration_not_set" {
 pipeline "correct_one_keyvault_with_non_rbac_secrets_expiration_not_set" {
   title         = "Correct one Key Vault with non-RBAC secret without expiration date"
   description   = "Runs corrective action on a single Key Vault with non-RBAC secret without expiration date."
-  tags          = merge(local.keyvault_common_tags, { class = "security" })
 
   param "title" {
     type        = string

@@ -43,7 +43,6 @@ variable "appservice_web_apps_not_using_latest_tls_version_enabled_actions" {
 trigger "query" "detect_and_correct_appservice_web_apps_not_using_latest_tls_version" {
   title         = "Detect & correct App Services web apps not using the latest TLS version"
   description   = "Detects App Services web apps not using the latest TLS version and runs your chosen action."
-  tags          = merge(local.appservice_common_tags, { class = "unused" })
 
   enabled  = var.appservice_web_apps_not_using_latest_tls_version_trigger_enabled
   schedule = var.appservice_web_apps_not_using_latest_tls_version_trigger_schedule
@@ -61,7 +60,6 @@ trigger "query" "detect_and_correct_appservice_web_apps_not_using_latest_tls_ver
 pipeline "detect_and_correct_appservice_web_apps_not_using_latest_tls_version" {
   title         = "Detect & correct App Services nweb apps ot using the latest TLS version"
   description   = "Detect App Services web apps not using the latest TLS version and runs your chosen action."
-  tags          = merge(local.appservice_common_tags, { class = "unused", type = "featured" })
 
   param "database" {
     type        = string
@@ -120,7 +118,6 @@ pipeline "detect_and_correct_appservice_web_apps_not_using_latest_tls_version" {
 pipeline "correct_appservice_web_apps_not_using_latest_tls_version" {
   title         = "Correct App Service web apps not using the latest TLS version"
   description   = "Enable latest TLS version for App Service web apps not using the latest TLS version."
-  tags          = merge(local.appservice_common_tags, { class = "unused" })
 
   param "items" {
     type = list(object({
@@ -192,7 +189,6 @@ pipeline "correct_appservice_web_apps_not_using_latest_tls_version" {
 pipeline "correct_one_appservice_web_app_not_using_latest_tls_version" {
   title         = "Correct App Service web app not using the latest TLS version"
   description   = "Enable latest TLS version for a App Service web app not using the latest TLS version."
-  tags          = merge(local.appservice_common_tags, { class = "unused" })
 
   param "title" {
     type        = string

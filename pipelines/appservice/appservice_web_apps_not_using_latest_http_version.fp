@@ -43,7 +43,6 @@ variable "appservice_web_apps_not_using_latest_http_version_enabled_actions" {
 trigger "query" "detect_and_correct_appservice_web_apps_not_using_latest_http_version" {
   title         = "Detect & correct App Service web apps not using the latest HTTP version"
   description   = "Detects App Services web apps not using the latest HTTP version and enable latest HTTP version."
-  tags          = merge(local.appservice_common_tags, { class = "unused" })
 
   enabled  = var.appservice_web_apps_not_using_latest_http_version_trigger_enabled
   schedule = var.appservice_web_apps_not_using_latest_http_version_trigger_schedule
@@ -61,7 +60,6 @@ trigger "query" "detect_and_correct_appservice_web_apps_not_using_latest_http_ve
 pipeline "detect_and_correct_appservice_web_apps_not_using_latest_http_version" {
   title         = "Detect & correct App Service web apps not using the latest HTTP version"
   description   = "Detects App Services web apps not using the latest HTTP version and enable latest HTTP version."
-  tags          = merge(local.appservice_common_tags, { class = "unused", type = "featured" })
 
   param "database" {
     type        = string
@@ -120,7 +118,6 @@ pipeline "detect_and_correct_appservice_web_apps_not_using_latest_http_version" 
 pipeline "correct_appservice_web_apps_not_using_latest_http_version" {
   title         = "Correct App Services web apps not using the latest HTTP version"
   description   = "Enable latest HTTP version for App Services web apps not using the latest HTTP version."
-  tags          = merge(local.appservice_common_tags, { class = "unused" })
 
   param "items" {
     type = list(object({
@@ -192,7 +189,6 @@ pipeline "correct_appservice_web_apps_not_using_latest_http_version" {
 pipeline "correct_one_appservice_web_app_not_using_latest_http_version" {
   title         = "Correct App Services web app not using the latest HTTP version"
   description   = "Enable latest HTTP version for a App Services web app not using the latest HTTP version."
-  tags          = merge(local.appservice_common_tags, { class = "unused" })
 
   param "title" {
     type        = string

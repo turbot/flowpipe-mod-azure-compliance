@@ -18,7 +18,6 @@ locals {
 trigger "query" "detect_and_correct_storage_accounts_secure_transfer_required_disabled" {
   title         = "Detect & correct Storage Accounts with secure transfer required disabled"
   description   = "Detects Storage Accounts with secure transfer required disabled and runs your chosen action."
-  tags          = merge(local.storage_common_tags, { class = "unused" })
 
   enabled  = var.storage_accounts_secure_transfer_required_disabled_trigger_enabled
   schedule = var.storage_accounts_secure_transfer_required_disabled_trigger_schedule
@@ -37,7 +36,6 @@ pipeline "detect_and_correct_storage_accounts_secure_transfer_required_disabled"
   title         = "Detect & correct Storage Accounts with secure transfer required disabled"
   description   = "Detects Storage Accounts with secure transfer required disabled and runs your chosen action."
   // documentation = file("./storage/docs/detect_and_correct_storage_accounts_secure_transfer_required_disabled.md")
-  tags          = merge(local.storage_common_tags, { class = "unused", type = "featured" })
 
   param "database" {
     type        = string
@@ -96,7 +94,6 @@ pipeline "detect_and_correct_storage_accounts_secure_transfer_required_disabled"
 pipeline "correct_storage_accounts_secure_transfer_required_disabled" {
   title         = "Correct Storage Accounts with secure transfer required disabled"
   description   = "Runs corrective action on a collection of Storage Accounts with secure transfer required disabled."
-  tags          = merge(local.storage_common_tags, { class = "unused" })
 
   param "items" {
     type = list(object({
@@ -172,7 +169,6 @@ pipeline "correct_storage_accounts_secure_transfer_required_disabled" {
 pipeline "correct_one_storage_accounts_secure_transfer_required_disabled" {
   title         = "Correct one Storage Account with secure transfer required disabled"
   description   = "Runs corrective action on a single Storage Account with secure transfer required disabled."
-  tags          = merge(local.storage_common_tags, { class = "unused" })
 
   param "title" {
     type        = string

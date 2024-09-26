@@ -45,7 +45,6 @@ variable "postgresql_servers_with_log_connections_disabled_enabled_actions" {
 trigger "query" "detect_and_correct_postgresql_servers_with_log_connections_disabled" {
   title         = "Detect & correct PostgreSQL servers with logging connections disabled"
   description   = "Detect PostgreSQL servers with logging connections disabled and then enable logging connections."
-  tags          = merge(local.postgres_common_tags, { class = "unused" })
 
   enabled  = var.postgresql_servers_with_log_connections_disabled_trigger_enabled
   schedule = var.postgresql_servers_with_log_connections_disabled_trigger_schedule
@@ -63,7 +62,6 @@ trigger "query" "detect_and_correct_postgresql_servers_with_log_connections_disa
 pipeline "detect_and_correct_postgresql_servers_with_log_connections_disabled" {
   title         = "Detect & correct PostgreSQL servers with logging connections disabled"
   description   = "Detect PostgreSQL servers with logging connections disabled and then enable logging connections."
-  tags          = merge(local.postgres_common_tags, { class = "unused", type = "featured" })
 
   param "database" {
     type        = string
@@ -122,7 +120,6 @@ pipeline "detect_and_correct_postgresql_servers_with_log_connections_disabled" {
 pipeline "correct_postgresql_servers_with_log_connections_disabled" {
   title         = "Correct PostgreSQL servers with logging connections disabled"
   description   = "Enable logging connections for PostgreSQL servers with logging connections disabled."
-  tags          = merge(local.postgres_common_tags, { class = "unused" })
 
   param "items" {
     type = list(object({
@@ -194,7 +191,6 @@ pipeline "correct_postgresql_servers_with_log_connections_disabled" {
 pipeline "correct_one_postgresql_server_with_log_connections_disabled" {
   title         = "Correct PostgreSQL server with logging connections disabled"
   description   = "Enable logging connections for a PostgreSQL server with logging connections disabled."
-  tags          = merge(local.postgres_common_tags, { class = "unused" })
 
   param "title" {
     type        = string

@@ -43,7 +43,6 @@ variable "securitycenters_with_azure_defender_for_container_disabled_enabled_act
 trigger "query" "detect_and_correct_securitycenters_with_azure_defender_for_container_disabled" {
   title         = "Detect & correct Security Centers with Azure Defender disabled for Container"
   description   = "Detect Security Centers with Azure Defender disabled for Container and then enable Azure Defender for Container."
-  // tags          = merge(local.securitycenter_common_tags, { class = "unused" })
 
   enabled  = var.securitycenters_with_azure_defender_for_container_disabled_trigger_enabled
   schedule = var.securitycenters_with_azure_defender_for_container_disabled_trigger_schedule
@@ -61,8 +60,7 @@ trigger "query" "detect_and_correct_securitycenters_with_azure_defender_for_cont
 pipeline "detect_and_correct_securitycenters_with_azure_defender_for_container_disabled" {
   title         = "Detect & correct Security Centers with Azure Defender disabled for Container"
   description   = "Detect Security Centers with Azure Defender disabled for Container and then enable Azure Defender for Container."
-  // tags          = merge(local.securitycenter_common_tags, { class = "unused", type = "featured" })
-
+  
   param "database" {
     type        = string
     description = local.description_database
@@ -120,7 +118,6 @@ pipeline "detect_and_correct_securitycenters_with_azure_defender_for_container_d
 pipeline "correct_securitycenters_with_azure_defender_for_container_disabled" {
   title         = "Correct Security Centers with Azure Defender disabled for Container"
   description   = "Enable Azure Defender for Container in Security Centers with Azure Defender disabled for Container."
-  //  tags          = merge(local.securitycenter_common_tags, { class = "unused" })
 
   param "items" {
     type = list(object({
@@ -190,7 +187,6 @@ pipeline "correct_securitycenters_with_azure_defender_for_container_disabled" {
 pipeline "correct_one_securitycenter_with_azure_defender_for_containers_disabled" {
   title         = "Correct Security Center with Azure Defender disabled for Container"
   description   = "Enable Azure Defender for Container in Security Center with Azure Defender disabled for Container."
-  // tags          = merge(local.securitycenter_common_tags, { class = "unused" })
 
   param "title" {
     type        = string

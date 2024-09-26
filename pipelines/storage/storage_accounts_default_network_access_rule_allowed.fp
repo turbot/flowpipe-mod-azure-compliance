@@ -19,7 +19,6 @@ locals {
 trigger "query" "detect_and_correct_storage_accounts_default_network_access_rule_allowed" {
   title         = "Detect & correct Storage Accounts with default network access rule set to Allow"
   description   = "Detects Storage Accounts with default network access rule set to Allow and runs your chosen action."
-  tags          = merge(local.storage_common_tags, { class = "unused" })
 
   enabled  = var.storage_accounts_default_network_access_rule_allowed_trigger_enabled
   schedule = var.storage_accounts_default_network_access_rule_allowed_trigger_schedule
@@ -37,7 +36,6 @@ trigger "query" "detect_and_correct_storage_accounts_default_network_access_rule
 pipeline "detect_and_correct_storage_accounts_default_network_access_rule_allowed" {
   title         = "Detect & correct Storage Accounts with default network access rule set to Allow"
   description   = "Detects Storage Accounts with default network access rule set to Allow and runs your chosen action."
-  tags          = merge(local.storage_common_tags, { class = "unused", type = "featured" })
 
   param "database" {
     type        = string
@@ -96,7 +94,6 @@ pipeline "detect_and_correct_storage_accounts_default_network_access_rule_allowe
 pipeline "correct_storage_accounts_default_network_access_rule_allowed" {
   title         = "Correct Storage Accounts with default network access rule set to Allow"
   description   = "Runs corrective action on a collection of Storage Accounts with default network access rule set to Allow."
-  tags          = merge(local.storage_common_tags, { class = "unused" })
 
   param "items" {
     type = list(object({
@@ -172,7 +169,6 @@ pipeline "correct_storage_accounts_default_network_access_rule_allowed" {
 pipeline "correct_one_storage_accounts_default_network_access_rule_allowed" {
   title         = "Correct one Storage Account with default network access rule set to Allow"
   description   = "Runs corrective action on a single Storage Account with default network access rule set to Allow."
-  tags          = merge(local.storage_common_tags, { class = "unused" })
 
   param "title" {
     type        = string

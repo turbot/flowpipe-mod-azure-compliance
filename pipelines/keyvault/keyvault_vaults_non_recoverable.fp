@@ -19,7 +19,6 @@ locals {
 trigger "query" "detect_and_correct_keyvault_vaults_non_recoverable" {
   title         = "Detect & correct non-recoverable Key Vaults"
   description   = "Detects non-recoverable Key Vaults and runs your chosen action."
-  tags          = merge(local.keyvault_common_tags, { class = "security" })
 
   enabled  = var.keyvault_vaults_non_recoverable_trigger_enabled
   schedule = var.keyvault_vaults_non_recoverable_trigger_schedule
@@ -37,7 +36,6 @@ trigger "query" "detect_and_correct_keyvault_vaults_non_recoverable" {
 pipeline "detect_and_correct_keyvault_vaults_non_recoverable" {
   title         = "Detect & correct non-recoverable Key Vaults"
   description   = "Detects non-recoverable Key Vaults and runs your chosen action."
-  tags          = merge(local.keyvault_common_tags, { class = "security", type = "featured" })
 
   param "database" {
     type        = string
@@ -96,7 +94,6 @@ pipeline "detect_and_correct_keyvault_vaults_non_recoverable" {
 pipeline "correct_keyvault_vaults_non_recoverable" {
   title         = "Correct non-recoverable Key Vaults"
   description   = "Runs corrective action on a collection of non-recoverable Key Vaults."
-  tags          = merge(local.keyvault_common_tags, { class = "security" })
 
   param "items" {
     type = list(object({
@@ -172,7 +169,6 @@ pipeline "correct_keyvault_vaults_non_recoverable" {
 pipeline "correct_one_keyvault_vaults_non_recoverable" {
   title         = "Correct one non-recoverable Key Vault"
   description   = "Runs corrective action on a single non-recoverable Key Vault."
-  tags          = merge(local.keyvault_common_tags, { class = "security" })
 
   param "title" {
     type        = string
