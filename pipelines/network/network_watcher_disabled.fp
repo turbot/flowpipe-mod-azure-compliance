@@ -6,7 +6,7 @@ locals {
       loc.name as region,
       concat(loc.name, 'NetworkWatcherRG') as resource_group,
       loc.subscription_id,
-      loc._ctx ->> 'connection_name' as cred
+      loc._ctx ->> 'connection_name' as conn
     from
       azure_location loc
       left join azure_network_watcher watcher on watcher.region = loc.name
@@ -14,6 +14,33 @@ locals {
     where
       watcher.id is null;
   EOQ
+
+  network_watcher_disabled_enabled_actions_enum = ["skip", "enable_network_watcher"]
+  network_watcher_disabled_default_action_enum = ["notify", "skip", "enable_network_watcher"]
+}
+
+variable "network_watcher_disabled_trigger_enabled" {
+  type        = bool
+  default     = false
+  description = "If true, the trigger is enabled."
+}
+
+variable "network_watcher_disabled_trigger_schedule" {
+  type        = string
+  default     = "15m"
+  description = "If the trigger is enabled, run it on this schedule."
+}
+
+variable "network_watcher_disabled_default_action" {
+  type        = string
+  description = "The default action to use when there are no approvers."
+  default     = "notify"
+}
+
+variable "network_watcher_disabled_enabled_actions" {
+  type        = list(string)
+  description = "The list of enabled actions to provide to approvers for selection."
+  default     = ["skip", "enable_network_watcher"]
 }
 
 trigger "query" "detect_and_correct_network_watcher_disabled" {
@@ -38,13 +65,13 @@ pipeline "detect_and_correct_network_watcher_disabled" {
   description   = "Detects disabled Network Watchers and runs your chosen action."
 
   param "database" {
-    type        = string
+    type        = connection.steampipe
     description = local.description_database
     default     = var.database
   }
 
   param "notifier" {
-    type        = string
+    type        = notifier
     description = local.description_notifier
     default     = var.notifier
   }
@@ -53,10 +80,11 @@ pipeline "detect_and_correct_network_watcher_disabled" {
     type        = string
     description = local.description_notifier_level
     default     = var.notification_level
+    enum        = local.notification_level_enum
   }
 
   param "approvers" {
-    type        = list(string)
+    type        = list(notifier)
     description = local.description_approvers
     default     = var.approvers
   }
@@ -65,12 +93,14 @@ pipeline "detect_and_correct_network_watcher_disabled" {
     type        = string
     description = local.description_default_action
     default     = var.network_watcher_disabled_default_action
+    enum        = local.network_watcher_disabled_default_action_enum
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
     default     = var.network_watcher_disabled_enabled_actions
+    enum        = local.network_watcher_disabled_enabled_actions_enum
   }
 
   step "query" "detect" {
@@ -102,13 +132,13 @@ pipeline "correct_network_watcher_disabled" {
 			region          = string
       subscription_id = string
 			resource_group  = string
-      cred            = string
+      conn            = string
     }))
     description = local.description_items
   }
 
   param "notifier" {
-    type        = string
+    type        = notifier
     description = local.description_notifier
     default     = var.notifier
   }
@@ -117,10 +147,11 @@ pipeline "correct_network_watcher_disabled" {
     type        = string
     description = local.description_notifier_level
     default     = var.notification_level
+    enum        = local.notification_level_enum
   }
 
   param "approvers" {
-    type        = list(string)
+    type        = list(notifier)
     description = local.description_approvers
     default     = var.approvers
   }
@@ -129,17 +160,20 @@ pipeline "correct_network_watcher_disabled" {
     type        = string
     description = local.description_default_action
     default     = var.network_watcher_disabled_default_action
+    enum        = local.network_watcher_disabled_default_action_enum
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
     default     = var.network_watcher_disabled_enabled_actions
+    enum        = local.network_watcher_disabled_enabled_actions_enum
   }
 
+
   step "message" "notify_detection_count" {
-    if       = var.notification_level == local.level_verbose
-    notifier = notifier[param.notifier]
+    if       = var.notification_level == local.level_info
+    notifier = param.notifier
     text     = "Detected ${length(param.items)} disabled Network Watchers."
   }
 
@@ -156,7 +190,7 @@ pipeline "correct_network_watcher_disabled" {
       region             = each.value.region
       subscription_id    = each.value.subscription_id
 			resource_group     = each.value.resource_group
-      cred               = each.value.cred
+      conn               = connection.azure[each.value.conn]
       notifier           = param.notifier
       notification_level = param.notification_level
       approvers          = param.approvers
@@ -190,14 +224,14 @@ pipeline "correct_one_network_watcher_disabled" {
     description = local.description_resource_group
   }
 
-  param "cred" {
+  param "conn" {
     type        = string
-    description = local.description_credential
+    description = local.description_connection
     default     = "default"
   }
 
   param "notifier" {
-    type        = string
+    type        = notifier
     description = local.description_notifier
     default     = var.notifier
   }
@@ -206,10 +240,11 @@ pipeline "correct_one_network_watcher_disabled" {
     type        = string
     description = local.description_notifier_level
     default     = var.notification_level
+    enum        = local.notification_level_enum
   }
 
   param "approvers" {
-    type        = list(string)
+    type        = list(notifier)
     description = local.description_approvers
     default     = var.approvers
   }
@@ -218,13 +253,16 @@ pipeline "correct_one_network_watcher_disabled" {
     type        = string
     description = local.description_default_action
     default     = var.network_watcher_disabled_default_action
+    enum        = local.network_watcher_disabled_default_action_enum
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
     default     = var.network_watcher_disabled_enabled_actions
+    enum        = local.network_watcher_disabled_enabled_actions_enum
   }
+
 
   step "pipeline" "respond" {
     pipeline = detect_correct.pipeline.correction_handler
@@ -240,10 +278,10 @@ pipeline "correct_one_network_watcher_disabled" {
           label        = "Skip"
           value        = "skip"
           style        = local.style_info
-          pipeline_ref = local.pipeline_optional_message
+          pipeline_ref = detect_correct.pipeline.optional_message
           pipeline_args = {
             notifier = param.notifier
-            send     = param.notification_level == local.level_verbose
+            send     = param.notification_level == local.level_info
             text     = "Skipped Network Watcher disabled in region ${param.region}."
           }
           success_msg = ""
@@ -258,7 +296,7 @@ pipeline "correct_one_network_watcher_disabled" {
             subscription_id = param.subscription_id
             resource_group  = param.resource_group
 						region          = param.region
-            cred            = param.cred
+            conn            = param.conn
           }
           success_msg = "Enabled Network Watcher in region ${param.region}."
           error_msg   = "Error enabling Network Watcher in region ${param.region}."
@@ -266,30 +304,6 @@ pipeline "correct_one_network_watcher_disabled" {
       }
     }
   }
-}
-
-variable "network_watcher_disabled_trigger_enabled" {
-  type        = bool
-  default     = false
-  description = "If true, the trigger is enabled."
-}
-
-variable "network_watcher_disabled_trigger_schedule" {
-  type        = string
-  default     = "15m"
-  description = "If the trigger is enabled, run it on this schedule."
-}
-
-variable "network_watcher_disabled_default_action" {
-  type        = string
-  description = "The default action to use when there are no approvers."
-  default     = "notify"
-}
-
-variable "network_watcher_disabled_enabled_actions" {
-  type        = list(string)
-  description = "The list of enabled actions to provide to approvers for selection."
-  default     = ["skip", "enable_network_watcher"]
 }
 
 pipeline "create_resource_group" {
@@ -301,9 +315,9 @@ pipeline "create_resource_group" {
     description = "The name of the location."
   }
 
-  param "cred" {
+  param "conn" {
     type        = string
-    description = local.description_credential
+    description = local.description_connection
     default     = "default"
   }
 
@@ -336,7 +350,7 @@ pipeline "create_resource_group" {
       resource_group = param.resource_group
       region         = param.region
 			subscription_id = param.subscription_id
-			cred            = param.cred
+			conn            = param.conn
     }
   }
 }
@@ -345,9 +359,9 @@ pipeline "enable_network_watcher" {
   title       = "Enable Network Watcher"
   description = "Enable Network Watcher for a specified region."
 
-  param "cred" {
+  param "conn" {
     type        = string
-    description = local.description_credential
+    description = local.description_connection
     default     = "default"
   }
 
@@ -370,7 +384,7 @@ pipeline "enable_network_watcher" {
 		pipeline = pipeline.create_resource_group
 		args = {
 			region          = param.region
-			cred            = param.cred
+			conn            = param.conn
 			resource_group  = param.resource_group
 			subscription_id = param.subscription_id
 		}
@@ -387,7 +401,7 @@ pipeline "enable_network_watcher" {
       "--subscription", param.subscription_id
     ]
 
-    env = credential.azure[param.cred].env
+    env = connection.azure[param.conn].env
   }
 
   output "network_watcher" {

@@ -6,7 +6,7 @@ locals {
       app.name,
       app.resource_group,
       app.subscription_id,
-      app._ctx ->> 'connection_name' as cred
+      app._ctx ->> 'connection_name' as conn
     from
       azure_app_service_web_app as app,
       azure_subscription as sub
@@ -14,12 +14,15 @@ locals {
       sub.subscription_id = app.subscription_id
       and not https_only;
   EOQ
+
+  appservice_web_apps_not_using_https_enabled_actions_enum = ["skip", "enable_https"]
+  appservice_web_apps_not_using_https_default_action_enum = ["notify", "skip", "enable_https"]
 }
 
 variable "appservice_web_apps_not_using_https_trigger_enabled" {
   type        = bool
-  default     = false
   description = "If true, the trigger is enabled."
+  default     = false
 }
 
 variable "appservice_web_apps_not_using_https_trigger_schedule" {
@@ -62,13 +65,13 @@ pipeline "detect_and_correct_appservice_web_apps_not_using_https" {
   description   = "Detects App Service web apps not using HTTPS and then enable HTTPS."
 
   param "database" {
-    type        = string
+    type        = connection.steampipe
     description = local.description_database
     default     = var.database
   }
 
   param "notifier" {
-    type        = string
+    type        = notifier
     description = local.description_notifier
     default     = var.notifier
   }
@@ -77,10 +80,11 @@ pipeline "detect_and_correct_appservice_web_apps_not_using_https" {
     type        = string
     description = local.description_notifier_level
     default     = var.notification_level
+    enum        = local.notification_level_enum
   }
 
   param "approvers" {
-    type        = list(string)
+    type        = list(notifier)
     description = local.description_approvers
     default     = var.approvers
   }
@@ -89,12 +93,14 @@ pipeline "detect_and_correct_appservice_web_apps_not_using_https" {
     type        = string
     description = local.description_default_action
     default     = var.appservice_web_apps_not_using_https_default_action
+    enum        = local.appservice_web_apps_not_using_https_default_action_enum
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
     default     = var.appservice_web_apps_not_using_https_enabled_actions
+    enum        = local.appservice_web_apps_not_using_https_enabled_actions_enum
   }
 
   step "query" "detect" {
@@ -126,13 +132,13 @@ pipeline "correct_appservice_web_apps_not_using_https" {
       name            = string
       resource_group  = string
       subscription_id = string
-      cred            = string
+      conn            = string
     }))
     description = local.description_items
   }
 
   param "notifier" {
-    type        = string
+    type        = notifier
     description = local.description_notifier
     default     = var.notifier
   }
@@ -141,10 +147,11 @@ pipeline "correct_appservice_web_apps_not_using_https" {
     type        = string
     description = local.description_notifier_level
     default     = var.notification_level
+    enum        = local.notification_level_enum
   }
 
   param "approvers" {
-    type        = list(string)
+    type        = list(notifier)
     description = local.description_approvers
     default     = var.approvers
   }
@@ -153,17 +160,19 @@ pipeline "correct_appservice_web_apps_not_using_https" {
     type        = string
     description = local.description_default_action
     default     = var.appservice_web_apps_not_using_https_default_action
+    enum        = local.appservice_web_apps_not_using_https_default_action_enum
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
     default     = var.appservice_web_apps_not_using_https_enabled_actions
+    enum        = local.appservice_web_apps_not_using_https_enabled_actions_enum
   }
 
   step "message" "notify_detection_count" {
-    if       = var.notification_level == local.level_verbose
-    notifier = notifier[param.notifier]
+    if       = var.notification_level == local.level_info
+    notifier = param.notifier
     text     = "Detected ${length(param.items)} App Service web app(s) not using HTTPS."
   }
 
@@ -176,7 +185,7 @@ pipeline "correct_appservice_web_apps_not_using_https" {
       name               = each.value.name
       resource_group     = each.value.resource_group
       subscription_id    = each.value.subscription_id
-      cred               = each.value.cred
+      conn               = connection.azure[connection.azure[each.value.conn]]
       notifier           = param.notifier
       notification_level = param.notification_level
       approvers          = param.approvers
@@ -210,14 +219,13 @@ pipeline "correct_one_appservice_web_app_not_using_https" {
     description = local.description_subscription_id
   }
 
-  param "cred" {
-    type        = string
-    description = local.description_credential
-    default     = "default"
+  param "conn" {
+    type        = connection.aws
+    description = local.description_connection
   }
 
   param "notifier" {
-    type        = string
+    type        = notifier
     description = local.description_notifier
     default     = var.notifier
   }
@@ -226,10 +234,11 @@ pipeline "correct_one_appservice_web_app_not_using_https" {
     type        = string
     description = local.description_notifier_level
     default     = var.notification_level
+    enum        = local.notification_level_enum
   }
 
   param "approvers" {
-    type        = list(string)
+    type        = list(notifier)
     description = local.description_approvers
     default     = var.approvers
   }
@@ -238,12 +247,14 @@ pipeline "correct_one_appservice_web_app_not_using_https" {
     type        = string
     description = local.description_default_action
     default     = var.appservice_web_apps_not_using_https_default_action
+    enum        = local.appservice_web_apps_not_using_https_default_action_enum
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
     default     = var.appservice_web_apps_not_using_https_enabled_actions
+    enum        = local.appservice_web_apps_not_using_https_enabled_actions_enum
   }
 
   step "pipeline" "respond" {
@@ -260,10 +271,10 @@ pipeline "correct_one_appservice_web_app_not_using_https" {
           label        = "Skip"
           value        = "skip"
           style        = local.style_info
-          pipeline_ref = local.pipeline_optional_message
+          pipeline_ref = detect_correct.pipeline.optional_message
           pipeline_args = {
             notifier = param.notifier
-            send     = param.notification_level == local.level_verbose
+            send     = param.notification_level == local.level_info
             text     = "Skipped App Service web app ${param.title}."
           }
           success_msg = ""
@@ -273,12 +284,12 @@ pipeline "correct_one_appservice_web_app_not_using_https" {
           label        = "Enable HTTPS"
           value        = "enable_https"
           style        = local.style_alert
-          pipeline_ref = local.azure_pipeline_update_appservice_webapp
+          pipeline_ref = azure.pipeline.update_appservice_webapp
           pipeline_args = {
             resource_group  = param.resource_group
             subscription_id = param.subscription_id
             app_name        = param.name
-            cred            = param.cred
+            conn            = param.conn
             https_only      = true
           }
           success_msg = "Enabled HTTPS for App Service web app ${param.title}."

@@ -16,7 +16,7 @@ locals {
       db.name,
       db.resource_group,
       db.subscription_id,
-      db._ctx ->> 'connection_name' as cred
+      db._ctx ->> 'connection_name' as conn
     from
       azure_postgresql_server as db,
       postgres_db_with_allow_access_to_azure_services as a,
@@ -25,6 +25,9 @@ locals {
       a.id is not null
       and sub.subscription_id = db.subscription_id;
   EOQ
+
+  postgresql_servers_with_allow_access_to_azure_services_enabled_enabled_actions_enum = ["skip", "delete_allow_all_windows_azure_ips_firewall_rule"]
+  postgresql_servers_with_allow_access_to_azure_services_enabled_default_action_enum = ["notify", "skip", "delete_allow_all_windows_azure_ips_firewall_rule"]
 }
 
 variable "postgresql_servers_with_allow_access_to_azure_services_enabled_trigger_enabled" {
@@ -73,13 +76,13 @@ pipeline "detect_and_correct_postgresql_servers_with_allow_access_to_azure_servi
   description   = "Detect PostgreSQL servers allowing access to Azure services and then disable access to Azure services."
 
   param "database" {
-    type        = string
+    type        = connection.steampipe
     description = local.description_database
     default     = var.database
   }
 
   param "notifier" {
-    type        = string
+    type        = notifier
     description = local.description_notifier
     default     = var.notifier
   }
@@ -88,10 +91,11 @@ pipeline "detect_and_correct_postgresql_servers_with_allow_access_to_azure_servi
     type        = string
     description = local.description_notifier_level
     default     = var.notification_level
+    enum        = local.notification_level_enum
   }
 
   param "approvers" {
-    type        = list(string)
+    type        = list(notifier)
     description = local.description_approvers
     default     = var.approvers
   }
@@ -100,12 +104,14 @@ pipeline "detect_and_correct_postgresql_servers_with_allow_access_to_azure_servi
     type        = string
     description = local.description_default_action
     default     = var.postgresql_servers_with_allow_access_to_azure_services_enabled_default_action
+    enum        = local.postgresql_servers_with_allow_access_to_azure_services_enabled_default_action_enum
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
     default     = var.postgresql_servers_with_allow_access_to_azure_services_enabled_enabled_actions
+    enum        = local.postgresql_servers_with_allow_access_to_azure_services_enabled_enabled_actions_enum
   }
 
   step "query" "detect" {
@@ -137,13 +143,13 @@ pipeline "correct_postgresql_servers_with_allow_access_to_azure_services_enabled
       name            = string
       resource_group  = string
       subscription_id = string
-      cred            = string
+      conn            = string
     }))
     description = local.description_items
   }
 
   param "notifier" {
-    type        = string
+    type        = notifier
     description = local.description_notifier
     default     = var.notifier
   }
@@ -152,10 +158,11 @@ pipeline "correct_postgresql_servers_with_allow_access_to_azure_services_enabled
     type        = string
     description = local.description_notifier_level
     default     = var.notification_level
+    enum        = local.notification_level_enum
   }
 
   param "approvers" {
-    type        = list(string)
+    type        = list(notifier)
     description = local.description_approvers
     default     = var.approvers
   }
@@ -164,17 +171,19 @@ pipeline "correct_postgresql_servers_with_allow_access_to_azure_services_enabled
     type        = string
     description = local.description_default_action
     default     = var.postgresql_servers_with_allow_access_to_azure_services_enabled_default_action
+    enum        = local.postgresql_servers_with_allow_access_to_azure_services_enabled_default_action_enum
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
     default     = var.postgresql_servers_with_allow_access_to_azure_services_enabled_enabled_actions
+    enum        = local.postgresql_servers_with_allow_access_to_azure_services_enabled_enabled_actions_enum
   }
 
   step "message" "notify_detection_count" {
-    if       = var.notification_level == local.level_verbose
-    notifier = notifier[param.notifier]
+    if       = var.notification_level == local.level_info
+    notifier = param.notifier
     text     = "Detected ${length(param.items)} PostgreSQL server(s) allowing access to Azure services."
   }
 
@@ -187,7 +196,7 @@ pipeline "correct_postgresql_servers_with_allow_access_to_azure_services_enabled
       name               = each.value.name
       resource_group     = each.value.resource_group
       subscription_id    = each.value.subscription_id
-      cred               = each.value.cred
+      conn               = connection.azure[each.value.conn]
       notifier           = param.notifier
       notification_level = param.notification_level
       approvers          = param.approvers
@@ -221,14 +230,14 @@ pipeline "correct_one_postgresql_servers_with_allow_access_to_azure_services_ena
     description = local.description_subscription_id
   }
 
-  param "cred" {
+  param "conn" {
     type        = string
-    description = local.description_credential
+    description = local.description_connection
     default     = "default"
   }
 
   param "notifier" {
-    type        = string
+    type        = notifier
     description = local.description_notifier
     default     = var.notifier
   }
@@ -237,10 +246,11 @@ pipeline "correct_one_postgresql_servers_with_allow_access_to_azure_services_ena
     type        = string
     description = local.description_notifier_level
     default     = var.notification_level
+    enum        = local.notification_level_enum
   }
 
   param "approvers" {
-    type        = list(string)
+    type        = list(notifier)
     description = local.description_approvers
     default     = var.approvers
   }
@@ -249,12 +259,14 @@ pipeline "correct_one_postgresql_servers_with_allow_access_to_azure_services_ena
     type        = string
     description = local.description_default_action
     default     = var.postgresql_servers_with_allow_access_to_azure_services_enabled_default_action
+    enum        = local.postgresql_servers_with_allow_access_to_azure_services_enabled_default_action_enum
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
     default     = var.postgresql_servers_with_allow_access_to_azure_services_enabled_enabled_actions
+    enum        = local.postgresql_servers_with_allow_access_to_azure_services_enabled_enabled_actions_enum
   }
 
   step "pipeline" "respond" {
@@ -271,10 +283,10 @@ pipeline "correct_one_postgresql_servers_with_allow_access_to_azure_services_ena
           label        = "Skip"
           value        = "skip"
           style        = local.style_info
-          pipeline_ref = local.pipeline_optional_message
+          pipeline_ref = detect_correct.pipeline.optional_message
           pipeline_args = {
             notifier = param.notifier
-            send     = param.notification_level == local.level_verbose
+            send     = param.notification_level == local.level_info
             text     = "Skipped PostgreSQL server ${param.title}."
           }
           success_msg = ""
@@ -284,12 +296,12 @@ pipeline "correct_one_postgresql_servers_with_allow_access_to_azure_services_ena
           label        = "Delete Firewall Rule"
           value        = "delete_allow_all_windows_azure_ips_firewall_rule"
           style        = local.style_alert
-          pipeline_ref = local.azure_pipeline_delete_postgres_server_firewall_rule
+          pipeline_ref = azure.pipeline.delete_postgres_server_firewall_rule
           pipeline_args = {
             resource_group     = param.resource_group
             subscription_id    = param.subscription_id
             server_name        = param.name
-            cred               = param.cred
+            conn               = param.conn
             firewall_rule_name = "AllowAllWindowsAzureIps"
           }
           success_msg = "Deleted firewall rule allowing access to Azure services for PostgreSQL server ${param.title}."

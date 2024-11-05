@@ -8,7 +8,7 @@ locals {
         alert.location,
         alert.subscription_id,
         alert.resource_group,
-        alert._ctx ->> 'connection_name' as cred,
+        alert._ctx ->> 'connection_name' as conn,
         jsonb_array_length(alert.condition -> 'allOf')
       from
         azure_log_alert as alert,
@@ -44,7 +44,7 @@ locals {
     select
       sub.subscription_id as title,
       sub.subscription_id,
-      sub._ctx ->> 'connection_name' as cred,
+      sub._ctx ->> 'connection_name' as conn,
       concat('/subscriptions/', sub.subscription_id) as scope,
       r.name as resource_group
     from
@@ -59,11 +59,14 @@ locals {
       a.alert_name,
       a.resource_group,
       a.subscription_id,
-      a.cred,
+      a.conn,
       r.name
     having
       not(count(a.subscription_id) > 0);
   EOQ
+
+  monitor_logs_without_activity_log_alert_for_delete_sql_servers_firewall_rule_enabled_actions_enum = ["skip", "create_delete_sql_servers_firewall_rule_activity_log_alert"]
+  monitor_logs_without_activity_log_alert_for_delete_sql_servers_firewall_rule_default_action_enum = ["notify", "skip", "create_delete_sql_servers_firewall_rule_activity_log_alert"]
 }
 
 variable "monitor_logs_without_activity_log_alert_for_delete_sql_servers_firewall_rule_trigger_enabled" {
@@ -112,13 +115,13 @@ pipeline "detect_and_correct_monitor_logs_without_activity_log_alert_for_delete_
   description   = "Detects Monitor Logs without an activity log alert for delete SQL servers firewall rule and runs your chosen action."
 
   param "database" {
-    type        = string
+    type        = connection.steampipe
     description = local.description_database
     default     = var.database
   }
 
   param "notifier" {
-    type        = string
+    type        = notifier
     description = local.description_notifier
     default     = var.notifier
   }
@@ -127,10 +130,11 @@ pipeline "detect_and_correct_monitor_logs_without_activity_log_alert_for_delete_
     type        = string
     description = local.description_notifier_level
     default     = var.notification_level
+    enum        = local.notification_level_enum
   }
 
   param "approvers" {
-    type        = list(string)
+    type        = list(notifier)
     description = local.description_approvers
     default     = var.approvers
   }
@@ -139,12 +143,14 @@ pipeline "detect_and_correct_monitor_logs_without_activity_log_alert_for_delete_
     type        = string
     description = local.description_default_action
     default     = var.monitor_logs_without_activity_log_alert_for_delete_sql_servers_firewall_rule_default_action
+    enum       = local.monitor_logs_without_activity_log_alert_for_delete_sql_servers_firewall_rule_default_action_enum
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
     default     = var.monitor_logs_without_activity_log_alert_for_delete_sql_servers_firewall_rule_enabled_actions
+    enum       = local.monitor_logs_without_activity_log_alert_for_delete_sql_servers_firewall_rule_enabled_actions_enum
   }
 
   step "query" "detect" {
@@ -176,13 +182,13 @@ pipeline "correct_monitor_logs_without_activity_log_alert_for_delete_sql_servers
       resource_group  = string
       scope           = string
       subscription_id = string
-      cred            = string
+      conn            = string
     }))
     description = local.description_items
   }
 
   param "notifier" {
-    type        = string
+    type        = notifier
     description = local.description_notifier
     default     = var.notifier
   }
@@ -191,10 +197,11 @@ pipeline "correct_monitor_logs_without_activity_log_alert_for_delete_sql_servers
     type        = string
     description = local.description_notifier_level
     default     = var.notification_level
+    enum        = local.notification_level_enum
   }
 
   param "approvers" {
-    type        = list(string)
+    type        = list(notifier)
     description = local.description_approvers
     default     = var.approvers
   }
@@ -203,17 +210,19 @@ pipeline "correct_monitor_logs_without_activity_log_alert_for_delete_sql_servers
     type        = string
     description = local.description_default_action
     default     = var.monitor_logs_without_activity_log_alert_for_delete_sql_servers_firewall_rule_default_action
+    enum       = local.monitor_logs_without_activity_log_alert_for_delete_sql_servers_firewall_rule_default_action_enum
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
     default     = var.monitor_logs_without_activity_log_alert_for_delete_sql_servers_firewall_rule_enabled_actions
+    enum       = local.monitor_logs_without_activity_log_alert_for_delete_sql_servers_firewall_rule_enabled_actions_enum
   }
 
   step "message" "notify_detection_count" {
-    if       = var.notification_level == local.level_verbose
-    notifier = notifier[param.notifier]
+    if       = var.notification_level == local.level_info
+    notifier = param.notifier
     text     = "Detected ${length(param.items)} Monitor Logs without activity log alert for delete SQL servers firewall rule."
   }
 
@@ -230,7 +239,7 @@ pipeline "correct_monitor_logs_without_activity_log_alert_for_delete_sql_servers
       subscription_id    = each.value.subscription_id
       resource_group     = each.value.resource_group
       scope              = each.value.scope
-      cred               = each.value.cred
+      conn               = connection.azure[each.value.conn]
       notifier           = param.notifier
       notification_level = param.notification_level
       approvers          = param.approvers
@@ -264,14 +273,14 @@ pipeline "correct_one_monitor_logs_without_activity_log_alert_for_delete_sql_ser
     description = local.description_subscription_id
   }
 
-  param "cred" {
+  param "conn" {
     type        = string
-    description = local.description_credential
+    description = local.description_connection
     default     = "default"
   }
 
   param "notifier" {
-    type        = string
+    type        = notifier
     description = local.description_notifier
     default     = var.notifier
   }
@@ -280,10 +289,11 @@ pipeline "correct_one_monitor_logs_without_activity_log_alert_for_delete_sql_ser
     type        = string
     description = local.description_notifier_level
     default     = var.notification_level
+    enum        = local.notification_level_enum
   }
 
   param "approvers" {
-    type        = list(string)
+    type        = list(notifier)
     description = local.description_approvers
     default     = var.approvers
   }
@@ -292,12 +302,14 @@ pipeline "correct_one_monitor_logs_without_activity_log_alert_for_delete_sql_ser
     type        = string
     description = local.description_default_action
     default     = var.monitor_logs_without_activity_log_alert_for_delete_sql_servers_firewall_rule_default_action
+    enum       = local.monitor_logs_without_activity_log_alert_for_delete_sql_servers_firewall_rule_default_action_enum
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
     default     = var.monitor_logs_without_activity_log_alert_for_delete_sql_servers_firewall_rule_enabled_actions
+    enum       = local.monitor_logs_without_activity_log_alert_for_delete_sql_servers_firewall_rule_enabled_actions_enum
   }
 
   step "pipeline" "respond" {
@@ -314,10 +326,10 @@ pipeline "correct_one_monitor_logs_without_activity_log_alert_for_delete_sql_ser
           label        = "Skip"
           value        = "skip"
           style        = local.style_info
-          pipeline_ref = local.pipeline_optional_message
+          pipeline_ref = detect_correct.pipeline.optional_message
           pipeline_args = {
             notifier = param.notifier
-            send     = param.notification_level == local.level_verbose
+            send     = param.notification_level == local.level_info
             text     = "Skipped subscription ${param.title} without activity log alert for delete SQL servers firewall rule."
           }
           success_msg = ""
@@ -335,7 +347,7 @@ pipeline "correct_one_monitor_logs_without_activity_log_alert_for_delete_sql_ser
             level             = "verbose"
             scope             = param.scope
             action_group_name = "actionGroupDeleteSqlServersFirewallRule"
-            cred              = param.cred
+            conn              = param.conn
           }
           success_msg = "Created delete SQL servers firewall rule activity log alert for subscription ${param.title}."
           error_msg   = "Error creating delete SQL servers firewall rule activity log alert for subscription ${param.title}."
@@ -349,9 +361,9 @@ pipeline "create_activity_log_alert_for_delete_sql_servers_firewall_rule" {
   title       = "Create Activity Log Alert for delete SQL servers firewall rule"
   description = "Create an Azure Monitor activity log alert for delete SQL servers firewall rule."
 
-  param "cred" {
+  param "conn" {
     type        = string
-    description = local.description_credential
+    description = local.description_connection
     default     = "default"
   }
 
@@ -398,7 +410,7 @@ pipeline "create_activity_log_alert_for_delete_sql_servers_firewall_rule" {
       "--output", "json"
     ]
 
-    env = credential.azure[param.cred].env
+    env = connection.azure[param.conn].env
   }
 
   step "container" "create_activity_log_alert" {
@@ -414,7 +426,7 @@ pipeline "create_activity_log_alert_for_delete_sql_servers_firewall_rule" {
       "--action-group", jsondecode(step.container.create_action_group.stdout).id
     ]
 
-    env = credential.azure[param.cred].env
+    env = connection.azure[param.conn].env
   }
 
   output "action_group_id" {

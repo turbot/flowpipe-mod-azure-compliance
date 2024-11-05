@@ -14,7 +14,7 @@ locals {
       kvk.name,
       kvk.subscription_id,
       kvk.vault_name as vault_name,
-      kvk._ctx ->> 'connection_name' as cred
+      kvk._ctx ->> 'connection_name' as conn
     from
       azure_key_vault_key kvk
       left join rbac_vault as v on v.name = kvk.vault_name
@@ -22,6 +22,9 @@ locals {
     where
       enabled and expires_at is null;
   EOQ
+
+  keyvault_with_rbac_keys_expiration_not_set_enabled_actions_enum = ["skip", "set_key_expiration"]
+  keyvault_with_rbac_keys_expiration_not_set_default_action_enum = ["notify", "skip", "set_key_expiration"]
 }
 
 locals {
@@ -74,13 +77,13 @@ pipeline "detect_and_correct_keyvault_with_rbac_keys_expiration_not_set" {
   description   = "Detects Key Vaults with RBAC keys that do not have an expiration date set and runs your chosen action."
 
   param "database" {
-    type        = string
+    type        = connection.steampipe
     description = local.description_database
     default     = var.database
   }
 
   param "notifier" {
-    type        = string
+    type        = notifier
     description = local.description_notifier
     default     = var.notifier
   }
@@ -89,10 +92,11 @@ pipeline "detect_and_correct_keyvault_with_rbac_keys_expiration_not_set" {
     type        = string
     description = local.description_notifier_level
     default     = var.notification_level
+    enum        = local.notification_level_enum
   }
 
   param "approvers" {
-    type        = list(string)
+    type        = list(notifier)
     description = local.description_approvers
     default     = var.approvers
   }
@@ -101,12 +105,14 @@ pipeline "detect_and_correct_keyvault_with_rbac_keys_expiration_not_set" {
     type        = string
     description = local.description_default_action
     default     = var.keyvault_with_rbac_keys_expiration_not_set_default_action
+    enum        = local.keyvault_with_rbac_keys_expiration_not_set_default_action_enum
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
     default     = var.keyvault_with_rbac_keys_expiration_not_set_enabled_actions
+    enum        = local.keyvault_with_rbac_keys_expiration_not_set_enabled_actions_enum
   }
 
   step "query" "detect" {
@@ -138,13 +144,13 @@ pipeline "correct_keyvault_with_rbac_keys_expiration_not_set" {
       name            = string
       vault_name      = string
       subscription_id = string
-      cred            = string
+      conn            = string
     }))
     description = local.description_items
   }
 
   param "notifier" {
-    type        = string
+    type        = notifier
     description = local.description_notifier
     default     = var.notifier
   }
@@ -153,10 +159,11 @@ pipeline "correct_keyvault_with_rbac_keys_expiration_not_set" {
     type        = string
     description = local.description_notifier_level
     default     = var.notification_level
+    enum        = local.notification_level_enum
   }
 
   param "approvers" {
-    type        = list(string)
+    type        = list(notifier)
     description = local.description_approvers
     default     = var.approvers
   }
@@ -165,17 +172,19 @@ pipeline "correct_keyvault_with_rbac_keys_expiration_not_set" {
     type        = string
     description = local.description_default_action
     default     = var.keyvault_with_rbac_keys_expiration_not_set_default_action
+    enum        = local.keyvault_with_rbac_keys_expiration_not_set_default_action_enum
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
     default     = var.keyvault_with_rbac_keys_expiration_not_set_enabled_actions
+    enum        = local.keyvault_with_rbac_keys_expiration_not_set_enabled_actions_enum
   }
 
   step "message" "notify_detection_count" {
-    if       = var.notification_level == local.level_verbose
-    notifier = notifier[param.notifier]
+    if       = var.notification_level == local.level_info
+    notifier = param.notifier
     text     = "Detected ${length(param.items)} Key Vaults with RBAC keys without expiration date."
   }
 
@@ -192,7 +201,7 @@ pipeline "correct_keyvault_with_rbac_keys_expiration_not_set" {
       name               = each.value.name
       vault_name         = each.value.vault_name
       subscription_id    = each.value.subscription_id
-      cred               = each.value.cred
+      conn               = connection.azure[each.value.conn]
       notifier           = param.notifier
       notification_level = param.notification_level
       approvers          = param.approvers
@@ -226,14 +235,14 @@ pipeline "correct_one_keyvault_with_rbac_keys_expiration_not_set" {
     description = local.description_subscription_id
   }
 
-  param "cred" {
+  param "conn" {
     type        = string
-    description = local.description_credential
+    description = local.description_connection
     default     = "default"
   }
 
   param "notifier" {
-    type        = string
+    type        = notifier
     description = local.description_notifier
     default     = var.notifier
   }
@@ -242,10 +251,11 @@ pipeline "correct_one_keyvault_with_rbac_keys_expiration_not_set" {
     type        = string
     description = local.description_notifier_level
     default     = var.notification_level
+    enum        = local.notification_level_enum
   }
 
   param "approvers" {
-    type        = list(string)
+    type        = list(notifier)
     description = local.description_approvers
     default     = var.approvers
   }
@@ -254,12 +264,14 @@ pipeline "correct_one_keyvault_with_rbac_keys_expiration_not_set" {
     type        = string
     description = local.description_default_action
     default     = var.keyvault_with_rbac_keys_expiration_not_set_default_action
+    enum        = local.keyvault_with_rbac_keys_expiration_not_set_default_action_enum
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
     default     = var.keyvault_with_rbac_keys_expiration_not_set_enabled_actions
+    enum        = local.keyvault_with_rbac_keys_expiration_not_set_enabled_actions_enum
   }
 
   step "pipeline" "respond" {
@@ -276,10 +288,10 @@ pipeline "correct_one_keyvault_with_rbac_keys_expiration_not_set" {
           label        = "Skip"
           value        = "skip"
           style        = local.style_info
-          pipeline_ref = local.pipeline_optional_message
+          pipeline_ref = detect_correct.pipeline.optional_message
           pipeline_args = {
             notifier = param.notifier
-            send     = param.notification_level == local.level_verbose
+            send     = param.notification_level == local.level_info
             text     = "Skipped Key Vault key ${param.title} without expiration date."
           }
           success_msg = ""
@@ -289,13 +301,13 @@ pipeline "correct_one_keyvault_with_rbac_keys_expiration_not_set" {
           label        = "Set Key Expiration"
           value        = "set_key_expiration"
           style        = local.style_alert
-          pipeline_ref = local.azure_pipeline_set_key_vault_key_attributes
+          pipeline_ref = azure.pipeline.set_key_vault_key_attributes
           pipeline_args = {
             vault_name      = param.vault_name
             key_name        = param.name
 						subscription_id =  param.subscription_id
             expires         = local.rbac_keys_expiration_date
-            cred            = param.cred
+            conn            = param.conn
           }
           success_msg = "Set expiration date for Key Vault key ${param.title}."
           error_msg   = "Error setting expiration date for Key Vault key ${param.title}."

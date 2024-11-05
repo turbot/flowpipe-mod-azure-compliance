@@ -6,7 +6,7 @@ locals {
       sa.name,
       sa.resource_group,
       sa.subscription_id,
-      sa._ctx ->> 'connection_name' as cred
+      sa._ctx ->> 'connection_name' as conn
     from
       azure_storage_account as sa,
       azure_subscription as sub
@@ -14,6 +14,9 @@ locals {
       sub.subscription_id = sa.subscription_id
 			and not blob_soft_delete_enabled;
   EOQ
+
+  storage_accounts_with_blob_soft_delete_disabled_enabled_actions_enum = ["skip", "enable_blob_soft_delete"]
+  storage_accounts_with_blob_soft_delete_disabled_default_action_enum = ["notify", "skip", "enable_blob_soft_delete"]
 }
 
 variable "storage_accounts_with_blob_soft_delete_disabled_trigger_enabled" {
@@ -62,13 +65,13 @@ pipeline "detect_and_correct_storage_accounts_with_blob_soft_delete_disabled" {
   description   = "Detects Storage Accounts with blob soft delete disabled and then enable blob soft delete."
 
   param "database" {
-    type        = string
+    type        = connection.steampipe
     description = local.description_database
     default     = var.database
   }
 
   param "notifier" {
-    type        = string
+    type        = notifier
     description = local.description_notifier
     default     = var.notifier
   }
@@ -77,10 +80,11 @@ pipeline "detect_and_correct_storage_accounts_with_blob_soft_delete_disabled" {
     type        = string
     description = local.description_notifier_level
     default     = var.notification_level
+    enum        = local.notification_level_enum
   }
 
   param "approvers" {
-    type        = list(string)
+    type        = list(notifier)
     description = local.description_approvers
     default     = var.approvers
   }
@@ -89,12 +93,14 @@ pipeline "detect_and_correct_storage_accounts_with_blob_soft_delete_disabled" {
     type        = string
     description = local.description_default_action
     default     = var.storage_accounts_with_blob_soft_delete_disabled_default_action
+    enum        = local.storage_accounts_with_blob_soft_delete_disabled_default_action_enum
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
     default     = var.storage_accounts_with_blob_soft_delete_disabled_enabled_actions
+    enum        = local.storage_accounts_with_blob_soft_delete_disabled_enabled_actions_enum
   }
 
   step "query" "detect" {
@@ -126,13 +132,13 @@ pipeline "correct_storage_accounts_with_blob_soft_delete_disabled" {
       name            = string
       resource_group  = string
       subscription_id = string
-      cred            = string
+      conn            = string
     }))
     description = local.description_items
   }
 
   param "notifier" {
-    type        = string
+    type        = notifier
     description = local.description_notifier
     default     = var.notifier
   }
@@ -141,10 +147,11 @@ pipeline "correct_storage_accounts_with_blob_soft_delete_disabled" {
     type        = string
     description = local.description_notifier_level
     default     = var.notification_level
+    enum        = local.notification_level_enum
   }
 
   param "approvers" {
-    type        = list(string)
+    type        = list(notifier)
     description = local.description_approvers
     default     = var.approvers
   }
@@ -153,17 +160,21 @@ pipeline "correct_storage_accounts_with_blob_soft_delete_disabled" {
     type        = string
     description = local.description_default_action
     default     = var.storage_accounts_with_blob_soft_delete_disabled_default_action
+    enum        = local.storage_accounts_with_blob_soft_delete_disabled_default_action_enum
   }
+
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
     default     = var.storage_accounts_with_blob_soft_delete_disabled_enabled_actions
+    enum        = local.storage_accounts_with_blob_soft_delete_disabled_enabled_actions_enum
   }
 
+
   step "message" "notify_detection_count" {
-    if       = var.notification_level == local.level_verbose
-    notifier = notifier[param.notifier]
+    if       = var.notification_level == local.level_info
+    notifier = param.notifier
     text     = "Detected ${length(param.items)} Storage Account(s) with blob soft delete disabled."
   }
 
@@ -176,7 +187,7 @@ pipeline "correct_storage_accounts_with_blob_soft_delete_disabled" {
       name               = each.value.name
       resource_group     = each.value.resource_group
       subscription_id    = each.value.subscription_id
-      cred               = each.value.cred
+      conn               = connection.azure[each.value.conn]
       notifier           = param.notifier
       notification_level = param.notification_level
       approvers          = param.approvers
@@ -210,14 +221,14 @@ pipeline "correct_one_storage_account_with_blob_soft_delete_disabled" {
     description = local.description_subscription_id
   }
 
-  param "cred" {
+  param "conn" {
     type        = string
-    description = local.description_credential
+    description = local.description_connection
     default     = "default"
   }
 
   param "notifier" {
-    type        = string
+    type        = notifier
     description = local.description_notifier
     default     = var.notifier
   }
@@ -226,10 +237,11 @@ pipeline "correct_one_storage_account_with_blob_soft_delete_disabled" {
     type        = string
     description = local.description_notifier_level
     default     = var.notification_level
+    enum        = local.notification_level_enum
   }
 
   param "approvers" {
-    type        = list(string)
+    type        = list(notifier)
     description = local.description_approvers
     default     = var.approvers
   }
@@ -238,13 +250,17 @@ pipeline "correct_one_storage_account_with_blob_soft_delete_disabled" {
     type        = string
     description = local.description_default_action
     default     = var.storage_accounts_with_blob_soft_delete_disabled_default_action
+    enum        = local.storage_accounts_with_blob_soft_delete_disabled_default_action_enum
   }
+
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
     default     = var.storage_accounts_with_blob_soft_delete_disabled_enabled_actions
+    enum        = local.storage_accounts_with_blob_soft_delete_disabled_enabled_actions_enum
   }
+
 
   step "pipeline" "respond" {
     pipeline = detect_correct.pipeline.correction_handler
@@ -260,10 +276,10 @@ pipeline "correct_one_storage_account_with_blob_soft_delete_disabled" {
           label        = "Skip"
           value        = "skip"
           style        = local.style_info
-          pipeline_ref = local.pipeline_optional_message
+          pipeline_ref = detect_correct.pipeline.optional_message
           pipeline_args = {
             notifier = param.notifier
-            send     = param.notification_level == local.level_verbose
+            send     = param.notification_level == local.level_info
             text     = "Skipped Storage Account ${param.title}."
           }
           success_msg = ""
@@ -273,12 +289,12 @@ pipeline "correct_one_storage_account_with_blob_soft_delete_disabled" {
           label        = "Enable Blob Soft Delete"
           value        = "enable_blob_soft_delete"
           style        = local.style_alert
-          pipeline_ref = local.azure_pipeline_update_storage_account_blob_service_properties
+          pipeline_ref = azure.pipeline.update_storage_account_blob_service_properties
           pipeline_args = {
             account_name                      = param.name
             resource_group                    = param.resource_group
             subscription_id                   = param.subscription_id
-            cred                              = param.cred
+            conn                              = param.conn
             enable_container_delete_retention = true
             container_delete_retention_days   = 30
           }

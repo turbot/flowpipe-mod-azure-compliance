@@ -6,7 +6,7 @@ locals {
       sa.name,
       sa.resource_group,
       sa.subscription_id,
-      sa._ctx ->> 'connection_name' as cred
+      sa._ctx ->> 'connection_name' as conn
     from
       azure_storage_account as sa,
       azure_subscription as sub
@@ -14,6 +14,9 @@ locals {
       sa.minimum_tls_version <> 'TLS1_2'
       and sub.subscription_id = sa.subscription_id;
   EOQ
+
+  storage_accounts_with_no_min_tls_1_2_enabled_actions_enum = ["skip", "enable_min_tls_1_2"]
+  storage_accounts_with_no_min_tls_1_2_default_action_enum = ["notify", "skip", "enable_min_tls_1_2"]
 }
 
 variable "storage_accounts_with_no_min_tls_1_2_trigger_enabled" {
@@ -62,13 +65,13 @@ pipeline "detect_and_correct_storage_accounts_with_no_min_tls_1_2" {
   description   =  "Detect Storage Accounts with minimum TLS version less than 1.2 and then enable 1.2 TLS version."
 
   param "database" {
-    type        = string
+    type        = connection.steampipe
     description = local.description_database
     default     = var.database
   }
 
   param "notifier" {
-    type        = string
+    type        = notifier
     description = local.description_notifier
     default     = var.notifier
   }
@@ -77,10 +80,11 @@ pipeline "detect_and_correct_storage_accounts_with_no_min_tls_1_2" {
     type        = string
     description = local.description_notifier_level
     default     = var.notification_level
+    enum        = local.notification_level_enum
   }
 
   param "approvers" {
-    type        = list(string)
+    type        = list(notifier)
     description = local.description_approvers
     default     = var.approvers
   }
@@ -89,12 +93,14 @@ pipeline "detect_and_correct_storage_accounts_with_no_min_tls_1_2" {
     type        = string
     description = local.description_default_action
     default     = var.storage_accounts_with_no_min_tls_1_2_default_action
+    enum        = local.storage_accounts_with_no_min_tls_1_2_default_action_enum
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
     default     = var.storage_accounts_with_no_min_tls_1_2_enabled_actions
+    enum        = local.storage_accounts_with_no_min_tls_1_2_enabled_actions_enum
   }
 
   step "query" "detect" {
@@ -126,13 +132,13 @@ pipeline "correct_storage_accounts_with_no_min_tls_1_2" {
       name            = string
       resource_group  = string
       subscription_id = string
-      cred            = string
+      conn            = string
     }))
     description = local.description_items
   }
 
   param "notifier" {
-    type        = string
+    type        = notifier
     description = local.description_notifier
     default     = var.notifier
   }
@@ -141,10 +147,11 @@ pipeline "correct_storage_accounts_with_no_min_tls_1_2" {
     type        = string
     description = local.description_notifier_level
     default     = var.notification_level
+    enum        = local.notification_level_enum
   }
 
   param "approvers" {
-    type        = list(string)
+    type        = list(notifier)
     description = local.description_approvers
     default     = var.approvers
   }
@@ -153,17 +160,19 @@ pipeline "correct_storage_accounts_with_no_min_tls_1_2" {
     type        = string
     description = local.description_default_action
     default     = var.storage_accounts_with_no_min_tls_1_2_default_action
+    enum        = local.storage_accounts_with_no_min_tls_1_2_default_action_enum
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
     default     = var.storage_accounts_with_no_min_tls_1_2_enabled_actions
+    enum        = local.storage_accounts_with_no_min_tls_1_2_enabled_actions_enum
   }
 
   step "message" "notify_detection_count" {
-    if       = var.notification_level == local.level_verbose
-    notifier = notifier[param.notifier]
+    if       = var.notification_level == local.level_info
+    notifier = param.notifier
     text     = "Detected ${length(param.items)} Storage Account(s) with minimum TLS version less than 1.2."
   }
 
@@ -176,7 +185,7 @@ pipeline "correct_storage_accounts_with_no_min_tls_1_2" {
       name               = each.value.name
       resource_group     = each.value.resource_group
       subscription_id    = each.value.subscription_id
-      cred               = each.value.cred
+      conn               = connection.azure[each.value.conn]
       notifier           = param.notifier
       notification_level = param.notification_level
       approvers          = param.approvers
@@ -210,14 +219,14 @@ pipeline "correct_one_storage_account_with_no_min_tls_1_2" {
     description = local.description_subscription_id
   }
 
-  param "cred" {
+  param "conn" {
     type        = string
-    description = local.description_credential
+    description = local.description_connection
     default     = "default"
   }
 
   param "notifier" {
-    type        = string
+    type        = notifier
     description = local.description_notifier
     default     = var.notifier
   }
@@ -226,10 +235,11 @@ pipeline "correct_one_storage_account_with_no_min_tls_1_2" {
     type        = string
     description = local.description_notifier_level
     default     = var.notification_level
+    enum        = local.notification_level_enum
   }
 
   param "approvers" {
-    type        = list(string)
+    type        = list(notifier)
     description = local.description_approvers
     default     = var.approvers
   }
@@ -238,12 +248,14 @@ pipeline "correct_one_storage_account_with_no_min_tls_1_2" {
     type        = string
     description = local.description_default_action
     default     = var.storage_accounts_with_no_min_tls_1_2_default_action
+    enum        = local.storage_accounts_with_no_min_tls_1_2_default_action_enum
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
     default     = var.storage_accounts_with_no_min_tls_1_2_enabled_actions
+    enum        = local.storage_accounts_with_no_min_tls_1_2_enabled_actions_enum
   }
 
   step "pipeline" "respond" {
@@ -260,10 +272,10 @@ pipeline "correct_one_storage_account_with_no_min_tls_1_2" {
           label        = "Skip"
           value        = "skip"
           style        = local.style_info
-          pipeline_ref = local.pipeline_optional_message
+          pipeline_ref = detect_correct.pipeline.optional_message
           pipeline_args = {
             notifier = param.notifier
-            send     = param.notification_level == local.level_verbose
+            send     = param.notification_level == local.level_info
             text     = "Skipped Storage Account ${param.title}."
           }
           success_msg = ""
@@ -273,12 +285,12 @@ pipeline "correct_one_storage_account_with_no_min_tls_1_2" {
           label        = "Enable minimum TLS 1.2"
           value        = "enable_min_tls_1_2"
           style        = local.style_alert
-          pipeline_ref = local.azure_pipeline_update_storage_account_minimum_tls
+          pipeline_ref = azure.pipeline.update_storage_account_minimum_tls
           pipeline_args = {
             account_name        = param.name
             resource_group      = param.resource_group
             subscription_id     = param.subscription_id
-            cred                = param.cred
+            conn                = param.conn
             minimum_tls_version = "TLS1_2"
           }
           success_msg = "Enabled minimum TLS 1.2 for Storage Account ${param.title}."

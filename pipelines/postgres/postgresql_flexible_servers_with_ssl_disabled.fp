@@ -23,8 +23,8 @@ locals {
       sub.subscription_id = s.subscription_id;
   EOQ
 
-  postgresql_flexible_servers_with_ssl_disabled_enabled_actions_enum = ["skip", "enable_ssl"]
-  postgresql_flexible_servers_with_ssl_disabled_default_action_enum  = ["notify", "skip", "enable_ssl"]
+  postgresql_flexible_servers_with_ssl_disabled_enabled_actions_enum = ["skip", "set_parameter_require_secure_transport"]
+  postgresql_flexible_servers_with_ssl_disabled_default_action_enum  = ["notify", "skip", "set_parameter_require_secure_transport"]
 }
 
 variable "postgresql_flexible_servers_with_ssl_disabled_trigger_enabled" {
@@ -91,13 +91,13 @@ pipeline "detect_and_correct_postgresql_flexible_servers_with_ssl_disabled" {
   description = "Detect PostgreSQL flexible servers with SSL disabled and then enable SSL."
 
   param "database" {
-    type        = string
+    type        = connection.steampipe
     description = local.description_database
     default     = var.database
   }
 
   param "notifier" {
-    type        = string
+    type        = notifier
     description = local.description_notifier
     default     = var.notifier
   }
@@ -110,7 +110,7 @@ pipeline "detect_and_correct_postgresql_flexible_servers_with_ssl_disabled" {
   }
 
   param "approvers" {
-    type        = list(string)
+    type        = list(notifier)
     description = local.description_approvers
     default     = var.approvers
   }
@@ -158,13 +158,13 @@ pipeline "correct_postgresql_flexible_servers_with_ssl_disabled" {
       name            = string
       resource_group  = string
       subscription_id = string
-      cred            = string
+      conn            = string
     }))
     description = local.description_items
   }
 
   param "notifier" {
-    type        = string
+    type        = notifier
     description = local.description_notifier
     default     = var.notifier
   }
@@ -177,7 +177,7 @@ pipeline "correct_postgresql_flexible_servers_with_ssl_disabled" {
   }
 
   param "approvers" {
-    type        = list(string)
+    type        = list(notifier)
     description = local.description_approvers
     default     = var.approvers
   }
@@ -197,8 +197,8 @@ pipeline "correct_postgresql_flexible_servers_with_ssl_disabled" {
   }
 
   step "message" "notify_detection_count" {
-    if       = var.notification_level == local.level_verbose
-    notifier = notifier[param.notifier]
+    if       = var.notification_level == local.level_info
+    notifier = param.notifier
     text     = "Detected ${length(param.items)} PostgreSQL flexible server(s) with SSL disabled."
   }
 
@@ -211,7 +211,7 @@ pipeline "correct_postgresql_flexible_servers_with_ssl_disabled" {
       name               = each.value.name
       resource_group     = each.value.resource_group
       subscription_id    = each.value.subscription_id
-      cred               = each.value.cred
+      conn               = connection.azure[each.value.conn]
       notifier           = param.notifier
       notification_level = param.notification_level
       approvers          = param.approvers
@@ -245,14 +245,14 @@ pipeline "correct_one_postgresql_flexible_server_with_ssl_disabled" {
     description = local.description_subscription_id
   }
 
-  param "cred" {
+  param "conn" {
     type        = string
-    description = local.description_credential
+    description = local.description_connection
     default     = "default"
   }
 
   param "notifier" {
-    type        = string
+    type        = notifier
     description = local.description_notifier
     default     = var.notifier
   }
@@ -265,7 +265,7 @@ pipeline "correct_one_postgresql_flexible_server_with_ssl_disabled" {
   }
 
   param "approvers" {
-    type        = list(string)
+    type        = list(notifier)
     description = local.description_approvers
     default     = var.approvers
   }
@@ -298,10 +298,10 @@ pipeline "correct_one_postgresql_flexible_server_with_ssl_disabled" {
           label        = "Skip"
           value        = "skip"
           style        = local.style_info
-          pipeline_ref = local.pipeline_optional_message
+          pipeline_ref = detect_correct.pipeline.optional_message
           pipeline_args = {
             notifier = param.notifier
-            send     = param.notification_level == local.level_verbose
+            send     = param.notification_level == local.level_info
             text     = "Skipped PostgreSQL flexible server ${param.title}."
           }
           success_msg = ""
@@ -311,7 +311,7 @@ pipeline "correct_one_postgresql_flexible_server_with_ssl_disabled" {
           label        = "Set require secure transport parameter to 'On'"
           value        = "set_parameter_require_secure_transport"
           style        = local.style_alert
-          pipeline_ref = local.azure_pipeline_set_postgres_flexible_server_parameter_require_secure_transport
+          pipeline_ref = azure.pipeline.set_postgres_flexible_server_require_secure_transport
           pipeline_args = {
             server_name              = param.name
             resource_group           = param.resource_group

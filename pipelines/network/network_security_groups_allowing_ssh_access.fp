@@ -6,7 +6,7 @@ locals {
       nsg.name as sg_name,
       nsg.resource_group,
       nsg.subscription_id,
-      nsg._ctx ->> 'connection_name' as cred
+      nsg._ctx ->> 'connection_name' as conn
     from
     azure_network_security_group nsg,
     jsonb_array_elements(security_rules) sg,
@@ -41,6 +41,9 @@ locals {
       )
   )
   EOQ
+
+  network_security_groups_allowing_ssh_access_enabled_actions_enum = ["skip", "delete_ssh_nsg_rule"]
+  network_security_groups_allowing_ssh_access_default_action_enum = ["notify", "skip", "delete_ssh_nsg_rule"]
 }
 
 variable "network_security_groups_allowing_ssh_access_trigger_enabled" {
@@ -89,13 +92,13 @@ pipeline "detect_and_correct_network_security_groups_allowing_ssh_access" {
   description   = "Detects NSGs allowing SSH access and runs your chosen action."
 
   param "database" {
-    type        = string
+    type        = connection.steampipe
     description = local.description_database
     default     = var.database
   }
 
   param "notifier" {
-    type        = string
+    type        = notifier
     description = local.description_notifier
     default     = var.notifier
   }
@@ -104,10 +107,11 @@ pipeline "detect_and_correct_network_security_groups_allowing_ssh_access" {
     type        = string
     description = local.description_notifier_level
     default     = var.notification_level
+    enum        = local.notification_level_enum
   }
 
   param "approvers" {
-    type        = list(string)
+    type        = list(notifier)
     description = local.description_approvers
     default     = var.approvers
   }
@@ -116,12 +120,14 @@ pipeline "detect_and_correct_network_security_groups_allowing_ssh_access" {
     type        = string
     description = local.description_default_action
     default     = var.network_security_groups_allowing_ssh_access_default_action
+    enum        = local.network_security_groups_allowing_ssh_access_default_action_enum
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
     default     = var.network_security_groups_allowing_ssh_access_enabled_actions
+    enum        = local.network_security_groups_allowing_ssh_access_enabled_actions_enum
   }
 
   step "query" "detect" {
@@ -154,13 +160,13 @@ pipeline "correct_network_security_groups_allowing_ssh_access" {
       sg_name         = string
       resource_group  = string
       subscription_id = string
-      cred            = string
+      conn            = string
     }))
     description = local.description_items
   }
 
   param "notifier" {
-    type        = string
+    type        = notifier
     description = local.description_notifier
     default     = var.notifier
   }
@@ -169,10 +175,11 @@ pipeline "correct_network_security_groups_allowing_ssh_access" {
     type        = string
     description = local.description_notifier_level
     default     = var.notification_level
+    enum        = local.notification_level_enum
   }
 
   param "approvers" {
-    type        = list(string)
+    type        = list(notifier)
     description = local.description_approvers
     default     = var.approvers
   }
@@ -181,17 +188,19 @@ pipeline "correct_network_security_groups_allowing_ssh_access" {
     type        = string
     description = local.description_default_action
     default     = var.network_security_groups_allowing_ssh_access_default_action
+    enum        = local.network_security_groups_allowing_ssh_access_default_action_enum
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
     default     = var.network_security_groups_allowing_ssh_access_enabled_actions
+    enum        = local.network_security_groups_allowing_ssh_access_enabled_actions_enum
   }
 
   step "message" "notify_detection_count" {
-    if       = var.notification_level == local.level_verbose
-    notifier = notifier[param.notifier]
+    if       = var.notification_level == local.level_info
+    notifier = param.notifier
     text     = "Detected ${length(param.items)} NSGs allowing SSH access."
   }
 
@@ -209,7 +218,7 @@ pipeline "correct_network_security_groups_allowing_ssh_access" {
       sg_name            = each.value.sg_name
       resource_group     = each.value.resource_group
       subscription_id    = each.value.subscription_id
-      cred               = each.value.cred
+      conn               = connection.azure[each.value.conn]
       notifier           = param.notifier
       notification_level = param.notification_level
       approvers          = param.approvers
@@ -248,14 +257,14 @@ pipeline "correct_one_network_security_groups_allowing_ssh_access" {
     description = local.description_subscription_id
   }
 
-  param "cred" {
+  param "conn" {
     type        = string
-    description = local.description_credential
+    description = local.description_connection
     default     = "default"
   }
 
   param "notifier" {
-    type        = string
+    type        = notifier
     description = local.description_notifier
     default     = var.notifier
   }
@@ -264,10 +273,11 @@ pipeline "correct_one_network_security_groups_allowing_ssh_access" {
     type        = string
     description = local.description_notifier_level
     default     = var.notification_level
+    enum        = local.notification_level_enum
   }
 
   param "approvers" {
-    type        = list(string)
+    type        = list(notifier)
     description = local.description_approvers
     default     = var.approvers
   }
@@ -276,12 +286,14 @@ pipeline "correct_one_network_security_groups_allowing_ssh_access" {
     type        = string
     description = local.description_default_action
     default     = var.network_security_groups_allowing_ssh_access_default_action
+    enum        = local.network_security_groups_allowing_ssh_access_default_action_enum
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
     default     = var.network_security_groups_allowing_ssh_access_enabled_actions
+    enum        = local.network_security_groups_allowing_ssh_access_enabled_actions_enum
   }
 
   step "pipeline" "respond" {
@@ -298,10 +310,10 @@ pipeline "correct_one_network_security_groups_allowing_ssh_access" {
           label        = "Skip"
           value        = "skip"
           style        = local.style_info
-          pipeline_ref = local.pipeline_optional_message
+          pipeline_ref = detect_correct.pipeline.optional_message
           pipeline_args = {
             notifier = param.notifier
-            send     = param.notification_level == local.level_verbose
+            send     = param.notification_level == local.level_info
             text     = "Skipped NSG ${param.sg_name} allowing SSH access."
           }
           success_msg = ""
@@ -311,13 +323,13 @@ pipeline "correct_one_network_security_groups_allowing_ssh_access" {
           label        = "Delete SSH NSG Rule"
           value        = "delete_ssh_nsg_rule"
           style        = local.style_alert
-          pipeline_ref = local.azure_pipeline_delete_network_nsg_rule
+          pipeline_ref = azure.pipeline.delete_network_nsg_rule
           pipeline_args = {
             resource_group     = param.resource_group
             nsg_name           = param.sg_name
             nsg_rule_name      = param.rule_name
             subscription_id    = param.subscription_id
-            cred               = param.cred
+            conn               = param.conn
           }
           success_msg = "Deleted SSH rule for NSG ${param.sg_name}."
           error_msg   = "Error deleting SSH rule for NSG ${param.sg_name}."
