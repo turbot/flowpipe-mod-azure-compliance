@@ -16,36 +16,53 @@ locals {
   EOQ
 
   securitycenters_with_azure_defender_for_app_service_disabled_enabled_actions_enum = ["skip", "enable_app_service_azure_defender"]
-  securitycenters_with_azure_defender_for_app_service_disabled_default_action_enum = ["notify", "skip", "enable_app_service_azure_defender"]
+  securitycenters_with_azure_defender_for_app_service_disabled_default_action_enum  = ["notify", "skip", "enable_app_service_azure_defender"]
 }
 
 variable "securitycenters_with_azure_defender_for_app_service_disabled_trigger_enabled" {
   type        = bool
-  default     = false
   description = "If true, the trigger is enabled."
+  default     = false
+
+  tags = {
+    folder = "Advanced/SecurityCenter"
+  }
 }
 
 variable "securitycenters_with_azure_defender_for_app_service_disabled_trigger_schedule" {
   type        = string
-  default     = "15m"
   description = "If the trigger is enabled, run it on this schedule."
+  default     = "15m"
+
+  tags = {
+    folder = "Advanced/SecurityCenter"
+  }
 }
 
 variable "securitycenters_with_azure_defender_for_app_service_disabled_default_action" {
   type        = string
   description = "The default action to use when there are no approvers."
   default     = "notify"
+
+  tags = {
+    folder = "Advanced/SecurityCenter"
+  }
 }
 
 variable "securitycenters_with_azure_defender_for_app_service_disabled_enabled_actions" {
   type        = list(string)
   description = "The list of enabled actions to provide to approvers for selection."
   default     = ["skip", "enable_app_service_azure_defender"]
+
+  tags = {
+    folder = "Advanced/SecurityCenter"
+  }
 }
 
 trigger "query" "detect_and_correct_securitycenters_with_azure_defender_for_app_service_disabled" {
-  title         = "Detect & correct Security Centers with Azure Defender disabled for App Service"
-  description   = "Detect Security Centers with Azure Defender disabled for App Service and then enable Azure Defender for App Service."
+  title         = "Detect & correct Security Centers with azure defender disabled for App Service"
+  description   = "Detect Security Centers with azure defender disabled for App Service and then enable azure defender for App Service."
+  tags          = local.securitycenter_common_tags
 
   enabled  = var.securitycenters_with_azure_defender_for_app_service_disabled_trigger_enabled
   schedule = var.securitycenters_with_azure_defender_for_app_service_disabled_trigger_schedule
@@ -61,8 +78,9 @@ trigger "query" "detect_and_correct_securitycenters_with_azure_defender_for_app_
 }
 
 pipeline "detect_and_correct_securitycenters_with_azure_defender_for_app_service_disabled" {
-  title         = "Detect & correct Security Centers with Azure Defender disabled for App Service"
-  description   = "Detect Security Centers with Azure Defender disabled for App Service and then enable Azure Defender for App Service."
+  title         = "Detect & correct Security Centers with azure defender disabled for App Service"
+  description   = "Detect Security Centers with azure defender disabled for App Service and then enable azure defender for App Service."
+  tags          = local.securitycenter_common_tags
 
   param "database" {
     type        = connection.steampipe
@@ -122,8 +140,9 @@ pipeline "detect_and_correct_securitycenters_with_azure_defender_for_app_service
 }
 
 pipeline "correct_securitycenters_with_azure_defender_for_app_service_disabled" {
-  title         = "Correct Security Centers with Azure Defender disabled for App Service"
-  description   = "Enable Azure Defender for App Service in Security Centers with Azure Defender disabled for App Service."
+  title         = "Correct Security Centers with azure defender disabled for App Service"
+  description   = "Enable azure defender for App Service in Security Centers with azure defender disabled for App Service."
+  tags          = merge(local.securitycenter_common_tags, { folder = "Internal" })
 
   param "items" {
     type = list(object({
@@ -172,7 +191,7 @@ pipeline "correct_securitycenters_with_azure_defender_for_app_service_disabled" 
   step "message" "notify_detection_count" {
     if       = var.notification_level == local.level_info
     notifier = param.notifier
-    text     = "Detected ${length(param.items)} Security Center(s) with Azure Defender disabled for App Service."
+    text     = "Detected ${length(param.items)} Security Center(s) with azure defender disabled for App Service."
   }
 
   step "pipeline" "correct_item" {
@@ -194,8 +213,9 @@ pipeline "correct_securitycenters_with_azure_defender_for_app_service_disabled" 
 }
 
 pipeline "correct_one_securitycenters_with_azure_defender_for_app_service_disabled" {
-  title         = "Correct Security Center with Azure Defender disabled for App Service"
-  description   = "Enable Azure Defender for App Service in Security Center with  Azure Defender disabled for App Service."
+  title         = "Correct Security Center with azure defender disabled for App Service"
+  description   = "Enable azure defender for App Service in Security Center with  azure defender disabled for App Service."
+  tags          = merge(local.securitycenter_common_tags, { folder = "Internal" })
 
   param "title" {
     type        = string
@@ -256,7 +276,7 @@ pipeline "correct_one_securitycenters_with_azure_defender_for_app_service_disabl
       notifier           = param.notifier
       notification_level = param.notification_level
       approvers          = param.approvers
-      detect_msg         = "Detected Security Center ${param.title} with Azure Defender disabled for App Service."
+      detect_msg         = "Detected Security Center ${param.title} with azure defender disabled for App Service."
       default_action     = param.default_action
       enabled_actions    = param.enabled_actions
       actions = {
@@ -274,7 +294,7 @@ pipeline "correct_one_securitycenters_with_azure_defender_for_app_service_disabl
           error_msg   = ""
         },
         "enable_app_service_azure_defender" = {
-          label        = "Enable App Service Azure Defender"
+          label        = "Enable App Service azure defender"
           value        = "enable_app_service_azure_defender"
           style        = local.style_alert
           pipeline_ref = azure.pipeline.create_security_pricing
@@ -284,8 +304,8 @@ pipeline "correct_one_securitycenters_with_azure_defender_for_app_service_disabl
             conn              = param.conn
             tier              = "Standard"
           }
-          success_msg = "Enabled Azure Defender for App Service in Security Center ${param.title}."
-          error_msg   = "Error enabling Azure Defender for App Service in Security Center ${param.title}."
+          success_msg = "Enabled azure defender for App Service in Security Center ${param.title}."
+          error_msg   = "Error enabling azure defender for App Service in Security Center ${param.title}."
         }
       }
     }

@@ -21,31 +21,48 @@ locals {
 
 variable "securitycenters_with_azure_defender_for_dns_disabled_trigger_enabled" {
   type        = bool
-  default     = false
   description = "If true, the trigger is enabled."
+  default     = false
+
+  tags = {
+    folder = "Advanced/SecurityCenter"
+  }
 }
 
 variable "securitycenters_with_azure_defender_for_dns_disabled_trigger_schedule" {
   type        = string
-  default     = "15m"
   description = "If the trigger is enabled, run it on this schedule."
+  default     = "15m"
+
+  tags = {
+    folder = "Advanced/SecurityCenter"
+  }
 }
 
 variable "securitycenters_with_azure_defender_for_dns_disabled_default_action" {
   type        = string
   description = "The default action to use when there are no approvers."
   default     = "notify"
+
+  tags = {
+    folder = "Advanced/SecurityCenter"
+  }
 }
 
 variable "securitycenters_with_azure_defender_for_dns_disabled_enabled_actions" {
   type        = list(string)
   description = "The list of enabled actions to provide to approvers for selection."
   default     = ["skip", "enable_dns_azure_defender"]
+
+  tags = {
+    folder = "Advanced/SecurityCenter"
+  }
 }
 
 trigger "query" "detect_and_correct_securitycenters_with_azure_defender_for_dns_disabled" {
   title         = "Detect & correct Security Centers with Azure Defender disabled for DNS"
   description   = "Detect Security Centers with Azure Defender disabled for DNS and then enable Azure Defender for DNS."
+  tags          = local.securitycenter_common_tags
 
   enabled  = var.securitycenters_with_azure_defender_for_dns_disabled_trigger_enabled
   schedule = var.securitycenters_with_azure_defender_for_dns_disabled_trigger_schedule
@@ -63,6 +80,7 @@ trigger "query" "detect_and_correct_securitycenters_with_azure_defender_for_dns_
 pipeline "detect_and_correct_securitycenters_with_azure_defender_for_dns_disabled" {
   title         = "Detect & correct Security Centers with Azure Defender disabled for DNS"
   description   = "Detect Security Centers with Azure Defender disabled for DNS and then enable Azure Defender for DNS."
+  tags          = local.securitycenter_common_tags
 
   param "database" {
     type        = connection.steampipe
@@ -124,6 +142,7 @@ pipeline "detect_and_correct_securitycenters_with_azure_defender_for_dns_disable
 pipeline "correct_securitycenters_with_azure_defender_for_dns_disabled" {
   title         = "Correct Security Centers with Azure Defender disabled for DNS"
   description   = "Enable Azure Defender for DNS in Security Centers with Azure Defender disabled for DNS."
+  tags          = merge(local.securitycenter_common_tags, { folder = "Internal" })
 
   param "items" {
     type = list(object({
@@ -196,6 +215,7 @@ pipeline "correct_securitycenters_with_azure_defender_for_dns_disabled" {
 pipeline "correct_one_securitycenter_with_azure_defender_for_dns_disabled" {
   title         = "Correct Security Center with Azure Defender disabled for DNS"
   description   = "Enable Azure Defender for DNS in Security Center with Azure Defender disabled for DNS."
+  tags          = merge(local.securitycenter_common_tags, { folder = "Internal" })
 
   param "title" {
     type        = string
