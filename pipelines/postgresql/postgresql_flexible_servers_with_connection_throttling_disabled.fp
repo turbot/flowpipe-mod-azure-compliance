@@ -1,27 +1,25 @@
 locals {
-  postgresql_servers_with_log_retention_less_than_3_days_query = <<-EOQ
+  postgresql_flexible_servers_with_connection_throttling_disabled_query = <<-EOQ
     select
-      concat(db.id, ' [', db.subscription_id, '/', db.resource_group, ']') as title,
-      db.id as id,
-      db.name,
-      db.resource_group,
-      db.subscription_id,
-      db._ctx ->> 'connection_name' as conn
+      concat(id, ' [', subscription_id, '/', resource_group, ']') as title,
+      id as id,
+      name,
+      resource_group,
+      subscription_id,
+      _ctx ->> 'connection_name' as conn
     from
-      azure_postgresql_server as db,
-      jsonb_array_elements(server_configurations) config,
-      azure_subscription as sub
+      azure_postgresql_flexible_server as db,
+      jsonb_array_elements(flexible_server_configurations) config
     where
-      config ->> 'Name' = 'log_retention_days'
-      and (config -> 'ConfigurationProperties' ->> 'value') :: integer <= 3
-      and sub.subscription_id = db.subscription_id;
+      config ->> 'Name' = 'connection_throttle.enable'
+      and lower(config -> 'ConfigurationProperties' ->> 'value') != 'on'
   EOQ
 
-  postgresql_servers_with_log_retention_less_than_3_days_enabled_actions_enum = ["skip", "update_log_retention_days"]
-  postgresql_servers_with_log_retention_less_than_3_days_default_action_enum = ["notify", "skip", "update_log_retention_days"]
+  postgresql_flexible_servers_with_connection_throttling_disabled_enabled_actions_enum = ["skip", "enable_connection_throttling"]
+  postgresql_flexible_servers_with_connection_throttling_disabled_default_action_enum = ["notify", "skip", "enable_connection_throttling"]
 }
 
-variable "postgresql_servers_with_log_retention_less_than_3_days_trigger_enabled" {
+variable "postgresql_flexible_servers_with_connection_throttling_disabled_trigger_enabled" {
   type        = bool
   description = "If true, the trigger is enabled."
   default     = false
@@ -31,7 +29,7 @@ variable "postgresql_servers_with_log_retention_less_than_3_days_trigger_enabled
   }
 }
 
-variable "postgresql_servers_with_log_retention_less_than_3_days_trigger_schedule" {
+variable "postgresql_flexible_servers_with_connection_throttling_disabled_trigger_schedule" {
   type        = string
   description = "If the trigger is enabled, run it on this schedule."
   default     = "15m"
@@ -41,7 +39,7 @@ variable "postgresql_servers_with_log_retention_less_than_3_days_trigger_schedul
   }
 }
 
-variable "postgresql_servers_with_log_retention_less_than_3_days_default_action" {
+variable "postgresql_flexible_servers_with_connection_throttling_disabled_default_action" {
   type        = string
   description = "The default action to use when there are no approvers."
   default     = "notify"
@@ -51,48 +49,36 @@ variable "postgresql_servers_with_log_retention_less_than_3_days_default_action"
   }
 }
 
-variable "postgresql_servers_with_log_retention_less_than_3_days_enabled_actions" {
+variable "postgresql_flexible_servers_with_connection_throttling_disabled_enabled_actions" {
   type        = list(string)
   description = "The list of enabled actions to provide to approvers for selection."
-  default     = ["skip", "update_log_retention_days"]
+  default     = ["skip", "enable_connection_throttling"]
 
   tags = {
     folder = "Advanced/PostgreSQL"
   }
 }
 
-variable "log_retention_days" {
-  type        = string
-  description = "The number of days logs should be retained."
-  default     = "7"
+trigger "query" "detect_and_correct_postgresql_flexible_servers_with_connection_throttling_disabled" {
+  title         = "Detect & correct PostgreSQL flexible servers with connection throttling disabled"
+  description   = "Detect PostgreSQL flexible servers with connection throttling disabled and then enable connection throttling."
 
-  tags = {
-    folder = "Advanced/PostgreSQL"
-  }
-}
-
-trigger "query" "detect_and_correct_postgresql_servers_with_log_retention_less_than_3_days" {
-  title         = "Detect & correct PostgreSQL servers with log retention less than 3 days"
-  description   = "Detect PostgreSQL servers with log retention less than 3 and then sets log retention to 3 or more than 3 days."
-  tags          = local.postgresql_common_tags
-
-  enabled  = var.postgresql_servers_with_log_retention_less_than_3_days_trigger_enabled
-  schedule = var.postgresql_servers_with_log_retention_less_than_3_days_trigger_schedule
+  enabled  = var.postgresql_flexible_servers_with_connection_throttling_disabled_trigger_enabled
+  schedule = var.postgresql_flexible_servers_with_connection_throttling_disabled_trigger_schedule
   database = var.database
-  sql      = local.postgresql_servers_with_log_retention_less_than_3_days_query
+  sql      = local.postgresql_flexible_servers_with_connection_throttling_disabled_query
 
   capture "insert" {
-    pipeline = pipeline.correct_postgresql_servers_with_log_retention_less_than_3_days
+    pipeline = pipeline.correct_postgresql_flexible_servers_with_connection_throttling_disabled
     args = {
       items = self.inserted_rows
     }
   }
 }
 
-pipeline "detect_and_correct_postgresql_servers_with_log_retention_less_than_3_days" {
-  title         = "Detect & correct PostgreSQL servers with log retention less than 3 days"
-  description   = "Detect PostgreSQL servers with log retention less than 3 and then sets log retention to 3 or more than 3 days."
-  tags          = local.postgresql_common_tags
+pipeline "detect_and_correct_postgresql_flexible_servers_with_connection_throttling_disabled" {
+  title         = "Detect & correct PostgreSQL flexible servers with connection throttling disabled"
+  description   = "Detect PostgreSQL flexible servers with connection throttling disabled and then enable connection throttling"
 
   param "database" {
     type        = connection.steampipe
@@ -122,24 +108,24 @@ pipeline "detect_and_correct_postgresql_servers_with_log_retention_less_than_3_d
   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.postgresql_servers_with_log_retention_less_than_3_days_default_action
-    enum        = local.postgresql_servers_with_log_retention_less_than_3_days_default_action_enum
+    default     = var.postgresql_flexible_servers_with_connection_throttling_disabled_default_action
+    enum        = local.postgresql_flexible_servers_with_connection_throttling_disabled_default_action_enum
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.postgresql_servers_with_log_retention_less_than_3_days_enabled_actions
-    enum        = local.postgresql_servers_with_log_retention_less_than_3_days_enabled_actions_enum
+    default     = var.postgresql_flexible_servers_with_connection_throttling_disabled_enabled_actions
+    enum        = local.postgresql_flexible_servers_with_connection_throttling_disabled_enabled_actions_enum
   }
 
   step "query" "detect" {
     database = param.database
-    sql      = local.postgresql_servers_with_log_retention_less_than_3_days_query
+    sql      = local.postgresql_flexible_servers_with_connection_throttling_disabled_query
   }
 
   step "pipeline" "respond" {
-    pipeline = pipeline.correct_postgresql_servers_with_log_retention_less_than_3_days
+    pipeline = pipeline.correct_postgresql_flexible_servers_with_connection_throttling_disabled
     args = {
       items              = step.query.detect.rows
       notifier           = param.notifier
@@ -151,9 +137,9 @@ pipeline "detect_and_correct_postgresql_servers_with_log_retention_less_than_3_d
   }
 }
 
-pipeline "correct_postgresql_servers_with_log_retention_less_than_3_days" {
-  title         = "Correct PostgreSQL servers with log retention less than 3 days"
-  description   = "Update log retention days to 3 or more for PostgreSQL servers with log retention less than 3 days."
+pipeline "correct_postgresql_flexible_servers_with_connection_throttling_disabled" {
+  title         = "Correct PostgreSQL flexible servers with connection throttling disabled"
+  description   = "Enable connection throttling for PostgreSQL flexible servers with connection throttling disabled."
   tags          = merge(local.postgresql_common_tags, { folder = "Internal" })
 
   param "items" {
@@ -190,27 +176,27 @@ pipeline "correct_postgresql_servers_with_log_retention_less_than_3_days" {
   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.postgresql_servers_with_log_retention_less_than_3_days_default_action
-    enum        = local.postgresql_servers_with_log_retention_less_than_3_days_default_action_enum
+    default     = var.postgresql_flexible_servers_with_connection_throttling_disabled_default_action
+    enum        = local.postgresql_flexible_servers_with_connection_throttling_disabled_default_action_enum
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.postgresql_servers_with_log_retention_less_than_3_days_enabled_actions
-    enum        = local.postgresql_servers_with_log_retention_less_than_3_days_enabled_actions_enum
+    default     = var.postgresql_flexible_servers_with_connection_throttling_disabled_enabled_actions
+    enum        = local.postgresql_flexible_servers_with_connection_throttling_disabled_enabled_actions_enum
   }
 
   step "message" "notify_detection_count" {
     if       = var.notification_level == local.level_info
     notifier = param.notifier
-    text     = "Detected ${length(param.items)} PostgreSQL server(s) with log retention_days less than 3 days."
+    text     = "Detected ${length(param.items)} PostgreSQL flexible server(s) with connection throttling disabled."
   }
 
   step "pipeline" "correct_item" {
     for_each        = { for row in param.items : row.id => row }
     max_concurrency = var.max_concurrency
-    pipeline        = pipeline.correct_one_postgresql_server_with_log_retention_less_than_3_days
+    pipeline        = pipeline.correct_one_postgresql_flexible_server_with_connection_throttling_disabled
     args = {
       title              = each.value.title
       name               = each.value.name
@@ -226,9 +212,9 @@ pipeline "correct_postgresql_servers_with_log_retention_less_than_3_days" {
   }
 }
 
-pipeline "correct_one_postgresql_server_with_log_retention_less_than_3_days" {
-  title         = "Correct PostgreSQL server with log retention less than 3 days"
-  description   = "Update log retention days to 3 or more for a PostgreSQL server with log retention less than 3 days."
+pipeline "correct_one_postgresql_flexible_server_with_connection_throttling_disabled" {
+  title         = "Correct PostgreSQL flexible server with connection throttling disabled"
+  description   = "Enable connection throttling for a PostgreSQL flexible server with connection throttling disabled."
   tags          = merge(local.postgresql_common_tags, { folder = "Internal" })
 
   param "title" {
@@ -238,7 +224,7 @@ pipeline "correct_one_postgresql_server_with_log_retention_less_than_3_days" {
 
   param "name" {
     type        = string
-    description = "The name of the PostgreSQL server."
+    description = "The name of the PostgreSQL flexible server."
   }
 
   param "resource_group" {
@@ -278,15 +264,15 @@ pipeline "correct_one_postgresql_server_with_log_retention_less_than_3_days" {
    param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.postgresql_servers_with_log_retention_less_than_3_days_default_action
-    enum        = local.postgresql_servers_with_log_retention_less_than_3_days_default_action_enum
+    default     = var.postgresql_flexible_servers_with_connection_throttling_disabled_default_action
+    enum        = local.postgresql_flexible_servers_with_connection_throttling_disabled_default_action_enum
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.postgresql_servers_with_log_retention_less_than_3_days_enabled_actions
-    enum        = local.postgresql_servers_with_log_retention_less_than_3_days_enabled_actions_enum
+    default     = var.postgresql_flexible_servers_with_connection_throttling_disabled_enabled_actions
+    enum        = local.postgresql_flexible_servers_with_connection_throttling_disabled_enabled_actions_enum
   }
 
   step "pipeline" "respond" {
@@ -295,7 +281,7 @@ pipeline "correct_one_postgresql_server_with_log_retention_less_than_3_days" {
       notifier           = param.notifier
       notification_level = param.notification_level
       approvers          = param.approvers
-      detect_msg         = "Detected PostgreSQL server ${param.title} with log retention less than 3 days."
+      detect_msg         = "Detected PostgreSQL flexible server ${param.title} with connection throttling disabled."
       default_action     = param.default_action
       enabled_actions    = param.enabled_actions
       actions = {
@@ -307,29 +293,30 @@ pipeline "correct_one_postgresql_server_with_log_retention_less_than_3_days" {
           pipeline_args = {
             notifier = param.notifier
             send     = param.notification_level == local.level_info
-            text     = "Skipped PostgreSQL DB server ${param.title}."
+            text     = "Skipped PostgreSQL flexible server ${param.title}."
           }
           success_msg = ""
           error_msg   = ""
         },
-        "update_log_retention_days" = {
-          label        = "Update log retention days"
-          value        = "update_log_retention_days"
+        "enable_connection_throttling" = {
+          label        = "Enable connection throttling"
+          value        = "enable_connection_throttling"
           style        = local.style_alert
-          pipeline_ref = azure.pipeline.set_postgres_server_configuration
+          pipeline_ref = azure.pipeline.set_postgres_flexible_server_configuration
           pipeline_args = {
             server_name       = param.name
             resource_group    = param.resource_group
             subscription_id   = param.subscription_id
             conn              = param.conn
-            config_name       = "log_retention_days"
-            config_value      = var.log_retention_days
+            config_name       = "connection_throttle.enable"
+            config_value      = "on"
           }
-          success_msg = "Updated log retention days for PostgreSQL server ${param.title}."
-          error_msg   = "Error updating log retention days for PostgreSQL server ${param.title}."
+          success_msg = "Enabled connection throttling for PostgreSQL flexible server ${param.title}."
+          error_msg   = "Error enabling connection throttling for PostgreSQL flexible server ${param.title}."
         }
       }
     }
   }
 }
+
 
