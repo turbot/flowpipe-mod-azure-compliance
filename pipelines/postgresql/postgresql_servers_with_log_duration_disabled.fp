@@ -1,15 +1,5 @@
 locals {
-  postgresql_servers_with_allow_access_to_azure_services_enabled_query = <<-EOQ
-    with postgres_db_with_allow_access_to_azure_services as (
-      select
-        id
-      from
-        azure_postgresql_server,
-        jsonb_array_elements(firewall_rules) as r
-      where
-        r -> 'FirewallRuleProperties' ->> 'endIpAddress' = '0.0.0.0'
-        and r -> 'FirewallRuleProperties' ->> 'startIpAddress' = '0.0.0.0'
-    )
+  postgresql_servers_with_log_duration_disabled_query = <<-EOQ
     select
       concat(db.id, ' [', db.subscription_id, '/', db.resource_group, ']') as title,
       db.id as id,
@@ -19,61 +9,80 @@ locals {
       db._ctx ->> 'connection_name' as conn
     from
       azure_postgresql_server as db,
-      postgres_db_with_allow_access_to_azure_services as a,
+      jsonb_array_elements(server_configurations) config,
       azure_subscription as sub
     where
-      a.id is not null
+      config ->> 'Name' = 'log_duration'
+      and lower(config -> 'ConfigurationProperties' ->> 'value') != 'on'
       and sub.subscription_id = db.subscription_id;
   EOQ
 
-  postgresql_servers_with_allow_access_to_azure_services_enabled_enabled_actions_enum = ["skip", "delete_allow_all_windows_azure_ips_firewall_rule"]
-  postgresql_servers_with_allow_access_to_azure_services_enabled_default_action_enum = ["notify", "skip", "delete_allow_all_windows_azure_ips_firewall_rule"]
+  postgresql_servers_with_log_duration_disabled_enabled_actions_enum = ["skip", "enable_logging_duration"]
+  postgresql_servers_with_log_duration_disabled_default_action_enum = ["notify", "skip", "enable_logging_duration"]
 }
 
-variable "postgresql_servers_with_allow_access_to_azure_services_enabled_trigger_enabled" {
+variable "postgresql_servers_with_log_duration_disabled_trigger_enabled" {
   type        = bool
-  default     = false
   description = "If true, the trigger is enabled."
+  default     = false
+
+  tags = {
+    folder = "Advanced/PostgreSQL"
+  }
 }
 
-variable "postgresql_servers_with_allow_access_to_azure_services_enabled_trigger_schedule" {
+variable "postgresql_servers_with_log_duration_disabled_trigger_schedule" {
   type        = string
-  default     = "15m"
   description = "If the trigger is enabled, run it on this schedule."
+  default     = "15m"
+
+  tags = {
+    folder = "Advanced/PostgreSQL"
+  }
 }
 
-variable "postgresql_servers_with_allow_access_to_azure_services_enabled_default_action" {
+variable "postgresql_servers_with_log_duration_disabled_default_action" {
   type        = string
   description = "The default action to use when there are no approvers."
   default     = "notify"
+
+  tags = {
+    folder = "Advanced/PostgreSQL"
+  }
 }
 
-variable "postgresql_servers_with_allow_access_to_azure_services_enabled_enabled_actions" {
+variable "postgresql_servers_with_log_duration_disabled_enabled_actions" {
   type        = list(string)
   description = "The list of enabled actions to provide to approvers for selection."
-  default     = ["skip", "delete_allow_all_windows_azure_ips_firewall_rule"]
+  default     = ["skip", "enable_logging_duration"]
+
+  tags = {
+    folder = "Advanced/PostgreSQL"
+  }
 }
 
-trigger "query" "detect_and_correct_postgresql_servers_with_allow_access_to_azure_services_enabled" {
-  title         = "Detect & correct PostgreSQL servers allowing access to Azure services"
-  description   = "Detect PostgreSQL servers allowing access to Azure services and then disable access to Azure services."
+trigger "query" "detect_and_correct_postgresql_servers_with_log_duration_disabled" {
+  title         = "Detect & correct PostgreSQL servers with logging duration disabled"
+  description   = "Detect PostgreSQL servers with logging duration disabled and then enable logging duration."
+  tags          = local.postgresql_common_tags
 
-  enabled  = var.postgresql_servers_with_allow_access_to_azure_services_enabled_trigger_enabled
-  schedule = var.postgresql_servers_with_allow_access_to_azure_services_enabled_trigger_schedule
+  enabled  = var.postgresql_servers_with_log_duration_disabled_trigger_enabled
+  schedule = var.postgresql_servers_with_log_duration_disabled_trigger_schedule
   database = var.database
-  sql      = local.postgresql_servers_with_allow_access_to_azure_services_enabled_query
+  sql      = local.postgresql_servers_with_log_duration_disabled_query
 
   capture "insert" {
-    pipeline = pipeline.correct_postgresql_servers_with_allow_access_to_azure_services_enabled
+    pipeline = pipeline.correct_postgresql_servers_with_log_duration_disabled
     args = {
       items = self.inserted_rows
     }
   }
 }
 
-pipeline "detect_and_correct_postgresql_servers_with_allow_access_to_azure_services_enabled" {
-  title         = "Detect & correct PostgreSQL servers allowing access to Azure services"
-  description   = "Detect PostgreSQL servers allowing access to Azure services and then disable access to Azure services."
+pipeline "detect_and_correct_postgresql_servers_with_log_duration_disabled" {
+  title         = "Detect & correct PostgreSQL servers with logging duration disabled"
+  description   = "Detect PostgreSQL servers with logging duration disabled and then enable logging duration."
+  tags          = local.postgresql_common_tags
 
   param "database" {
     type        = connection.steampipe
@@ -103,24 +112,24 @@ pipeline "detect_and_correct_postgresql_servers_with_allow_access_to_azure_servi
   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.postgresql_servers_with_allow_access_to_azure_services_enabled_default_action
-    enum        = local.postgresql_servers_with_allow_access_to_azure_services_enabled_default_action_enum
+    default     = var.postgresql_servers_with_log_duration_disabled_default_action
+    enum        = local.postgresql_servers_with_log_duration_disabled_default_action_enum
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.postgresql_servers_with_allow_access_to_azure_services_enabled_enabled_actions
-    enum        = local.postgresql_servers_with_allow_access_to_azure_services_enabled_enabled_actions_enum
+    default     = var.postgresql_servers_with_log_duration_disabled_enabled_actions
+    enum        = local.postgresql_servers_with_log_duration_disabled_enabled_actions_enum
   }
 
   step "query" "detect" {
     database = param.database
-    sql      = local.postgresql_servers_with_allow_access_to_azure_services_enabled_query
+    sql      = local.postgresql_servers_with_log_duration_disabled_query
   }
 
   step "pipeline" "respond" {
-    pipeline = pipeline.correct_postgresql_servers_with_allow_access_to_azure_services_enabled
+    pipeline = pipeline.correct_postgresql_servers_with_log_duration_disabled
     args = {
       items              = step.query.detect.rows
       notifier           = param.notifier
@@ -132,9 +141,10 @@ pipeline "detect_and_correct_postgresql_servers_with_allow_access_to_azure_servi
   }
 }
 
-pipeline "correct_postgresql_servers_with_allow_access_to_azure_services_enabled" {
-  title         = "Correct PostgreSQL servers allowing access to Azure services"
-  description   = "Disable access to Azure services for PostgreSQL servers with enabled access to Azure services."
+pipeline "correct_postgresql_servers_with_log_duration_disabled" {
+  title         = "Correct PostgreSQL servers with logging duration disabled"
+  description   = "Enable logging duration for PostgreSQL servers with logging duration disabled."
+  tags          = merge(local.postgresql_common_tags, { folder = "Internal" })
 
   param "items" {
     type = list(object({
@@ -170,27 +180,27 @@ pipeline "correct_postgresql_servers_with_allow_access_to_azure_services_enabled
   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.postgresql_servers_with_allow_access_to_azure_services_enabled_default_action
-    enum        = local.postgresql_servers_with_allow_access_to_azure_services_enabled_default_action_enum
+    default     = var.postgresql_servers_with_log_duration_disabled_default_action
+    enum        = local.postgresql_servers_with_log_duration_disabled_default_action_enum
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.postgresql_servers_with_allow_access_to_azure_services_enabled_enabled_actions
-    enum        = local.postgresql_servers_with_allow_access_to_azure_services_enabled_enabled_actions_enum
+    default     = var.postgresql_servers_with_log_duration_disabled_enabled_actions
+    enum        = local.postgresql_servers_with_log_duration_disabled_enabled_actions_enum
   }
 
   step "message" "notify_detection_count" {
     if       = var.notification_level == local.level_info
     notifier = param.notifier
-    text     = "Detected ${length(param.items)} PostgreSQL server(s) allowing access to Azure services."
+    text     = "Detected ${length(param.items)} PostgreSQL server(s) with logging duration disabled."
   }
 
   step "pipeline" "correct_item" {
     for_each        = { for row in param.items : row.id => row }
     max_concurrency = var.max_concurrency
-    pipeline        = pipeline.correct_one_postgresql_servers_with_allow_access_to_azure_services_enabled
+    pipeline        = pipeline.correct_one_postgresql_server_with_log_duration_disabled
     args = {
       title              = each.value.title
       name               = each.value.name
@@ -206,9 +216,10 @@ pipeline "correct_postgresql_servers_with_allow_access_to_azure_services_enabled
   }
 }
 
-pipeline "correct_one_postgresql_servers_with_allow_access_to_azure_services_enabled" {
-  title         = "Correct PostgreSQL server allowing access to Azure services"
-  description   = "Disable access to Azure services for a PostgreSQL server with enabled access to Azure services."
+pipeline "correct_one_postgresql_server_with_log_duration_disabled" {
+  title         = "Correct PostgreSQL server with logging duration disabled"
+  description   = "Enable logging duration for a PostgreSQL server with logging duration disabled."
+  tags          = merge(local.postgresql_common_tags, { folder = "Internal" })
 
   param "title" {
     type        = string
@@ -254,18 +265,18 @@ pipeline "correct_one_postgresql_servers_with_allow_access_to_azure_services_ena
     default     = var.approvers
   }
 
-  param "default_action" {
+   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.postgresql_servers_with_allow_access_to_azure_services_enabled_default_action
-    enum        = local.postgresql_servers_with_allow_access_to_azure_services_enabled_default_action_enum
+    default     = var.postgresql_servers_with_log_duration_disabled_default_action
+    enum        = local.postgresql_servers_with_log_duration_disabled_default_action_enum
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.postgresql_servers_with_allow_access_to_azure_services_enabled_enabled_actions
-    enum        = local.postgresql_servers_with_allow_access_to_azure_services_enabled_enabled_actions_enum
+    default     = var.postgresql_servers_with_log_duration_disabled_enabled_actions
+    enum        = local.postgresql_servers_with_log_duration_disabled_enabled_actions_enum
   }
 
   step "pipeline" "respond" {
@@ -274,7 +285,7 @@ pipeline "correct_one_postgresql_servers_with_allow_access_to_azure_services_ena
       notifier           = param.notifier
       notification_level = param.notification_level
       approvers          = param.approvers
-      detect_msg         = "Detected PostgreSQL server ${param.title} allowing access to Azure services."
+      detect_msg         = "Detected PostgreSQL server ${param.title} with logging duration disabled."
       default_action     = param.default_action
       enabled_actions    = param.enabled_actions
       actions = {
@@ -291,20 +302,21 @@ pipeline "correct_one_postgresql_servers_with_allow_access_to_azure_services_ena
           success_msg = ""
           error_msg   = ""
         },
-        "delete_allow_all_windows_azure_ips_firewall_rule" = {
-          label        = "Delete Firewall Rule"
-          value        = "delete_allow_all_windows_azure_ips_firewall_rule"
+        "enable_logging_duration" = {
+          label        = "Enable logging duration"
+          value        = "enable_logging_duration"
           style        = local.style_alert
-          pipeline_ref = azure.pipeline.delete_postgres_server_firewall_rule
+          pipeline_ref = azure.pipeline.set_postgres_server_configuration
           pipeline_args = {
-            resource_group     = param.resource_group
-            subscription_id    = param.subscription_id
-            server_name        = param.name
-            conn               = param.conn
-            firewall_rule_name = "AllowAllWindowsAzureIps"
+            server_name       = param.name
+            resource_group    = param.resource_group
+            subscription_id   = param.subscription_id
+            conn              = param.conn
+            config_name       = "log_duration"
+            config_value      = "on"
           }
-          success_msg = "Deleted firewall rule allowing access to Azure services for PostgreSQL server ${param.title}."
-          error_msg   = "Error deleting firewall rule allowing access to Azure services for PostgreSQL server ${param.title}."
+          success_msg = "Enabled logging duration for PostgreSQL server ${param.title}."
+          error_msg   = "Error enabling logging duration for PostgreSQL server ${param.title}."
         }
       }
     }

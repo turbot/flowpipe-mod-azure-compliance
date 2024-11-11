@@ -1,5 +1,5 @@
 locals {
-  postgresql_servers_with_connection_throttling_disabled_query = <<-EOQ
+  postgresql_servers_with_log_connections_disabled_query = <<-EOQ
     select
       concat(db.id, ' [', db.subscription_id, '/', db.resource_group, ']') as title,
       db.id as id,
@@ -12,59 +12,77 @@ locals {
       jsonb_array_elements(server_configurations) config,
       azure_subscription as sub
     where
-      config ->> 'Name' = 'connection_throttling'
+      config ->> 'Name' = 'log_connections'
       and lower(config -> 'ConfigurationProperties' ->> 'value') != 'on'
       and sub.subscription_id = db.subscription_id;
   EOQ
 
-  postgresql_servers_with_connection_throttling_disabled_enabled_actions_enum = ["skip", "enable_connection_throttling"]
-  postgresql_servers_with_connection_throttling_disabled_default_action_enum = ["notify", "skip", "enable_connection_throttling"]
+  postgresql_servers_with_log_connections_disabled_enabled_actions_enum = ["skip", "enable_logging_connections"]
+  postgresql_servers_with_log_connections_disabled_default_action_enum = ["notify", "skip", "enable_logging_connections"]
 }
 
-variable "postgresql_servers_with_connection_throttling_disabled_trigger_enabled" {
+variable "postgresql_servers_with_log_connections_disabled_trigger_enabled" {
   type        = bool
-  default     = false
   description = "If true, the trigger is enabled."
+  default     = false
+
+  tags = {
+    folder = "Advanced/PostgreSQL"
+  }
 }
 
-variable "postgresql_servers_with_connection_throttling_disabled_trigger_schedule" {
+variable "postgresql_servers_with_log_connections_disabled_trigger_schedule" {
   type        = string
-  default     = "15m"
   description = "If the trigger is enabled, run it on this schedule."
+  default     = "15m"
+
+  tags = {
+    folder = "Advanced/PostgreSQL"
+  }
 }
 
-variable "postgresql_servers_with_connection_throttling_disabled_default_action" {
+variable "postgresql_servers_with_log_connections_disabled_default_action" {
   type        = string
   description = "The default action to use when there are no approvers."
   default     = "notify"
+
+  tags = {
+    folder = "Advanced/PostgreSQL"
+  }
 }
 
-variable "postgresql_servers_with_connection_throttling_disabled_enabled_actions" {
+variable "postgresql_servers_with_log_connections_disabled_enabled_actions" {
   type        = list(string)
   description = "The list of enabled actions to provide to approvers for selection."
-  default     = ["skip", "enable_connection_throttling"]
+  default     = ["skip", "enable_logging_connections"]
+
+  tags = {
+    folder = "Advanced/PostgreSQL"
+  }
 }
 
-trigger "query" "detect_and_correct_postgresql_servers_with_connection_throttling_disabled" {
-  title         = "Detect & correct PostgreSQL servers with connection throttling disabled"
-  description   = "Detect PostgreSQL servers with connection throttling disabled and then enable connection throttling."
+trigger "query" "detect_and_correct_postgresql_servers_with_log_connections_disabled" {
+  title         = "Detect & correct PostgreSQL servers with logging connections disabled"
+  description   = "Detect PostgreSQL servers with logging connections disabled and then enable logging connections."
+  tags          = local.postgresql_common_tags
 
-  enabled  = var.postgresql_servers_with_connection_throttling_disabled_trigger_enabled
-  schedule = var.postgresql_servers_with_connection_throttling_disabled_trigger_schedule
+  enabled  = var.postgresql_servers_with_log_connections_disabled_trigger_enabled
+  schedule = var.postgresql_servers_with_log_connections_disabled_trigger_schedule
   database = var.database
-  sql      = local.postgresql_servers_with_connection_throttling_disabled_query
+  sql      = local.postgresql_servers_with_log_connections_disabled_query
 
   capture "insert" {
-    pipeline = pipeline.correct_postgresql_servers_with_connection_throttling_disabled
+    pipeline = pipeline.correct_postgresql_servers_with_log_connections_disabled
     args = {
       items = self.inserted_rows
     }
   }
 }
 
-pipeline "detect_and_correct_postgresql_servers_with_connection_throttling_disabled" {
-  title         = "Detect & correct PostgreSQL servers with connection throttling disabled"
-  description   = "Detect PostgreSQL servers with connection throttling disabled and then enable connection throttling"
+pipeline "detect_and_correct_postgresql_servers_with_log_connections_disabled" {
+  title         = "Detect & correct PostgreSQL servers with logging connections disabled"
+  description   = "Detect PostgreSQL servers with logging connections disabled and then enable logging connections."
+  tags          = local.postgresql_common_tags
 
   param "database" {
     type        = connection.steampipe
@@ -94,24 +112,24 @@ pipeline "detect_and_correct_postgresql_servers_with_connection_throttling_disab
   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.postgresql_servers_with_connection_throttling_disabled_default_action
-    enum        = local.postgresql_servers_with_connection_throttling_disabled_default_action_enum
+    default     = var.postgresql_servers_with_log_connections_disabled_default_action
+    enum        = local.postgresql_servers_with_log_connections_disabled_default_action_enum
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.postgresql_servers_with_connection_throttling_disabled_enabled_actions
-    enum        = local.postgresql_servers_with_connection_throttling_disabled_enabled_actions_enum
+    default     = var.postgresql_servers_with_log_connections_disabled_enabled_actions
+    enum        = local.postgresql_servers_with_log_connections_disabled_enabled_actions_enum
   }
 
   step "query" "detect" {
     database = param.database
-    sql      = local.postgresql_servers_with_connection_throttling_disabled_query
+    sql      = local.postgresql_servers_with_log_connections_disabled_query
   }
 
   step "pipeline" "respond" {
-    pipeline = pipeline.correct_postgresql_servers_with_connection_throttling_disabled
+    pipeline = pipeline.correct_postgresql_servers_with_log_connections_disabled
     args = {
       items              = step.query.detect.rows
       notifier           = param.notifier
@@ -123,9 +141,10 @@ pipeline "detect_and_correct_postgresql_servers_with_connection_throttling_disab
   }
 }
 
-pipeline "correct_postgresql_servers_with_connection_throttling_disabled" {
-  title         = "Correct PostgreSQL servers with connection throttling disabled"
-  description   = "Enable connection throttling for PostgreSQL servers with connection throttling disabled."
+pipeline "correct_postgresql_servers_with_log_connections_disabled" {
+  title         = "Correct PostgreSQL servers with logging connections disabled"
+  description   = "Enable logging connections for PostgreSQL servers with logging connections disabled."
+  tags          = merge(local.postgresql_common_tags, { folder = "Internal" })
 
   param "items" {
     type = list(object({
@@ -161,27 +180,27 @@ pipeline "correct_postgresql_servers_with_connection_throttling_disabled" {
   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.postgresql_servers_with_connection_throttling_disabled_default_action
-    enum        = local.postgresql_servers_with_connection_throttling_disabled_default_action_enum
+    default     = var.postgresql_servers_with_log_connections_disabled_default_action
+    enum        = local.postgresql_servers_with_log_connections_disabled_default_action_enum
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.postgresql_servers_with_connection_throttling_disabled_enabled_actions
-    enum        = local.postgresql_servers_with_connection_throttling_disabled_enabled_actions_enum
+    default     = var.postgresql_servers_with_log_connections_disabled_enabled_actions
+    enum        = local.postgresql_servers_with_log_connections_disabled_enabled_actions_enum
   }
 
   step "message" "notify_detection_count" {
     if       = var.notification_level == local.level_info
     notifier = param.notifier
-    text     = "Detected ${length(param.items)} PostgreSQL server(s) with connection throttling disabled."
+    text     = "Detected ${length(param.items)} PostgreSQL server(s) with logging connections disabled."
   }
 
   step "pipeline" "correct_item" {
     for_each        = { for row in param.items : row.id => row }
     max_concurrency = var.max_concurrency
-    pipeline        = pipeline.correct_one_postgresql_server_with_connection_throttling_disabled
+    pipeline        = pipeline.correct_one_postgresql_server_with_log_connections_disabled
     args = {
       title              = each.value.title
       name               = each.value.name
@@ -197,9 +216,10 @@ pipeline "correct_postgresql_servers_with_connection_throttling_disabled" {
   }
 }
 
-pipeline "correct_one_postgresql_server_with_connection_throttling_disabled" {
-  title         = "Correct PostgreSQL server with connection throttling disabled"
-  description   = "Enable connection throttling for a PostgreSQL server with connection throttling disabled."
+pipeline "correct_one_postgresql_server_with_log_connections_disabled" {
+  title         = "Correct PostgreSQL server with logging connections disabled"
+  description   = "Enable logging connections for a PostgreSQL server with logging connections disabled."
+  tags          = merge(local.postgresql_common_tags, { folder = "Internal" })
 
   param "title" {
     type        = string
@@ -248,15 +268,15 @@ pipeline "correct_one_postgresql_server_with_connection_throttling_disabled" {
    param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.postgresql_servers_with_connection_throttling_disabled_default_action
-    enum        = local.postgresql_servers_with_connection_throttling_disabled_default_action_enum
+    default     = var.postgresql_servers_with_log_connections_disabled_default_action
+    enum        = local.postgresql_servers_with_log_connections_disabled_default_action_enum
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.postgresql_servers_with_connection_throttling_disabled_enabled_actions
-    enum        = local.postgresql_servers_with_connection_throttling_disabled_enabled_actions_enum
+    default     = var.postgresql_servers_with_log_connections_disabled_enabled_actions
+    enum        = local.postgresql_servers_with_log_connections_disabled_enabled_actions_enum
   }
 
   step "pipeline" "respond" {
@@ -265,7 +285,7 @@ pipeline "correct_one_postgresql_server_with_connection_throttling_disabled" {
       notifier           = param.notifier
       notification_level = param.notification_level
       approvers          = param.approvers
-      detect_msg         = "Detected PostgreSQL server ${param.title} with connection throttling disabled."
+      detect_msg         = "Detected PostgreSQL server ${param.title} with logging connections disabled."
       default_action     = param.default_action
       enabled_actions    = param.enabled_actions
       actions = {
@@ -282,9 +302,9 @@ pipeline "correct_one_postgresql_server_with_connection_throttling_disabled" {
           success_msg = ""
           error_msg   = ""
         },
-        "enable_connection_throttling" = {
-          label        = "On connection throttling"
-          value        = "enable_connection_throttling"
+        "enable_logging_connections" = {
+          label        = "Enable logging connections"
+          value        = "enable_logging_connections"
           style        = local.style_alert
           pipeline_ref = azure.pipeline.set_postgres_server_configuration
           pipeline_args = {
@@ -292,15 +312,14 @@ pipeline "correct_one_postgresql_server_with_connection_throttling_disabled" {
             resource_group    = param.resource_group
             subscription_id   = param.subscription_id
             conn              = param.conn
-            config_name       = "connection_throttling"
+            config_name       = "log_connections"
             config_value      = "on"
           }
-          success_msg = "Enable connection throttling for PostgreSQL server ${param.title}."
-          error_msg   = "Error enabling connection throttling for PostgreSQL server ${param.title}."
+          success_msg = "Enabled logging connections for PostgreSQL server ${param.title}."
+          error_msg   = "Error enabling logging connections for PostgreSQL server ${param.title}."
         }
       }
     }
   }
 }
-
 

@@ -1,5 +1,5 @@
 locals {
-  postgresql_servers_with_log_retention_less_than_3_days_query = <<-EOQ
+  postgresql_servers_with_log_checkpoints_disabled_query = <<-EOQ
     select
       concat(db.id, ' [', db.subscription_id, '/', db.resource_group, ']') as title,
       db.id as id,
@@ -12,65 +12,77 @@ locals {
       jsonb_array_elements(server_configurations) config,
       azure_subscription as sub
     where
-      config ->> 'Name' = 'log_retention_days'
-      and (config -> 'ConfigurationProperties' ->> 'value') :: integer <= 3
+      config ->> 'Name' = 'log_checkpoints'
+      and lower(config -> 'ConfigurationProperties' ->> 'value') != 'on'
       and sub.subscription_id = db.subscription_id;
   EOQ
 
-  postgresql_servers_with_log_retention_less_than_3_days_enabled_actions_enum = ["skip", "update_log_retention_days"]
-  postgresql_servers_with_log_retention_less_than_3_days_default_action_enum = ["notify", "skip", "update_log_retention_days"]
+  postgresql_servers_with_log_checkpoints_disabled_enabled_actions_enum = ["skip", "enable_log_checkpoints"]
+  postgresql_servers_with_log_checkpoints_disabled_default_action_enum = ["notify", "skip", "enable_log_checkpoints"]
 }
 
-variable "postgresql_servers_with_log_retention_less_than_3_days_trigger_enabled" {
+variable "postgresql_servers_with_log_checkpoints_disabled_trigger_enabled" {
   type        = bool
-  default     = false
   description = "If true, the trigger is enabled."
+  default     = false
+
+  tags = {
+    folder = "Advanced/PostgreSQL"
+  }
 }
 
-variable "postgresql_servers_with_log_retention_less_than_3_days_trigger_schedule" {
+variable "postgresql_servers_with_log_checkpoints_disabled_trigger_schedule" {
   type        = string
-  default     = "15m"
   description = "If the trigger is enabled, run it on this schedule."
+  default     = "15m"
+
+  tags = {
+    folder = "Advanced/PostgreSQL"
+  }
 }
 
-variable "postgresql_servers_with_log_retention_less_than_3_days_default_action" {
+variable "postgresql_servers_with_log_checkpoints_disabled_default_action" {
   type        = string
   description = "The default action to use when there are no approvers."
   default     = "notify"
+
+  tags = {
+    folder = "Advanced/PostgreSQL"
+  }
 }
 
-variable "postgresql_servers_with_log_retention_less_than_3_days_enabled_actions" {
+variable "postgresql_servers_with_log_checkpoints_disabled_enabled_actions" {
   type        = list(string)
   description = "The list of enabled actions to provide to approvers for selection."
-  default     = ["skip", "update_log_retention_days"]
+  default     = ["skip", "enable_log_checkpoints"]
+
+  tags = {
+    folder = "Advanced/PostgreSQL"
+  }
 }
 
-variable "log_retention_days" {
-  type        = string
-  description = "The number of days logs should be retained."
-  default     = "7"
-}
+trigger "query" "detect_and_correct_postgresql_servers_with_log_checkpoints_disabled" {
+  title         = "Detect & correct PostgreSQL servers with log checkpoints disabled"
+  description   = "Detect PostgreSQL servers with log checkpoints disabled and then enable log checkpoints."
+  tags          = local.postgresql_common_tags
 
-trigger "query" "detect_and_correct_postgresql_servers_with_log_retention_less_than_3_days" {
-  title         = "Detect & correct PostgreSQL servers with log retention less than 3 days"
-  description   = "Detect PostgreSQL servers with log retention less than 3 and then sets log retention to 3 or more than 3 days."
-
-  enabled  = var.postgresql_servers_with_log_retention_less_than_3_days_trigger_enabled
-  schedule = var.postgresql_servers_with_log_retention_less_than_3_days_trigger_schedule
+  enabled  = var.postgresql_servers_with_log_checkpoints_disabled_trigger_enabled
+  schedule = var.postgresql_servers_with_log_checkpoints_disabled_trigger_schedule
   database = var.database
-  sql      = local.postgresql_servers_with_log_retention_less_than_3_days_query
+  sql      = local.postgresql_servers_with_log_checkpoints_disabled_query
 
   capture "insert" {
-    pipeline = pipeline.correct_postgresql_servers_with_log_retention_less_than_3_days
+    pipeline = pipeline.correct_postgresql_servers_with_log_checkpoints_disabled
     args = {
       items = self.inserted_rows
     }
   }
 }
 
-pipeline "detect_and_correct_postgresql_servers_with_log_retention_less_than_3_days" {
-  title         = "Detect & correct PostgreSQL servers with log retention less than 3 days"
-  description   = "Detect PostgreSQL servers with log retention less than 3 and then sets log retention to 3 or more than 3 days."
+pipeline "detect_and_correct_postgresql_servers_with_log_checkpoints_disabled" {
+  title         = "Detect & correct PostgreSQL servers with log checkpoints disabled"
+  description   = "Detect PostgreSQL servers with log checkpoints disabled and then enable log checkpoints."
+  tags          = local.postgresql_common_tags
 
   param "database" {
     type        = connection.steampipe
@@ -100,24 +112,24 @@ pipeline "detect_and_correct_postgresql_servers_with_log_retention_less_than_3_d
   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.postgresql_servers_with_log_retention_less_than_3_days_default_action
-    enum        = local.postgresql_servers_with_log_retention_less_than_3_days_default_action_enum
+    default     = var.postgresql_servers_with_log_checkpoints_disabled_default_action
+    enum        = local.postgresql_servers_with_log_checkpoints_disabled_default_action_enum
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.postgresql_servers_with_log_retention_less_than_3_days_enabled_actions
-    enum        = local.postgresql_servers_with_log_retention_less_than_3_days_enabled_actions_enum
+    default     = var.postgresql_servers_with_log_checkpoints_disabled_enabled_actions
+    enum        = local.postgresql_servers_with_log_checkpoints_disabled_enabled_actions_enum
   }
 
   step "query" "detect" {
     database = param.database
-    sql      = local.postgresql_servers_with_log_retention_less_than_3_days_query
+    sql      = local.postgresql_servers_with_log_checkpoints_disabled_query
   }
 
   step "pipeline" "respond" {
-    pipeline = pipeline.correct_postgresql_servers_with_log_retention_less_than_3_days
+    pipeline = pipeline.correct_postgresql_servers_with_log_checkpoints_disabled
     args = {
       items              = step.query.detect.rows
       notifier           = param.notifier
@@ -129,9 +141,10 @@ pipeline "detect_and_correct_postgresql_servers_with_log_retention_less_than_3_d
   }
 }
 
-pipeline "correct_postgresql_servers_with_log_retention_less_than_3_days" {
-  title         = "Correct PostgreSQL servers with log retention less than 3 days"
-  description   = "Update log retention days to 3 or more for PostgreSQL servers with log retention less than 3 days."
+pipeline "correct_postgresql_servers_with_log_checkpoints_disabled" {
+  title         = "Correct PostgreSQL servers with log checkpoints disabled"
+  description   = "Enable log checkpoints for PostgreSQL servers with log checkpoints disabled."
+  tags          = merge(local.postgresql_common_tags, { folder = "Internal" })
 
   param "items" {
     type = list(object({
@@ -167,27 +180,27 @@ pipeline "correct_postgresql_servers_with_log_retention_less_than_3_days" {
   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.postgresql_servers_with_log_retention_less_than_3_days_default_action
-    enum        = local.postgresql_servers_with_log_retention_less_than_3_days_default_action_enum
+    default     = var.postgresql_servers_with_log_checkpoints_disabled_default_action
+    enum        = local.postgresql_servers_with_log_checkpoints_disabled_default_action_enum
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.postgresql_servers_with_log_retention_less_than_3_days_enabled_actions
-    enum        = local.postgresql_servers_with_log_retention_less_than_3_days_enabled_actions_enum
+    default     = var.postgresql_servers_with_log_checkpoints_disabled_enabled_actions
+    enum        = local.postgresql_servers_with_log_checkpoints_disabled_enabled_actions_enum
   }
 
   step "message" "notify_detection_count" {
     if       = var.notification_level == local.level_info
     notifier = param.notifier
-    text     = "Detected ${length(param.items)} PostgreSQL server(s) with log retention_days less than 3 days."
+    text     = "Detected ${length(param.items)} PostgreSQL server(s) with log checkpoints disabled."
   }
 
   step "pipeline" "correct_item" {
     for_each        = { for row in param.items : row.id => row }
     max_concurrency = var.max_concurrency
-    pipeline        = pipeline.correct_one_postgresql_server_with_log_retention_less_than_3_days
+    pipeline        = pipeline.correct_one_postgresql_servers_with_log_checkpoints_disabled
     args = {
       title              = each.value.title
       name               = each.value.name
@@ -203,9 +216,10 @@ pipeline "correct_postgresql_servers_with_log_retention_less_than_3_days" {
   }
 }
 
-pipeline "correct_one_postgresql_server_with_log_retention_less_than_3_days" {
-  title         = "Correct PostgreSQL server with log retention less than 3 days"
-  description   = "Update log retention days to 3 or more for a PostgreSQL server with log retention less than 3 days."
+pipeline "correct_one_postgresql_servers_with_log_checkpoints_disabled" {
+  title         = "Correct PostgreSQL server with log checkpoints disabled"
+  description   = "Enable log checkpoints for a PostgreSQL server with log checkpoints disabled."
+  tags          = merge(local.postgresql_common_tags, { folder = "Internal" })
 
   param "title" {
     type        = string
@@ -254,15 +268,15 @@ pipeline "correct_one_postgresql_server_with_log_retention_less_than_3_days" {
    param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.postgresql_servers_with_log_retention_less_than_3_days_default_action
-    enum        = local.postgresql_servers_with_log_retention_less_than_3_days_default_action_enum
+    default     = var.postgresql_servers_with_log_checkpoints_disabled_default_action
+    enum        = local.postgresql_servers_with_log_checkpoints_disabled_default_action_enum
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.postgresql_servers_with_log_retention_less_than_3_days_enabled_actions
-    enum        = local.postgresql_servers_with_log_retention_less_than_3_days_enabled_actions_enum
+    default     = var.postgresql_servers_with_log_checkpoints_disabled_enabled_actions
+    enum        = local.postgresql_servers_with_log_checkpoints_disabled_enabled_actions_enum
   }
 
   step "pipeline" "respond" {
@@ -271,7 +285,7 @@ pipeline "correct_one_postgresql_server_with_log_retention_less_than_3_days" {
       notifier           = param.notifier
       notification_level = param.notification_level
       approvers          = param.approvers
-      detect_msg         = "Detected PostgreSQL server ${param.title} with log retention less than 3 days."
+      detect_msg         = "Detected PostgreSQL server ${param.title} with log checkpoints disabled."
       default_action     = param.default_action
       enabled_actions    = param.enabled_actions
       actions = {
@@ -288,9 +302,9 @@ pipeline "correct_one_postgresql_server_with_log_retention_less_than_3_days" {
           success_msg = ""
           error_msg   = ""
         },
-        "update_log_retention_days" = {
-          label        = "Update log retention days"
-          value        = "update_log_retention_days"
+        "enable_log_checkpoints" = {
+          label        = "Enable log checkpoints"
+          value        = "enable_log_checkpoints"
           style        = local.style_alert
           pipeline_ref = azure.pipeline.set_postgres_server_configuration
           pipeline_args = {
@@ -298,14 +312,13 @@ pipeline "correct_one_postgresql_server_with_log_retention_less_than_3_days" {
             resource_group    = param.resource_group
             subscription_id   = param.subscription_id
             conn              = param.conn
-            config_name       = "log_retention_days"
-            config_value      = var.log_retention_days
+            config_name       = "log_checkpoints"
+            config_value      = "on"
           }
-          success_msg = "Updated log retention days for PostgreSQL server ${param.title}."
-          error_msg   = "Error updating log retention days for PostgreSQL server ${param.title}."
+          success_msg = "Enabled log checkpoints for PostgreSQL server ${param.title}."
+          error_msg   = "Error enabling log checkpoints for PostgreSQL server ${param.title}."
         }
       }
     }
   }
 }
-
