@@ -226,9 +226,8 @@ pipeline "correct_one_storage_accounts_default_network_access_rule_allowed" {
   }
 
   param "conn" {
-    type        = string
+    type        = connection.azure
     description = local.description_connection
-    default     = "default"
   }
 
   param "notifier" {

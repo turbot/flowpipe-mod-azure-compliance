@@ -220,9 +220,8 @@ pipeline "correct_one_storage_account_with_trusted_microsoft_services_disabled" 
   }
 
   param "conn" {
-    type        = string
+    type        = connection.azure
     description = local.description_connection
-    default     = "default"
   }
 
   param "notifier" {

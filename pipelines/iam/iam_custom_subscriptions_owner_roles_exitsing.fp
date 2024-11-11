@@ -217,9 +217,8 @@ pipeline "correct_one_iam_custom_subscriptions_owner_role_existing" {
   }
 
   param "conn" {
-    type        = string
+    type        = connection.azure
     description = local.description_connection
-    default     = "default"
   }
 
   param "notifier" {

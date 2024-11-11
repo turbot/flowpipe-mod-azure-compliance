@@ -237,9 +237,8 @@ pipeline "correct_one_storage_account_with_queue_service_logging_disabled" {
   }
 
   param "conn" {
-    type        = string
+    type        = connection.azure
     description = local.description_connection
-    default     = "default"
   }
 
   param "notifier" {

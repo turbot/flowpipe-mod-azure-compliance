@@ -274,9 +274,8 @@ pipeline "correct_one_monitor_logs_without_activity_log_alert_for_create_update_
   }
 
   param "conn" {
-    type        = string
+    type        = connection.azure
     description = local.description_connection
-    default     = "default"
   }
 
   param "notifier" {
@@ -362,9 +361,8 @@ pipeline "create_activity_log_alert_for_create_update_security_solution" {
   description = "Create an Azure Monitor activity log alert for create and update security solution."
 
   param "conn" {
-    type        = string
+    type        = connection.azure
     description = local.description_connection
-    default     = "default"
   }
 
   param "subscription_id" {

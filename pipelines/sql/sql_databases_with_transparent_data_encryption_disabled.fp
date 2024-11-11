@@ -229,9 +229,8 @@ pipeline "correct_one_sql_database_with_transparent_data_encryption_disabled" {
   }
 
   param "conn" {
-    type        = string
+    type        = connection.azure
     description = local.description_connection
-    default     = "default"
   }
 
   param "notifier" {

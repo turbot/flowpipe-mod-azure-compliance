@@ -222,9 +222,8 @@ pipeline "correct_one_postgresql_servers_with_log_checkpoints_disabled" {
   }
 
   param "conn" {
-    type        = string
+    type        = connection.azure
     description = local.description_connection
-    default     = "default"
   }
 
   param "notifier" {

@@ -225,9 +225,8 @@ pipeline "correct_one_network_watcher_disabled" {
   }
 
   param "conn" {
-    type        = string
+    type        = connection.azure
     description = local.description_connection
-    default     = "default"
   }
 
   param "notifier" {
@@ -316,9 +315,8 @@ pipeline "create_resource_group" {
   }
 
   param "conn" {
-    type        = string
+    type        = connection.azure
     description = local.description_connection
-    default     = "default"
   }
 
   param "resource_group" {
@@ -360,9 +358,8 @@ pipeline "enable_network_watcher" {
   description = "Enable Network Watcher for a specified region."
 
   param "conn" {
-    type        = string
+    type        = connection.azure
     description = local.description_connection
-    default     = "default"
   }
 
   param "subscription_id" {

@@ -231,9 +231,8 @@ pipeline "correct_one_postgresql_servers_with_allow_access_to_azure_services_ena
   }
 
   param "conn" {
-    type        = string
+    type        = connection.azure
     description = local.description_connection
-    default     = "default"
   }
 
   param "notifier" {

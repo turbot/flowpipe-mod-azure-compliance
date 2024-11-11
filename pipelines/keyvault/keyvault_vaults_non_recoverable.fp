@@ -224,9 +224,8 @@ pipeline "correct_one_keyvault_vaults_non_recoverable" {
   }
 
   param "conn" {
-    type        = string
+    type        = connection.azure
     description = local.description_connection
-    default     = "default"
   }
 
   param "notifier" {

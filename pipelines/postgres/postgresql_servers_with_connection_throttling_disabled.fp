@@ -222,9 +222,8 @@ pipeline "correct_one_postgresql_server_with_connection_throttling_disabled" {
   }
 
   param "conn" {
-    type        = string
+    type        = connection.azure
     description = local.description_connection
-    default     = "default"
   }
 
   param "notifier" {

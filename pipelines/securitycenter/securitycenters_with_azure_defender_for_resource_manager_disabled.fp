@@ -213,9 +213,8 @@ pipeline "correct_one_securitycenter_with_azure_defender_for_resource_manager_di
   }
 
   param "conn" {
-    type        = string
+    type        = connection.azure
     description = local.description_connection
-    default     = "default"
   }
 
   param "notifier" {

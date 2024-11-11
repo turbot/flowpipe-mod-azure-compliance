@@ -16,36 +16,53 @@ locals {
   EOQ
 
   appservice_web_apps_not_using_https_enabled_actions_enum = ["skip", "enable_https"]
-  appservice_web_apps_not_using_https_default_action_enum = ["notify", "skip", "enable_https"]
+  appservice_web_apps_not_using_https_default_action_enum  = ["notify", "skip", "enable_https"]
 }
 
 variable "appservice_web_apps_not_using_https_trigger_enabled" {
   type        = bool
   description = "If true, the trigger is enabled."
   default     = false
+
+  tags = {
+    folder = "Advanced/AppService"
+  }
 }
 
 variable "appservice_web_apps_not_using_https_trigger_schedule" {
   type        = string
-  default     = "15m"
   description = "If the trigger is enabled, run it on this schedule."
+  default     = "15m"
+
+  tags = {
+    folder = "Advanced/AppService"
+  }
 }
 
 variable "appservice_web_apps_not_using_https_default_action" {
   type        = string
   description = "The default action to use when there are no approvers."
   default     = "notify"
+
+  tags = {
+    folder = "Advanced/AppService"
+  }
 }
 
 variable "appservice_web_apps_not_using_https_enabled_actions" {
   type        = list(string)
   description = "The list of enabled actions approvers can select."
   default     = ["skip", "enable_https"]
+
+  tags = {
+    folder = "Advanced/AppService"
+  }
 }
 
 trigger "query" "detect_and_correct_appservice_web_apps_not_using_https" {
   title         = "Detect & correct App Service web apps not using HTTPS"
-  description   = "Detects App Services not using HTTPS and then enable HTTPS."
+  description   = "Detects App Services web apps not using HTTPS and then enable HTTPS."
+  tags          = local.appservice_common_tags
 
   enabled  = var.appservice_web_apps_not_using_https_trigger_enabled
   schedule = var.appservice_web_apps_not_using_https_trigger_schedule
@@ -63,6 +80,7 @@ trigger "query" "detect_and_correct_appservice_web_apps_not_using_https" {
 pipeline "detect_and_correct_appservice_web_apps_not_using_https" {
   title         = "Detect & correct App Service web apps not using HTTPS"
   description   = "Detects App Service web apps not using HTTPS and then enable HTTPS."
+  tags          = local.appservice_common_tags
 
   param "database" {
     type        = connection.steampipe
@@ -124,6 +142,7 @@ pipeline "detect_and_correct_appservice_web_apps_not_using_https" {
 pipeline "correct_appservice_web_apps_not_using_https" {
   title         = "Correct App Service web apps not using HTTPS"
   description   = "Enable HTTPS for App Service web apps not using HTTPS."
+  tags          = merge(local.appservice_common_tags, { folder = "Internal" })
 
   param "items" {
     type = list(object({
@@ -185,7 +204,7 @@ pipeline "correct_appservice_web_apps_not_using_https" {
       name               = each.value.name
       resource_group     = each.value.resource_group
       subscription_id    = each.value.subscription_id
-      conn               = connection.azure[connection.azure[each.value.conn]]
+      conn               = connection.azure[each.value.conn]
       notifier           = param.notifier
       notification_level = param.notification_level
       approvers          = param.approvers
@@ -198,6 +217,7 @@ pipeline "correct_appservice_web_apps_not_using_https" {
 pipeline "correct_one_appservice_web_app_not_using_https" {
   title         = "Correct App Service web app not using HTTPS"
   description   = "Enable HTTPS for a App Service web app not using HTTPS."
+  tags          = merge(local.appservice_common_tags, { folder = "Internal" })
 
   param "title" {
     type        = string
@@ -206,7 +226,7 @@ pipeline "correct_one_appservice_web_app_not_using_https" {
 
   param "name" {
     type        = string
-    description = "The name of the App Service."
+    description = "The name of the App Service web app."
   }
 
   param "resource_group" {
@@ -220,7 +240,7 @@ pipeline "correct_one_appservice_web_app_not_using_https" {
   }
 
   param "conn" {
-    type        = connection.aws
+    type        = connection.azure
     description = local.description_connection
   }
 

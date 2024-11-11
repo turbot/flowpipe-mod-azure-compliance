@@ -214,9 +214,8 @@ pipeline "correct_one_securitycenter_with_azure_defender_for_open_source_relatio
   }
 
   param "conn" {
-    type        = string
+    type        = connection.azure
     description = local.description_connection
-    default     = "default"
   }
 
   param "notifier" {

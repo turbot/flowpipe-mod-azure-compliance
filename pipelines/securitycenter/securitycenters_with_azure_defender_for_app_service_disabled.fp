@@ -213,9 +213,8 @@ pipeline "correct_one_securitycenters_with_azure_defender_for_app_service_disabl
   }
 
   param "conn" {
-    type        = string
+    type        = connection.azure
     description = local.description_connection
-    default     = "default"
   }
 
   param "notifier" {

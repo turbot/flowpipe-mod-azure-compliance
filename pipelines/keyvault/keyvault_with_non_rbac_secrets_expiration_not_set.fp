@@ -236,9 +236,8 @@ pipeline "correct_one_keyvault_with_non_rbac_secrets_expiration_not_set" {
   }
 
   param "conn" {
-    type        = string
+    type        = connection.azure
     description = local.description_connection
-    default     = "default"
   }
 
   param "notifier" {

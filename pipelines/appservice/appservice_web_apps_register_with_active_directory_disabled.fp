@@ -16,36 +16,53 @@ locals {
   EOQ
 
   appservice_web_apps_register_with_active_directory_disabled_enabled_actions_enum = ["skip", "register_active_directory"]
-  appservice_web_apps_register_with_active_directory_disabled_default_action_enum = ["notify", "skip", "register_active_directory"]
+  appservice_web_apps_register_with_active_directory_disabled_default_action_enum  = ["notify", "skip", "register_active_directory"]
 }
 
 variable "appservice_web_apps_register_with_active_directory_disabled_trigger_enabled" {
   type        = bool
-  default     = false
   description = "If true, the trigger is enabled."
+  default     = false
+
+  tags = {
+    folder = "Advanced/AppService"
+  }
 }
 
 variable "appservice_web_apps_register_with_active_directory_disabled_trigger_schedule" {
   type        = string
-  default     = "15m"
   description = "If the trigger is enabled, run it on this schedule."
+  default     = "15m"
+
+  tags = {
+    folder = "Advanced/AppService"
+  }
 }
 
 variable "appservice_web_apps_register_with_active_directory_disabled_default_action" {
   type        = string
   description = "The default action to use when there are no approvers."
   default     = "notify"
+
+  tags = {
+    folder = "Advanced/AppService"
+  }
 }
 
 variable "appservice_web_apps_register_with_active_directory_disabled_enabled_actions" {
   type        = list(string)
   description = "The list of enabled actions to provide to approvers for selection."
   default     = ["skip", "register_active_directory"]
+
+  tags = {
+    folder = "Advanced/AppService"
+  }
 }
 
 trigger "query" "detect_and_correct_appservice_web_apps_register_with_active_directory_disabled" {
-  title         = "Detect & correct App Service web apps register with Active Directory disabled"
-  description   = "Detects App Service web apps register with Active Directory disabled and then register with Active Directory."
+  title         = "Detect & correct App Service web apps register with active directory disabled"
+  description   = "Detects App Service web apps register with active directory disabled and then register with active directory."
+  tags          = local.appservice_common_tags
 
   enabled  = var.appservice_web_apps_register_with_active_directory_disabled_trigger_enabled
   schedule = var.appservice_web_apps_register_with_active_directory_disabled_trigger_schedule
@@ -61,8 +78,9 @@ trigger "query" "detect_and_correct_appservice_web_apps_register_with_active_dir
 }
 
 pipeline "detect_and_correct_appservice_web_apps_register_with_active_directory_disabled" {
-  title         = "Detect & correct App Service web apps register with Active Directory disabled"
-  description   = "Detects App Service web apps register with Active Directory disabled and then register with Active Directory."
+  title         = "Detect & correct App Service web apps register with active directory disabled"
+  description   = "Detects App Service web apps register with active directory disabled and then register with active directory."
+  tags          = local.appservice_common_tags
 
   param "database" {
     type        = connection.steampipe
@@ -122,8 +140,9 @@ pipeline "detect_and_correct_appservice_web_apps_register_with_active_directory_
 }
 
 pipeline "correct_appservice_web_apps_register_with_active_directory_disabled" {
-  title         = "Correct App Services not registered with Active Directory"
-  description   = "Runs corrective action on a collection of App Services not registered with Active Directory."
+  title         = "Correct App Service web apps not registered with active directory"
+  description   = "Register active directory for App Service web apps not registered with active directory."
+  tags          = merge(local.appservice_common_tags, { folder = "Internal" })
 
   param "items" {
     type = list(object({
@@ -176,12 +195,8 @@ pipeline "correct_appservice_web_apps_register_with_active_directory_disabled" {
     text     = "Detected ${length(param.items)} App Services not registered with Active Directory."
   }
 
-  step "transform" "items_by_id" {
-    value = { for row in param.items : row.id => row }
-  }
-
   step "pipeline" "correct_item" {
-    for_each        = step.transform.items_by_id.value
+    for_each        = { for row in param.items : row.id => row }
     max_concurrency = var.max_concurrency
     pipeline        = pipeline.correct_one_appservice_web_apps_register_with_active_directory_disabled
     args = {
@@ -200,8 +215,9 @@ pipeline "correct_appservice_web_apps_register_with_active_directory_disabled" {
 }
 
 pipeline "correct_one_appservice_web_apps_register_with_active_directory_disabled" {
-  title         = "Correct one App Service not registered with Active Directory"
-  description   = "Runs corrective action on a single App Service not registered with Active Directory."
+  title         = "Correct App Service web app not registered with active directory"
+  description   = "Register active directory for a App Service web app not registered with active directory."
+  tags          = merge(local.appservice_common_tags, { folder = "Internal" })
 
   param "title" {
     type        = string
@@ -210,7 +226,7 @@ pipeline "correct_one_appservice_web_apps_register_with_active_directory_disable
 
   param "name" {
     type        = string
-    description = "The name of the App Service."
+    description = "The name of the App Service web app."
   }
 
   param "resource_group" {
@@ -224,9 +240,8 @@ pipeline "correct_one_appservice_web_apps_register_with_active_directory_disable
   }
 
   param "conn" {
-    type        = string
+    type        = connection.azure
     description = local.description_connection
-    default     = "default"
   }
 
   param "notifier" {
@@ -268,7 +283,7 @@ pipeline "correct_one_appservice_web_apps_register_with_active_directory_disable
       notifier           = param.notifier
       notification_level = param.notification_level
       approvers          = param.approvers
-      detect_msg         = "Detected App Service web app ${param.title} unregistered with Active Directory."
+      detect_msg         = "Detected App Service web app ${param.title} unregistered with active directory."
       default_action     = param.default_action
       enabled_actions    = param.enabled_actions
       actions = {
@@ -286,7 +301,7 @@ pipeline "correct_one_appservice_web_apps_register_with_active_directory_disable
           error_msg   = ""
         },
         "register_active_directory" = {
-          label        = "Register Active Directory"
+          label        = "Register active directory"
           value        = "register_active_directory"
           style        = local.style_alert
           pipeline_ref = azure.pipeline.assign_appservice_webapp_identity
@@ -296,8 +311,8 @@ pipeline "correct_one_appservice_web_apps_register_with_active_directory_disable
             app_name        = param.name
             conn            = param.conn
           }
-          success_msg = "Registered Active Directory for App Service web app ${param.title}."
-          error_msg   = "Error registering Active Directory for App Service web app ${param.title}."
+          success_msg = "Registered active directory for App Service web app ${param.title}."
+          error_msg   = "Error registering active directory for App Service web app ${param.title}."
         }
       }
     }

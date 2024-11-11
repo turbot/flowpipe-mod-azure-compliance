@@ -228,9 +228,8 @@ pipeline "correct_one_postgresql_server_with_log_retention_less_than_3_days" {
   }
 
   param "conn" {
-    type        = string
+    type        = connection.azure
     description = local.description_connection
-    default     = "default"
   }
 
   param "notifier" {

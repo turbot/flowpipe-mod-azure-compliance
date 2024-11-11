@@ -16,36 +16,53 @@ locals {
   EOQ
 
   appservice_web_apps_not_using_latest_tls_version_enabled_actions_enum = ["skip", "enable_latest_tls_version"]
-  appservice_web_apps_not_using_latest_tls_version_default_action_enum = ["notify", "skip", "enable_latest_tls_version"]
+  appservice_web_apps_not_using_latest_tls_version_default_action_enum  = ["notify", "skip", "enable_latest_tls_version"]
 }
 
 variable "appservice_web_apps_not_using_latest_tls_version_trigger_enabled" {
   type        = bool
-  default     = false
   description = "If true, the trigger is enabled."
+  default     = false
+
+  tags = {
+    folder = "Advanced/AppService"
+  }
 }
 
 variable "appservice_web_apps_not_using_latest_tls_version_trigger_schedule" {
   type        = string
-  default     = "15m"
   description = "If the trigger is enabled, run it on this schedule."
+  default     = "15m"
+
+  tags = {
+    folder = "Advanced/AppService"
+  }
 }
 
 variable "appservice_web_apps_not_using_latest_tls_version_default_action" {
   type        = string
   description = "The default action to use when there are no approvers."
   default     = "notify"
+
+  tags = {
+    folder = "Advanced/AppService"
+  }
 }
 
 variable "appservice_web_apps_not_using_latest_tls_version_enabled_actions" {
   type        = list(string)
   description = "The list of enabled actions to provide to approvers for selection."
   default     = ["skip", "enable_latest_tls_version"]
+
+  tags = {
+    folder = "Advanced/AppService"
+  }
 }
 
 trigger "query" "detect_and_correct_appservice_web_apps_not_using_latest_tls_version" {
-  title         = "Detect & correct App Services web apps not using the latest TLS version"
-  description   = "Detects App Services web apps not using the latest TLS version and runs your chosen action."
+  title         = "Detect & correct App Service web apps not using the latest TLS version"
+  description   = "Detects App Services web apps not using the latest TLS version and then enable latest TLS version."
+  tags          = local.appservice_common_tags
 
   enabled  = var.appservice_web_apps_not_using_latest_tls_version_trigger_enabled
   schedule = var.appservice_web_apps_not_using_latest_tls_version_trigger_schedule
@@ -61,8 +78,9 @@ trigger "query" "detect_and_correct_appservice_web_apps_not_using_latest_tls_ver
 }
 
 pipeline "detect_and_correct_appservice_web_apps_not_using_latest_tls_version" {
-  title         = "Detect & correct App Services nweb apps ot using the latest TLS version"
-  description   = "Detect App Services web apps not using the latest TLS version and runs your chosen action."
+  title         = "Detect & correct App Service web apps not using the latest TLS version"
+  description   = "Detect App Services web apps not using the latest TLS version and then enable latest TLS version."
+  tags          = local.appservice_common_tags
 
   param "database" {
     type        = connection.steampipe
@@ -124,6 +142,7 @@ pipeline "detect_and_correct_appservice_web_apps_not_using_latest_tls_version" {
 pipeline "correct_appservice_web_apps_not_using_latest_tls_version" {
   title         = "Correct App Service web apps not using the latest TLS version"
   description   = "Enable latest TLS version for App Service web apps not using the latest TLS version."
+  tags          = merge(local.appservice_common_tags, { folder = "Internal" })
 
   param "items" {
     type = list(object({
@@ -198,6 +217,7 @@ pipeline "correct_appservice_web_apps_not_using_latest_tls_version" {
 pipeline "correct_one_appservice_web_app_not_using_latest_tls_version" {
   title         = "Correct App Service web app not using the latest TLS version"
   description   = "Enable latest TLS version for a App Service web app not using the latest TLS version."
+  tags          = merge(local.appservice_common_tags, { folder = "Internal" })
 
   param "title" {
     type        = string
@@ -220,9 +240,8 @@ pipeline "correct_one_appservice_web_app_not_using_latest_tls_version" {
   }
 
   param "conn" {
-    type        = string
+    type        = connection.azure
     description = local.description_connection
-    default     = "default"
   }
 
   param "notifier" {
@@ -244,7 +263,7 @@ pipeline "correct_one_appservice_web_app_not_using_latest_tls_version" {
     default     = var.approvers
   }
 
- param "default_action" {
+  param "default_action" {
     type        = string
     description = local.description_default_action
     default     = var.appservice_web_apps_not_using_latest_tls_version_default_action
@@ -282,7 +301,7 @@ pipeline "correct_one_appservice_web_app_not_using_latest_tls_version" {
           error_msg   = ""
         },
         "enable_latest_tls_version" = {
-          label        = "Enable Latest TLS Version"
+          label        = "Enable latest TLS version"
           value        = "enable_latest_tls_version"
           style        = local.style_alert
           pipeline_ref = azure.pipeline.set_config_appservice_webapp
@@ -291,7 +310,7 @@ pipeline "correct_one_appservice_web_app_not_using_latest_tls_version" {
             subscription_id = param.subscription_id
             app_name        = param.name
             conn            = param.conn
-            tls_version = "1.2"
+            tls_version     = "1.2"
           }
           success_msg = "Enabled latest TLS version for App Service web app ${param.title}."
           error_msg   = "Error enabling latest TLS version for App Service web app ${param.title}."

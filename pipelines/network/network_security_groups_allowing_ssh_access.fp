@@ -258,9 +258,8 @@ pipeline "correct_one_network_security_groups_allowing_ssh_access" {
   }
 
   param "conn" {
-    type        = string
+    type        = connection.azure
     description = local.description_connection
-    default     = "default"
   }
 
   param "notifier" {

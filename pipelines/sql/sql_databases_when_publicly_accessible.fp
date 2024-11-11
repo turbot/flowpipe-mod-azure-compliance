@@ -233,9 +233,8 @@ pipeline "correct_one_sql_database_when_publicly_accessible" {
   }
 
   param "conn" {
-    type        = string
+    type        = connection.azure
     description = local.description_connection
-    default     = "default"
   }
 
   param "notifier" {

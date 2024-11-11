@@ -223,9 +223,8 @@ pipeline "correct_one_storage_accounts_secure_transfer_required_disabled" {
   }
 
   param "conn" {
-    type        = string
+    type        = connection.azure
     description = local.description_connection
-    default     = "default"
   }
 
   param "notifier" {

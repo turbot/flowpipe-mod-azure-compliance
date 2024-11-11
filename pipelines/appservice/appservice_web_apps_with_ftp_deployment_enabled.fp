@@ -16,36 +16,53 @@ locals {
   EOQ
 
   appservice_web_apps_with_ftp_deployment_enabled_enabled_actions_enum = ["skip", "disable_ftp_deployment"]
-  appservice_web_apps_with_ftp_deployment_enabled_default_action_enum = ["notify", "skip", "disable_ftp_deployment"]
+  appservice_web_apps_with_ftp_deployment_enabled_default_action_enum  = ["notify", "skip", "disable_ftp_deployment"]
 }
 
 variable "appservice_web_apps_with_ftp_deployment_enabled_trigger_enabled" {
   type        = bool
-  default     = false
   description = "If true, the trigger is enabled."
+  default     = false
+
+  tags = {
+    folder = "Advanced/AppService"
+  }
 }
 
 variable "appservice_web_apps_with_ftp_deployment_enabled_trigger_schedule" {
   type        = string
-  default     = "15m"
   description = "If the trigger is enabled, run it on this schedule."
+  default     = "15m"
+
+  tags = {
+    folder = "Advanced/AppService"
+  }
 }
 
 variable "appservice_web_apps_with_ftp_deployment_enabled_default_action" {
   type        = string
   description = "The default action to use when there are no approvers."
   default     = "notify"
+
+  tags = {
+    folder = "Advanced/AppService"
+  }
 }
 
 variable "appservice_web_apps_with_ftp_deployment_enabled_enabled_actions" {
   type        = list(string)
   description = "The list of enabled actions approvers can select."
   default     = ["skip", "disable_ftp_deployment"]
+
+  tags = {
+    folder = "Advanced/AppService"
+  }
 }
 
 trigger "query" "detect_and_correct_appservice_web_apps_with_ftp_deployment_enabled" {
-  title         = "Detect & Correct App Service web apps with FTP deployment enabled"
-  description   = "Detect App Service web apps with FTP deployment enabled and then disable FTP Deployment."
+  title         = "Detect & correct App Service web apps with FTP deployment enabled"
+  description   = "Detect App Service web apps with FTP deployment enabled and then disable FTP deployment."
+  tags          = local.appservice_common_tags
 
   enabled  = var.appservice_web_apps_with_ftp_deployment_enabled_trigger_enabled
   schedule = var.appservice_web_apps_with_ftp_deployment_enabled_trigger_schedule
@@ -61,8 +78,9 @@ trigger "query" "detect_and_correct_appservice_web_apps_with_ftp_deployment_enab
 }
 
 pipeline "detect_and_correct_appservice_web_apps_with_ftp_deployment_enabled" {
-  title         = "Detect & Correct App Service web apps with FTP deployment enabled"
-  description   = "Detect App Service web apps with FTP deployment enabled and then disable FTP Deployment."
+  title         = "Detect & correct App Service web apps with FTP deployment enabled"
+  description   = "Detect App Service web apps with FTP deployment enabled and then disable FTP deployment."
+  tags          = local.appservice_common_tags
 
   param "database" {
     type        = connection.steampipe
@@ -122,8 +140,9 @@ pipeline "detect_and_correct_appservice_web_apps_with_ftp_deployment_enabled" {
 }
 
 pipeline "correct_appservice_web_apps_with_ftp_deployment_enabled" {
-  title         = "Correct App Service Web App with FTP deployment enabled"
-  description   = "Disable FTP Deployment for App Service web apps with FTP deployment enabled."
+  title         = "Correct App Service web apps with FTP deployment enabled"
+  description   = "Disable FTP deployment for App Service web apps with FTP deployment enabled."
+  tags          = merge(local.appservice_common_tags, { folder = "Internal" })
 
   param "items" {
     type = list(object({
@@ -197,7 +216,8 @@ pipeline "correct_appservice_web_apps_with_ftp_deployment_enabled" {
 
 pipeline "correct_one_appservice_web_app_with_ftp_deployment_enabled" {
   title         = "Correct App Service web app with FTP deployment enabled"
-  description   = "Disable FTP Deployment for a App Service web app with FTP deployment enabled."
+  description   = "Disable FTP deployment for a App Service web app with FTP deployment enabled."
+  tags          = merge(local.appservice_common_tags, { folder = "Internal" })
 
   param "title" {
     type        = string
@@ -220,9 +240,8 @@ pipeline "correct_one_appservice_web_app_with_ftp_deployment_enabled" {
   }
 
   param "conn" {
-    type        = string
+    type        = connection.azure
     description = local.description_connection
-    default     = "default"
   }
 
   param "notifier" {

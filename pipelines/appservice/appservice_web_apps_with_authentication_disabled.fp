@@ -16,36 +16,53 @@ locals {
   EOQ
 
   appservice_web_apps_with_authentication_disabled_enabled_actions_enum = ["skip", "enable_web_app_authentication"]
-  appservice_web_apps_with_authentication_disabled_default_action_enum = ["notify", "skip", "enable_web_app_authentication"]
+  appservice_web_apps_with_authentication_disabled_default_action_enum  = ["notify", "skip", "enable_web_app_authentication"]
 }
 
 variable "appservice_web_apps_with_authentication_disabled_trigger_enabled" {
   type        = bool
-  default     = false
   description = "If true, the trigger is enabled."
+  default     = false
+
+  tags = {
+    folder = "Advanced/AppService"
+  }
 }
 
 variable "appservice_web_apps_with_authentication_disabled_trigger_schedule" {
   type        = string
-  default     = "15m"
   description = "If the trigger is enabled, run it on this schedule."
+  default     = "15m"
+
+  tags = {
+    folder = "Advanced/AppService"
+  }
 }
 
 variable "appservice_web_apps_with_authentication_disabled_default_action" {
   type        = string
   description = "The default action to use when there are no approvers."
   default     = "notify"
+
+  tags = {
+    folder = "Advanced/AppService"
+  }
 }
 
 variable "appservice_web_apps_with_authentication_disabled_enabled_actions" {
   type        = list(string)
   description = "The list of enabled actions approvers can select"
   default     = ["skip", "enable_web_app_authentication"]
+
+  tags = {
+    folder = "Advanced/AppService"
+  }
 }
 
 trigger "query" "detect_and_correct_appservice_web_apps_with_authentication_disabled" {
-  title         = "Detect & Correct App Service web apps with authentication sisabled"
+  title         = "Detect & correct App Service web apps with authentication disabled"
   description   = "Detects App Service web apps with authentication disabled and then enable authentication."
+  tags          = local.appservice_common_tags
 
   enabled  = var.appservice_web_apps_with_authentication_disabled_trigger_enabled
   schedule = var.appservice_web_apps_with_authentication_disabled_trigger_schedule
@@ -61,8 +78,9 @@ trigger "query" "detect_and_correct_appservice_web_apps_with_authentication_disa
 }
 
 pipeline "detect_and_correct_appservice_web_apps_with_authentication_disabled" {
-  title         = "Detect & Correct App Service web apps with authentication sisabled"
+  title         = "Detect & correct App Service web apps with authentication disabled"
   description   = "Detects App Service web apps with authentication disabled and then enable authentication."
+  tags          = local.appservice_common_tags
 
   param "database" {
     type        = connection.steampipe
@@ -124,6 +142,7 @@ pipeline "detect_and_correct_appservice_web_apps_with_authentication_disabled" {
 pipeline "correct_appservice_web_apps_with_authentication_disabled" {
   title         = "Correct App Service web apps with authentication disabled"
   description   = "Enable authentication for App Service web apps with authentication disabled."
+  tags          = merge(local.appservice_common_tags, { folder = "Internal" })
 
   param "items" {
     type = list(object({
@@ -163,25 +182,21 @@ pipeline "correct_appservice_web_apps_with_authentication_disabled" {
     enum        = local.appservice_web_apps_with_authentication_disabled_default_action_enum
   }
 
-
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
     default     = var.appservice_web_apps_with_authentication_disabled_enabled_actions
     enum        = local.appservice_web_apps_with_authentication_disabled_enabled_actions_enum
   }
+
   step "message" "notify_detection_count" {
     if       = var.notification_level == local.level_info
     notifier = param.notifier
     text     = "Detected ${length(param.items)} App Service web app(s) with authentication disabled."
   }
 
-  step "transform" "items_by_id" {
-    value = { for row in param.items : row.id => row }
-  }
-
   step "pipeline" "correct_item" {
-    for_each        = step.transform.items_by_id.value
+    for_each        = { for row in param.items : row.id => row }
     max_concurrency = var.max_concurrency
     pipeline        = pipeline.correct_one_appservice_webapp_with_authentication_disabled
     args = {
@@ -202,6 +217,7 @@ pipeline "correct_appservice_web_apps_with_authentication_disabled" {
 pipeline "correct_one_appservice_webapp_with_authentication_disabled" {
   title         = "Correct App Service web app with authentication disabled"
   description   = "Enable authentication for a App Service web app with authentication disabled."
+  tags          = merge(local.appservice_common_tags, { folder = "Internal" })
 
   param "title" {
     type        = string
@@ -210,7 +226,7 @@ pipeline "correct_one_appservice_webapp_with_authentication_disabled" {
 
   param "name" {
     type        = string
-    description = "The name of the App Service."
+    description = "The name of the App Service web app."
   }
 
   param "resource_group" {
@@ -224,9 +240,8 @@ pipeline "correct_one_appservice_webapp_with_authentication_disabled" {
   }
 
   param "conn" {
-    type        = string
+    type        = connection.azure
     description = local.description_connection
-    default     = "default"
   }
 
   param "notifier" {

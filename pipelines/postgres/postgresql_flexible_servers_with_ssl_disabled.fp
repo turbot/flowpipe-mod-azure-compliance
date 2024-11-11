@@ -246,9 +246,8 @@ pipeline "correct_one_postgresql_flexible_server_with_ssl_disabled" {
   }
 
   param "conn" {
-    type        = string
+    type        = connection.azure
     description = local.description_connection
-    default     = "default"
   }
 
   param "notifier" {
