@@ -23,29 +23,46 @@ variable "iam_custom_subscriptions_owner_roles_existing_trigger_enabled" {
   type        = bool
   default     = false
   description = "If true, the trigger is enabled."
+
+  tags = {
+    folder = "Advanced/IAM"
+  }
 }
 
 variable "iam_custom_subscriptions_owner_roles_existing_trigger_schedule" {
   type        = string
   default     = "15m"
   description = "If the trigger is enabled, run it on this schedule."
+
+  tags = {
+    folder = "Advanced/IAM"
+  }
 }
 
 variable "iam_custom_subscriptions_owner_roles_existing_default_action" {
   type        = string
   description = "The default action to use when there are no approvers."
   default     = "notify"
+
+  tags = {
+    folder = "Advanced/IAM"
+  }
 }
 
 variable "iam_custom_subscriptions_owner_roles_existing_enabled_actions" {
   type        = list(string)
   description = "The list of enabled actions to provide to approvers for selection."
   default     = ["skip", "delete_custom_role"]
+
+  tags = {
+    folder = "Advanced/IAM"
+  }
 }
 
 trigger "query" "detect_and_correct_iam_custom_subscriptions_owner_roles_existing" {
   title         = "Detect & correct custom subscription owner roles existing"
-  description   = "Detects custom subscription owner roles that exist and runs your chosen action."
+  description   = "Detects custom subscription owner roles that exist and then delete custom subscriptions owner roles."
+  tags          = local.iam_common_tags
 
   enabled  = var.iam_custom_subscriptions_owner_roles_existing_trigger_enabled
   schedule = var.iam_custom_subscriptions_owner_roles_existing_trigger_schedule
@@ -62,7 +79,8 @@ trigger "query" "detect_and_correct_iam_custom_subscriptions_owner_roles_existin
 
 pipeline "detect_and_correct_iam_custom_subscriptions_owner_roles_existing" {
   title         = "Detect & correct custom subscription owner roles existing"
-  description   = "Detects custom subscription owner roles that exist and runs your chosen action."
+  description   = "Detects custom subscription owner roles that exist and then delete custom subscriptions owner roles."
+  tags          = local.iam_common_tags
 
   param "database" {
     type        = connection.steampipe
@@ -124,6 +142,7 @@ pipeline "detect_and_correct_iam_custom_subscriptions_owner_roles_existing" {
 pipeline "correct_iam_custom_subscriptions_owner_roles_existing" {
   title         = "Correct custom subscription owner roles existing"
   description   = "Runs corrective action on a collection of custom subscription owner roles that exist."
+  tags          = merge(local.iam_common_tags, { folder = "Internal" })
 
   param "items" {
     type = list(object({
@@ -172,15 +191,11 @@ pipeline "correct_iam_custom_subscriptions_owner_roles_existing" {
   step "message" "notify_detection_count" {
     if       = var.notification_level == local.level_info
     notifier = param.notifier
-    text     = "Detected ${length(param.items)} custom subscription owner roles existing."
-  }
-
-  step "transform" "items_by_id" {
-    value = { for row in param.items : row.id => row }
+    text     = "Detected ${length(param.items)} custom subscription owner roles."
   }
 
   step "pipeline" "correct_item" {
-    for_each        = step.transform.items_by_id.value
+    for_each        = { for row in param.items : row.id => row }
     max_concurrency = var.max_concurrency
     pipeline        = pipeline.correct_one_iam_custom_subscriptions_owner_role_existing
     args = {
@@ -200,6 +215,7 @@ pipeline "correct_iam_custom_subscriptions_owner_roles_existing" {
 pipeline "correct_one_iam_custom_subscriptions_owner_role_existing" {
   title         = "Correct one custom subscription owner role existing"
   description   = "Runs corrective action on a single custom subscription owner role that exists."
+  tags          = merge(local.iam_common_tags, { folder = "Internal" })
 
   param "title" {
     type        = string
@@ -260,7 +276,7 @@ pipeline "correct_one_iam_custom_subscriptions_owner_role_existing" {
       notifier           = param.notifier
       notification_level = param.notification_level
       approvers          = param.approvers
-      detect_msg         = "Detected custom subscription owner role ${param.title} existing."
+      detect_msg         = "Detected custom subscription owner role ${param.title}."
       default_action     = param.default_action
       enabled_actions    = param.enabled_actions
       actions = {
@@ -278,7 +294,7 @@ pipeline "correct_one_iam_custom_subscriptions_owner_role_existing" {
           error_msg   = ""
         },
         "delete_custom_role" = {
-          label        = "Delete Custom Role"
+          label        = "Delete custom role"
           value        = "delete_custom_role"
           style        = local.style_alert
           pipeline_ref = azure.pipeline.delete_iam_role
