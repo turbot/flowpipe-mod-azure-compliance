@@ -64,6 +64,7 @@ variable "postgresql_servers_with_connection_throttling_disabled_enabled_actions
 trigger "query" "detect_and_correct_postgresql_servers_with_connection_throttling_disabled" {
   title         = "Detect & correct PostgreSQL servers with connection throttling disabled"
   description   = "Detect PostgreSQL servers with connection throttling disabled and then enable connection throttling."
+  tags          = local.postgresql_common_tags
 
   enabled  = var.postgresql_servers_with_connection_throttling_disabled_trigger_enabled
   schedule = var.postgresql_servers_with_connection_throttling_disabled_trigger_schedule
@@ -81,6 +82,7 @@ trigger "query" "detect_and_correct_postgresql_servers_with_connection_throttlin
 pipeline "detect_and_correct_postgresql_servers_with_connection_throttling_disabled" {
   title         = "Detect & correct PostgreSQL servers with connection throttling disabled"
   description   = "Detect PostgreSQL servers with connection throttling disabled and then enable connection throttling"
+  tags          = local.postgresql_common_tags
 
   param "database" {
     type        = connection.steampipe

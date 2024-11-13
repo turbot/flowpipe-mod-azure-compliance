@@ -1,9 +1,11 @@
 locals {
-  network_security_groups_allowing_udp_access_query = <<-EOQ
+  network_security_groups_allowing_inbound_to_ssh_port_query = <<-EOQ
     select
       concat(nsg.id, ' [', nsg.subscription_id, '/', nsg.resource_group, '/', sg ->> 'name', ']') as title,
       sg ->> 'name' as rule_name,
       nsg.name as sg_name,
+      sip as source_address,
+      dport as destination_port,
       nsg.resource_group,
       nsg.subscription_id,
       nsg._ctx ->> 'connection_name' as conn
@@ -19,7 +21,10 @@ locals {
   where
     sg -> 'properties' ->> 'access' = 'Allow'
     and sg -> 'properties' ->> 'direction' = 'Inbound'
-    and sg -> 'properties' ->> 'protocol' = 'UDP'
+    and (
+      sg -> 'properties' ->> 'protocol' ilike 'TCP'
+      or sg -> 'properties' ->> 'protocol' = '*'
+    )
     and sip in (
       '*',
       '0.0.0.0',
@@ -30,74 +35,81 @@ locals {
       '/0'
     )
     and (
-      dport = '*'
+      dport in ('22', '*')
       or (
         dport like '%-%'
-        and (
-          53 between split_part(dport, '-', 1) :: integer
-          and split_part(dport, '-', 2) :: integer
-          or 123 between split_part(dport, '-', 1) :: integer
-          and split_part(dport, '-', 2) :: integer
-          or 161 between split_part(dport, '-', 1) :: integer
-          and split_part(dport, '-', 2) :: integer
-          or 389 between split_part(dport, '-', 1) :: integer
-          and split_part(dport, '-', 2) :: integer
-          or 1900 between split_part(dport, '-', 1) :: integer
-          and split_part(dport, '-', 2) :: integer
-        )
+        and split_part(dport, '-', 1) :: integer <= 22
+        and split_part(dport, '-', 2) :: integer >= 22
       )
-    )
+  )
   EOQ
 
-  network_security_groups_allowing_udp_access_enabled_actions_enum = ["skip", "delete_udp_nsg_rule"]
-  network_security_groups_allowing_udp_access_default_action_enum = ["notify", "skip", "delete_udp_nsg_rule"]
+  network_security_groups_allowing_inbound_to_ssh_port_enabled_actions_enum = ["skip", "revoke_nsg_rule"]
+  network_security_groups_allowing_inbound_to_ssh_port_default_action_enum = ["notify", "skip", "revoke_nsg_rule"]
 }
 
-variable "network_security_groups_allowing_udp_access_trigger_enabled" {
+variable "network_security_groups_allowing_inbound_to_ssh_port_trigger_enabled" {
   type        = bool
   default     = false
   description = "If true, the trigger is enabled."
+
+  tags = {
+    folder = "Advanced/Network"
+  }
 }
 
-variable "network_security_groups_allowing_udp_access_trigger_schedule" {
+variable "network_security_groups_allowing_inbound_to_ssh_port_trigger_schedule" {
   type        = string
   default     = "15m"
   description = "If the trigger is enabled, run it on this schedule."
+
+  tags = {
+    folder = "Advanced/Network"
+  }
 }
 
-variable "network_security_groups_allowing_udp_access_default_action" {
+variable "network_security_groups_allowing_inbound_to_ssh_port_default_action" {
   type        = string
   description = "The default action to use when there are no approvers."
   default     = "notify"
+
+  tags = {
+    folder = "Advanced/Network"
+  }
 }
 
-variable "network_security_groups_allowing_udp_access_enabled_actions" {
+variable "network_security_groups_allowing_inbound_to_ssh_port_enabled_actions" {
   type        = list(string)
   description = "The list of enabled actions to provide to approvers for selection."
-  default     = ["skip", "delete_udp_nsg_rule"]
+  default     = ["skip", "revoke_nsg_rule"]
+
+  tags = {
+    folder = "Advanced/Network"
+  }
 }
 
-trigger "query" "detect_and_correct_network_security_groups_allowing_udp_access" {
-  title         = "Detect & correct NSGs allowing UDP access"
-  description   = "Detects NSGs allowing UDP access and runs your chosen action."
+trigger "query" "detect_and_correct_network_security_groups_allowing_inbound_to_ssh_port" {
+  title         = "Detect & correct NSGs allowing inbound to SSH port"
+  description   = "Detect NSGs that allow inbound from 0.0.0.0/0 to SSH port and revoke NSG rule."
+  tags          = local.network_common_tags
 
-  enabled  = var.network_security_groups_allowing_udp_access_trigger_enabled
-  schedule = var.network_security_groups_allowing_udp_access_trigger_schedule
+  enabled  = var.network_security_groups_allowing_inbound_to_ssh_port_trigger_enabled
+  schedule = var.network_security_groups_allowing_inbound_to_ssh_port_trigger_schedule
   database = var.database
-  sql      = local.network_security_groups_allowing_udp_access_query
+  sql      = local.network_security_groups_allowing_inbound_to_ssh_port_query
 
   capture "insert" {
-    pipeline = pipeline.correct_network_security_groups_allowing_udp_access
+    pipeline = pipeline.correct_network_security_groups_allowing_inbound_to_ssh_port
     args = {
       items = self.inserted_rows
     }
   }
 }
 
-pipeline "detect_and_correct_network_security_groups_allowing_udp_access" {
-  title         = "Detect & correct NSGs allowing UDP access"
-  description   = "Detects NSGs allowing UDP access and runs your chosen action."
-
+pipeline "detect_and_correct_network_security_groups_allowing_inbound_to_ssh_port" {
+  title         = "Detect & correct NSGs allowing inbound to SSH port"
+  description   = "Detect NSGs that allow inbound from 0.0.0.0/0 to SSH port and revoke NSG rule."
+  tags          = local.network_common_tags
 
   param "database" {
     type        = connection.steampipe
@@ -127,24 +139,24 @@ pipeline "detect_and_correct_network_security_groups_allowing_udp_access" {
   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.network_security_groups_allowing_udp_access_default_action
-    enum        = local.network_security_groups_allowing_udp_access_default_action_enum
+    default     = var.network_security_groups_allowing_inbound_to_ssh_port_default_action
+    enum        = local.network_security_groups_allowing_inbound_to_ssh_port_default_action_enum
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.network_security_groups_allowing_udp_access_enabled_actions
-    enum        = local.network_security_groups_allowing_udp_access_enabled_actions_enum
+    default     = var.network_security_groups_allowing_inbound_to_ssh_port_enabled_actions
+    enum        = local.network_security_groups_allowing_inbound_to_ssh_port_enabled_actions_enum
   }
 
   step "query" "detect" {
     database = param.database
-    sql      = local.network_security_groups_allowing_udp_access_query
+    sql      = local.network_security_groups_allowing_inbound_to_ssh_port_query
   }
 
   step "pipeline" "respond" {
-    pipeline = pipeline.correct_network_security_groups_allowing_udp_access
+    pipeline = pipeline.correct_network_security_groups_allowing_inbound_to_ssh_port
     args = {
       items              = step.query.detect.rows
       notifier           = param.notifier
@@ -156,19 +168,21 @@ pipeline "detect_and_correct_network_security_groups_allowing_udp_access" {
   }
 }
 
-pipeline "correct_network_security_groups_allowing_udp_access" {
-  title         = "Correct NSGs allowing UDP access"
-  description   = "Runs corrective action on a collection of NSGs allowing UDP access."
+pipeline "correct_network_security_groups_allowing_inbound_to_ssh_port" {
+  title         = "Correct NSGs allowing inbound to SSH port"
+  description   = "Revoke NSG rule entries to restrict access to SSH port from 0.0.0.0/0."
+  tags          = merge(local.network_common_tags, { folder = "Internal" })
 
   param "items" {
     type = list(object({
-      id              = string
-      title           = string
-      rule_name       = string
-      sg_name         = string
-      resource_group  = string
-      subscription_id = string
-      conn            = string
+      title            = string
+      rule_name        = string
+      sg_name          = string
+      destination_port = string
+      source_address   = string
+      resource_group   = string
+      subscription_id  = string
+      conn             = string
     }))
     description = local.description_items
   }
@@ -195,35 +209,33 @@ pipeline "correct_network_security_groups_allowing_udp_access" {
   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.network_security_groups_allowing_udp_access_default_action
-    enum        = local.network_security_groups_allowing_udp_access_default_action_enum
+    default     = var.network_security_groups_allowing_inbound_to_ssh_port_default_action
+    enum        = local.network_security_groups_allowing_inbound_to_ssh_port_default_action_enum
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.network_security_groups_allowing_udp_access_enabled_actions
-    enum        = local.network_security_groups_allowing_udp_access_enabled_actions_enum
+    default     = var.network_security_groups_allowing_inbound_to_ssh_port_enabled_actions
+    enum        = local.network_security_groups_allowing_inbound_to_ssh_port_enabled_actions_enum
   }
 
   step "message" "notify_detection_count" {
     if       = var.notification_level == local.level_info
     notifier = param.notifier
-    text     = "Detected ${length(param.items)} NSGs allowing UDP access."
-  }
-
-  step "transform" "items_by_id" {
-    value = { for row in param.items : row.title => row }
+    text     = "Detected ${length(param.items)} NSG rule(s) allowing inbound to SSH port from 0.0.0.0/0."
   }
 
   step "pipeline" "correct_item" {
-    for_each        = step.transform.items_by_id.value
+    for_each        = { for row in param.items : row.title => row }
     max_concurrency = var.max_concurrency
-    pipeline        = pipeline.correct_one_network_security_groups_allowing_udp_access
+    pipeline        = pipeline.correct_one_network_security_groups_allowing_inbound_to_ssh_port
     args = {
       title              = each.value.title
       rule_name          = each.value.rule_name
       sg_name            = each.value.sg_name
+      destination_port   = each.value.destination_port
+      source_address     = each.value.source_address
       resource_group     = each.value.resource_group
       subscription_id    = each.value.subscription_id
       conn               = connection.azure[each.value.conn]
@@ -236,9 +248,10 @@ pipeline "correct_network_security_groups_allowing_udp_access" {
   }
 }
 
-pipeline "correct_one_network_security_groups_allowing_udp_access" {
-  title         = "Correct one NSG allowing UDP access"
-  description   = "Runs corrective action on a single NSG allowing UDP access."
+pipeline "correct_one_network_security_groups_allowing_inbound_to_ssh_port" {
+  title         = "Correct one NSG allowing inbound to SSH port"
+  description   = "Revoke a NSG rule allowing ingress to SSH port from 0.0.0.0/0."
+  tags          = merge(local.network_common_tags, { folder = "Internal" })
 
   param "title" {
     type        = string
@@ -258,6 +271,16 @@ pipeline "correct_one_network_security_groups_allowing_udp_access" {
   param "sg_name" {
     type        = string
     description = "The name of NSG."
+  }
+
+  param "destination_port" {
+    type        = string
+    description = "The destination port."
+  }
+
+  param "source_address" {
+    type        = string
+    description = "The source address."
   }
 
   param "subscription_id" {
@@ -292,15 +315,15 @@ pipeline "correct_one_network_security_groups_allowing_udp_access" {
   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.network_security_groups_allowing_udp_access_default_action
-    enum        = local.network_security_groups_allowing_udp_access_default_action_enum
+    default     = var.network_security_groups_allowing_inbound_to_ssh_port_default_action
+    enum        = local.network_security_groups_allowing_inbound_to_ssh_port_default_action_enum
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.network_security_groups_allowing_udp_access_enabled_actions
-    enum        = local.network_security_groups_allowing_udp_access_enabled_actions_enum
+    default     = var.network_security_groups_allowing_inbound_to_ssh_port_enabled_actions
+    enum        = local.network_security_groups_allowing_inbound_to_ssh_port_enabled_actions_enum
   }
 
   step "pipeline" "respond" {
@@ -309,7 +332,7 @@ pipeline "correct_one_network_security_groups_allowing_udp_access" {
       notifier           = param.notifier
       notification_level = param.notification_level
       approvers          = param.approvers
-      detect_msg         = "Detected NSG ${param.sg_name} allowing UDP access."
+      detect_msg         = "Detected NSG rule ${param.rule_name} in ${param.sg_name}/${param.subscription_id} allowing inbound on SSH and port(s) ${param.destination_port} from ${param.source_address}."
       default_action     = param.default_action
       enabled_actions    = param.enabled_actions
       actions = {
@@ -321,14 +344,14 @@ pipeline "correct_one_network_security_groups_allowing_udp_access" {
           pipeline_args = {
             notifier = param.notifier
             send     = param.notification_level == local.level_info
-            text     = "Skipped NSG ${param.sg_name} allowing UDP access."
+            text     = "Skipped NSG rule ${param.rule_name} in ${param.sg_name}/${param.subscription_id}."
           }
           success_msg = ""
           error_msg   = ""
         },
-        "delete_udp_nsg_rule" = {
-          label        = "Delete UDP NSG Rule"
-          value        = "delete_udp_nsg_rule"
+        "revoke_nsg_rule" = {
+          label        = "Revoke NSG rule"
+          value        = "revoke_nsg_rule"
           style        = local.style_alert
           pipeline_ref = azure.pipeline.delete_network_nsg_rule
           pipeline_args = {
@@ -338,8 +361,8 @@ pipeline "correct_one_network_security_groups_allowing_udp_access" {
             subscription_id    = param.subscription_id
             conn               = param.conn
           }
-          success_msg = "Deleted UDP rule for NSG ${param.sg_name}."
-          error_msg   = "Error deleting UDP rule for NSG ${param.sg_name}."
+          success_msg = "Revoked NSG rule ${param.rule_name} from ${param.sg_name}/${param.subscription_id}."
+          error_msg   = "Error revoking NSG inbound rule ${param.rule_name} from security group ${param.sg_name}/${param.subscription_id}."
         }
       }
     }
