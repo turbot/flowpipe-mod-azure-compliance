@@ -23,29 +23,46 @@ variable "storage_accounts_with_no_min_tls_1_2_trigger_enabled" {
   type        = bool
   default     = false
   description = "If true, the trigger is enabled."
+
+  tags = {
+    folder = "Advanced/Storage"
+  }
 }
 
 variable "storage_accounts_with_no_min_tls_1_2_trigger_schedule" {
   type        = string
   default     = "15m"
   description = "If the trigger is enabled, run it on this schedule."
+
+  tags = {
+    folder = "Advanced/Storage"
+  }
 }
 
 variable "storage_accounts_with_no_min_tls_1_2_default_action" {
   type        = string
   description = "The default action to use when there are no approvers."
   default     = "notify"
+
+  tags = {
+    folder = "Advanced/Storage"
+  }
 }
 
 variable "storage_accounts_with_no_min_tls_1_2_enabled_actions" {
   type        = list(string)
   description = "The list of enabled actions to provide to approvers for selection."
   default     = ["skip", "enable_min_tls_1_2"]
+
+  tags = {
+    folder = "Advanced/Storage"
+  }
 }
 
 trigger "query" "detect_and_correct_storage_accounts_with_no_min_tls_1_2" {
   title         = "Detect & correct Storage Accounts with minimum TLS version less than 1.2"
   description   = "Detect Storage Accounts with minimum TLS version less than 1.2 and then enable 1.2 TLS version."
+  tags          = local.storage_common_tags
 
   enabled  = var.storage_accounts_with_no_min_tls_1_2_trigger_enabled
   schedule = var.storage_accounts_with_no_min_tls_1_2_trigger_schedule
@@ -63,6 +80,7 @@ trigger "query" "detect_and_correct_storage_accounts_with_no_min_tls_1_2" {
 pipeline "detect_and_correct_storage_accounts_with_no_min_tls_1_2" {
   title         = "Detect & correct Storage Accounts with minimum TLS version less than 1.2"
   description   =  "Detect Storage Accounts with minimum TLS version less than 1.2 and then enable 1.2 TLS version."
+  tags          = local.storage_common_tags
 
   param "database" {
     type        = connection.steampipe
@@ -124,6 +142,7 @@ pipeline "detect_and_correct_storage_accounts_with_no_min_tls_1_2" {
 pipeline "correct_storage_accounts_with_no_min_tls_1_2" {
   title         = "Correct Storage Accounts with minimum TLS version less than 1.2"
   description   = "Enable 1.2 TLS version for Storage Accounts with minimum TLS version less than 1.2"
+  tags          = merge(local.storage_common_tags, { folder = "Internal" })
 
   param "items" {
     type = list(object({
@@ -198,6 +217,7 @@ pipeline "correct_storage_accounts_with_no_min_tls_1_2" {
 pipeline "correct_one_storage_account_with_no_min_tls_1_2" {
   title         = "Correct Storage Account with minimum TLS version less than 1.2"
   description   = "Enable 1.2 TLS version for a Storage Account with minimum TLS version less than 1.2"
+  tags          = merge(local.storage_common_tags, { folder = "Internal" })
 
   param "title" {
     type        = string

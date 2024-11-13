@@ -23,29 +23,46 @@ variable "storage_accounts_with_blob_soft_delete_disabled_trigger_enabled" {
   type        = bool
   default     = false
   description = "If true, the trigger is enabled."
+
+  tags = {
+    folder = "Advanced/Storage"
+  }
 }
 
 variable "storage_accounts_with_blob_soft_delete_disabled_trigger_schedule" {
   type        = string
   default     = "15m"
   description = "If the trigger is enabled, run it on this schedule."
+
+  tags = {
+    folder = "Advanced/Storage"
+  }
 }
 
 variable "storage_accounts_with_blob_soft_delete_disabled_default_action" {
   type        = string
   description = "The default action to use when there are no approvers."
   default     = "notify"
+
+  tags = {
+    folder = "Advanced/Storage"
+  }
 }
 
 variable "storage_accounts_with_blob_soft_delete_disabled_enabled_actions" {
   type        = list(string)
   description = "The list of enabled actions approvers can select."
   default     = ["skip", "enable_blob_soft_delete"]
+
+  tags = {
+    folder = "Advanced/Storage"
+  }
 }
 
 trigger "query" "detect_and_correct_storage_accounts_with_blob_soft_delete_disabled" {
   title         = "Detect & correct Storage Accounts with blob soft delete disabled"
   description   = "Detect Storage Accounts with blob soft delete disabled and then enable blob soft delete."
+  tags          = local.storage_common_tags
 
   enabled  = var.storage_accounts_with_blob_soft_delete_disabled_trigger_enabled
   schedule = var.storage_accounts_with_blob_soft_delete_disabled_trigger_schedule
@@ -63,6 +80,7 @@ trigger "query" "detect_and_correct_storage_accounts_with_blob_soft_delete_disab
 pipeline "detect_and_correct_storage_accounts_with_blob_soft_delete_disabled" {
   title         = "Detect & correct Storage Accounts with blob soft delete disabled"
   description   = "Detects Storage Accounts with blob soft delete disabled and then enable blob soft delete."
+  tags          = local.storage_common_tags
 
   param "database" {
     type        = connection.steampipe
@@ -124,6 +142,7 @@ pipeline "detect_and_correct_storage_accounts_with_blob_soft_delete_disabled" {
 pipeline "correct_storage_accounts_with_blob_soft_delete_disabled" {
   title         = "Correct Storage Accounts with blob soft delete disabled"
   description   = "Enable blob soft delete for Storage Accounts with blob soft delete disabled."
+  tags          = merge(local.storage_common_tags, { folder = "Internal" })
 
   param "items" {
     type = list(object({
@@ -200,6 +219,7 @@ pipeline "correct_storage_accounts_with_blob_soft_delete_disabled" {
 pipeline "correct_one_storage_account_with_blob_soft_delete_disabled" {
   title         = "Correct Storage Account with blob soft delete disabled"
   description   = "Enable blob soft delete for a Storage Account with blob soft delete disabled."
+  tags          = merge(local.storage_common_tags, { folder = "Internal" })
 
   param "title" {
     type        = string
@@ -260,7 +280,6 @@ pipeline "correct_one_storage_account_with_blob_soft_delete_disabled" {
     enum        = local.storage_accounts_with_blob_soft_delete_disabled_enabled_actions_enum
   }
 
-
   step "pipeline" "respond" {
     pipeline = detect_correct.pipeline.correction_handler
     args = {
@@ -285,7 +304,7 @@ pipeline "correct_one_storage_account_with_blob_soft_delete_disabled" {
           error_msg   = ""
         },
         "enable_blob_soft_delete" = {
-          label        = "Enable Blob Soft Delete"
+          label        = "Enable blob soft delete"
           value        = "enable_blob_soft_delete"
           style        = local.style_alert
           pipeline_ref = azure.pipeline.update_storage_account_blob_service_properties

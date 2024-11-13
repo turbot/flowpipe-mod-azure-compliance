@@ -39,29 +39,46 @@ variable "storage_accounts_with_queue_service_logging_disabled_trigger_enabled" 
   type        = bool
   default     = false
   description = "If true, the trigger is enabled."
+
+  tags = {
+    folder = "Advanced/Storage"
+  }
 }
 
 variable "storage_accounts_with_queue_service_logging_disabled_trigger_schedule" {
   type        = string
   default     = "15m"
   description = "If the trigger is enabled, run it on this schedule."
+
+  tags = {
+    folder = "Advanced/Storage"
+  }
 }
 
 variable "storage_accounts_with_queue_service_logging_disabled_default_action" {
   type        = string
   description = "The default action to use when there are no approvers."
   default     = "notify"
+
+  tags = {
+    folder = "Advanced/Storage"
+  }
 }
 
 variable "storage_accounts_with_queue_service_logging_disabled_enabled_actions" {
   type        = list(string)
   description = "The list of enabled actions to provide to approvers for selection."
   default     = ["skip", "enable_queue_service_logging"]
+
+  tags = {
+    folder = "Advanced/Storage"
+  }
 }
 
 trigger "query" "detect_and_correct_storage_accounts_with_queue_service_logging_disabled" {
   title         = "Detect & correct Storage Accounts with queue service logging disabled"
   description   = "Detect Storage Accounts with queue service logging disabled and enable queue service logging."
+  tags          = local.storage_common_tags
 
   enabled  = var.storage_accounts_with_queue_service_logging_disabled_trigger_enabled
   schedule = var.storage_accounts_with_queue_service_logging_disabled_trigger_schedule
@@ -79,6 +96,7 @@ trigger "query" "detect_and_correct_storage_accounts_with_queue_service_logging_
 pipeline "detect_and_correct_storage_accounts_with_queue_service_logging_disabled" {
   title         = "Detect & correct Storage Accounts with queue service logging disabled"
   description   = "Detect Storage Accounts with queue service logging disabled and enable queue service logging."
+  tags          = local.storage_common_tags
 
   param "database" {
     type        = connection.steampipe
@@ -140,6 +158,7 @@ pipeline "detect_and_correct_storage_accounts_with_queue_service_logging_disable
 pipeline "correct_storage_accounts_with_queue_service_logging_disabled" {
   title         = "Correct Storage Accounts with queue service logging disabled"
   description   = "Enable queue service logging for Storage Accounts with queue service logging disabled."
+  tags          = merge(local.storage_common_tags, { folder = "Internal" })
 
   param "items" {
     type = list(object({
@@ -215,6 +234,7 @@ pipeline "correct_storage_accounts_with_queue_service_logging_disabled" {
 pipeline "correct_one_storage_account_with_queue_service_logging_disabled" {
   title         = "Correct Storage Account with queue service logging disabled"
   description   = "Enable queue service logging for a Storage Account with queue service logging disabled."
+  tags          = merge(local.storage_common_tags, { folder = "Internal" })
 
   param "title" {
     type        = string
@@ -299,7 +319,7 @@ pipeline "correct_one_storage_account_with_queue_service_logging_disabled" {
           error_msg   = ""
         },
         "enable_queue_service_logging" = {
-          label        = "Enable Queue Service Logging"
+          label        = "Enable queue service logging"
           value        = "enable_queue_service_logging"
           style        = local.style_alert
           pipeline_ref = azure.pipeline.update_storage_account_logging

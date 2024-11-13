@@ -8,8 +8,7 @@ locals {
       sa.subscription_id,
       sa._ctx ->> 'connection_name' as conn
     from
-      azure_storage_account as sa,
-      azure_subscription as sub
+      azure_storage_account as sa
     where
       sa.public_network_access = 'Enabled';
   EOQ
@@ -22,29 +21,46 @@ variable "storage_accounts_when_publicly_accessible_trigger_enabled" {
   type        = bool
   default     = false
   description = "If true, the trigger is enabled."
+
+  tags = {
+    folder = "Advanced/Storage"
+  }
 }
 
 variable "storage_accounts_when_publicly_accessible_trigger_schedule" {
   type        = string
   default     = "15m"
   description = "If the trigger is enabled, run it on this schedule."
+
+  tags = {
+    folder = "Advanced/Storage"
+  }
 }
 
 variable "storage_accounts_when_publicly_accessible_default_action" {
   type        = string
   description = "The default action to use when there are no approvers."
   default     = "notify"
+
+  tags = {
+    folder = "Advanced/Storage"
+  }
 }
 
 variable "storage_accounts_when_publicly_accessible_enabled_actions" {
   type        = list(string)
   description = "The list of enabled actions to provide to approvers for selection."
   default     = ["skip", "disable_public_network_access"]
+
+  tags = {
+    folder = "Advanced/Storage"
+  }
 }
 
 trigger "query" "detect_and_correct_storage_accounts_when_publicly_accessible" {
   title         = "Detect & correct publicly accessible Storage Accounts"
   description   = "Detect publicly accessible Storage Accounts and then disable public access."
+  tags          = local.storage_common_tags
 
   enabled  = var.storage_accounts_when_publicly_accessible_trigger_enabled
   schedule = var.storage_accounts_when_publicly_accessible_trigger_schedule
@@ -62,6 +78,7 @@ trigger "query" "detect_and_correct_storage_accounts_when_publicly_accessible" {
 pipeline "detect_and_correct_storage_accounts_when_publicly_accessible" {
   title         = "Detect & correct publicly accessible Storage Accounts"
   description   = "Detect publicly accessible Storage Accounts and then disable public access."
+  tags          = local.storage_common_tags
 
   param "database" {
     type        = connection.steampipe
@@ -123,6 +140,7 @@ pipeline "detect_and_correct_storage_accounts_when_publicly_accessible" {
 pipeline "correct_storage_accounts_when_publicly_accessible" {
   title         = "Correct publicly accessible Storage Accounts"
   description   = "Disable public access for publicly accessible Storage Accounts."
+  tags          = merge(local.storage_common_tags, { folder = "Internal" })
 
   param "items" {
     type = list(object({
@@ -197,6 +215,7 @@ pipeline "correct_storage_accounts_when_publicly_accessible" {
 pipeline "correct_one_storage_account_when_publicly_accessible" {
   title         = "Correct publicly accessible Storage Account"
   description   = "Disable public access for a publicly accessible Storage Account."
+  tags          = merge(local.storage_common_tags, { folder = "Internal" })
 
   param "title" {
     type        = string

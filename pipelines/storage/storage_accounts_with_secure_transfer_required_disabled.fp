@@ -1,5 +1,5 @@
 locals {
-  storage_accounts_default_network_access_rule_allowed_query = <<-EOQ
+  storage_accounts_with_secure_transfer_required_disabled_query = <<-EOQ
     select
       concat(sa.id, ' [', sa.resource_group, '/', sa.subscription_id, ']') as title,
       sa.id as id,
@@ -11,58 +11,75 @@ locals {
       azure_storage_account as sa,
       azure_subscription as sub
     where
-      sa.network_rule_default_action = 'Allow'
-      and sub.subscription_id = sa.subscription_id;
+      not enable_https_traffic_only;
   EOQ
 
-  storage_accounts_default_network_access_rule_allowed_enabled_actions_enum = ["skip", "update_default_action_deny"]
-  storage_accounts_default_network_access_rule_allowed_default_action_enum = ["notify", "skip", "update_default_action_deny"]
+  storage_accounts_with_secure_transfer_required_disabled_enabled_actions_enum = ["skip", "enable_secure_transfer"]
+  storage_accounts_with_secure_transfer_required_disabled_default_action_enum = ["notify", "skip", "enable_secure_transfer"]
 }
 
-variable "storage_accounts_default_network_access_rule_allowed_trigger_enabled" {
+variable "storage_accounts_with_secure_transfer_required_disabled_trigger_enabled" {
   type        = bool
   default     = false
   description = "If true, the trigger is enabled."
+
+  tags = {
+    folder = "Advanced/Storage"
+  }
 }
 
-variable "storage_accounts_default_network_access_rule_allowed_trigger_schedule" {
+variable "storage_accounts_with_secure_transfer_required_disabled_trigger_schedule" {
   type        = string
   default     = "15m"
   description = "If the trigger is enabled, run it on this schedule."
+
+  tags = {
+    folder = "Advanced/Storage"
+  }
 }
 
-variable "storage_accounts_default_network_access_rule_allowed_default_action" {
+variable "storage_accounts_with_secure_transfer_required_disabled_default_action" {
   type        = string
   description = "The default action to use when there are no approvers."
   default     = "notify"
+
+  tags = {
+    folder = "Advanced/Storage"
+  }
 }
 
-variable "storage_accounts_default_network_access_rule_allowed_enabled_actions" {
+variable "storage_accounts_with_secure_transfer_required_disabled_enabled_actions" {
   type        = list(string)
   description = "The list of enabled actions to provide to approvers for selection."
-  default     = ["skip", "update_default_action_deny"]
+  default     = ["skip", "enable_secure_transfer"]
+
+  tags = {
+    folder = "Advanced/Storage"
+  }
 }
 
-trigger "query" "detect_and_correct_storage_accounts_default_network_access_rule_allowed" {
-  title         = "Detect & correct Storage Accounts with default network access rule set to Allow"
-  description   = "Detects Storage Accounts with default network access rule set to Allow and runs your chosen action."
+trigger "query" "detect_and_correct_storage_accounts_with_secure_transfer_required_disabled" {
+  title         = "Detect & correct Storage Accounts with secure transfer required disabled"
+  description   = "Detects Storage Accounts with secure transfer required disabled and runs your chosen action."
+  tags          = local.storage_common_tags
 
-  enabled  = var.storage_accounts_default_network_access_rule_allowed_trigger_enabled
-  schedule = var.storage_accounts_default_network_access_rule_allowed_trigger_schedule
+  enabled  = var.storage_accounts_with_secure_transfer_required_disabled_trigger_enabled
+  schedule = var.storage_accounts_with_secure_transfer_required_disabled_trigger_schedule
   database = var.database
-  sql      = local.storage_accounts_default_network_access_rule_allowed_query
+  sql      = local.storage_accounts_with_secure_transfer_required_disabled_query
 
   capture "insert" {
-    pipeline = pipeline.correct_storage_accounts_default_network_access_rule_allowed
+    pipeline = pipeline.correct_storage_accounts_with_secure_transfer_required_disabled
     args = {
       items = self.inserted_rows
     }
   }
 }
 
-pipeline "detect_and_correct_storage_accounts_default_network_access_rule_allowed" {
-  title         = "Detect & correct Storage Accounts with default network access rule set to Allow"
-  description   = "Detects Storage Accounts with default network access rule set to Allow and runs your chosen action."
+pipeline "detect_and_correct_storage_accounts_with_secure_transfer_required_disabled" {
+  title         = "Detect & correct Storage Accounts with secure transfer required disabled"
+  description   = "Detects Storage Accounts with secure transfer required disabled and runs your chosen action."
+  tags          = local.storage_common_tags
 
   param "database" {
     type        = connection.steampipe
@@ -92,24 +109,24 @@ pipeline "detect_and_correct_storage_accounts_default_network_access_rule_allowe
   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.storage_accounts_default_network_access_rule_allowed_default_action
-    enum        = local.storage_accounts_default_network_access_rule_allowed_default_action_enum
+    default     = var.storage_accounts_with_secure_transfer_required_disabled_default_action
+    enum        = local.storage_accounts_with_secure_transfer_required_disabled_default_action_enum
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.storage_accounts_default_network_access_rule_allowed_enabled_actions
-    enum        = local.storage_accounts_default_network_access_rule_allowed_enabled_actions_enum
+    default     = var.storage_accounts_with_secure_transfer_required_disabled_enabled_actions
+    enum        = local.storage_accounts_with_secure_transfer_required_disabled_enabled_actions_enum
   }
 
   step "query" "detect" {
     database = param.database
-    sql      = local.storage_accounts_default_network_access_rule_allowed_query
+    sql      = local.storage_accounts_with_secure_transfer_required_disabled_query
   }
 
   step "pipeline" "respond" {
-    pipeline = pipeline.correct_storage_accounts_default_network_access_rule_allowed
+    pipeline = pipeline.correct_storage_accounts_with_secure_transfer_required_disabled
     args = {
       items              = step.query.detect.rows
       notifier           = param.notifier
@@ -121,9 +138,10 @@ pipeline "detect_and_correct_storage_accounts_default_network_access_rule_allowe
   }
 }
 
-pipeline "correct_storage_accounts_default_network_access_rule_allowed" {
-  title         = "Correct Storage Accounts with default network access rule set to Allow"
-  description   = "Runs corrective action on a collection of Storage Accounts with default network access rule set to Allow."
+pipeline "correct_storage_accounts_with_secure_transfer_required_disabled" {
+  title         = "Correct Storage Accounts with secure transfer required disabled"
+  description   = "Runs corrective action on a collection of Storage Accounts with secure transfer required disabled."
+  tags          = merge(local.storage_common_tags, { folder = "Internal" })
 
   param "items" {
     type = list(object({
@@ -159,23 +177,21 @@ pipeline "correct_storage_accounts_default_network_access_rule_allowed" {
   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.storage_accounts_default_network_access_rule_allowed_default_action
-    enum        = local.storage_accounts_default_network_access_rule_allowed_default_action_enum
+    default     = var.storage_accounts_with_secure_transfer_required_disabled_default_action
+    enum        = local.storage_accounts_with_secure_transfer_required_disabled_default_action_enum
   }
-
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.storage_accounts_default_network_access_rule_allowed_enabled_actions
-    enum        = local.storage_accounts_default_network_access_rule_allowed_enabled_actions_enum
+    default     = var.storage_accounts_with_secure_transfer_required_disabled_enabled_actions
+    enum        = local.storage_accounts_with_secure_transfer_required_disabled_enabled_actions_enum
   }
-
 
   step "message" "notify_detection_count" {
     if       = var.notification_level == local.level_info
     notifier = param.notifier
-    text     = "Detected ${length(param.items)} Storage Accounts with default network access rule set to Allow."
+    text     = "Detected ${length(param.items)} Storage Accounts with secure transfer required disabled."
   }
 
   step "transform" "items_by_id" {
@@ -185,7 +201,7 @@ pipeline "correct_storage_accounts_default_network_access_rule_allowed" {
   step "pipeline" "correct_item" {
     for_each        = step.transform.items_by_id.value
     max_concurrency = var.max_concurrency
-    pipeline        = pipeline.correct_one_storage_accounts_default_network_access_rule_allowed
+    pipeline        = pipeline.correct_one_storage_accounts_with_secure_transfer_required_disabled
     args = {
       title              = each.value.title
       name               = each.value.name
@@ -201,9 +217,10 @@ pipeline "correct_storage_accounts_default_network_access_rule_allowed" {
   }
 }
 
-pipeline "correct_one_storage_accounts_default_network_access_rule_allowed" {
-  title         = "Correct one Storage Account with default network access rule set to Allow"
-  description   = "Runs corrective action on a single Storage Account with default network access rule set to Allow."
+pipeline "correct_one_storage_accounts_with_secure_transfer_required_disabled" {
+  title         = "Correct one Storage Account with secure transfer required disabled"
+  description   = "Runs corrective action on a single Storage Account with secure transfer required disabled."
+  tags          = merge(local.storage_common_tags, { folder = "Internal" })
 
   param "title" {
     type        = string
@@ -252,18 +269,16 @@ pipeline "correct_one_storage_accounts_default_network_access_rule_allowed" {
   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.storage_accounts_default_network_access_rule_allowed_default_action
-    enum        = local.storage_accounts_default_network_access_rule_allowed_default_action_enum
+    default     = var.storage_accounts_with_secure_transfer_required_disabled_default_action
+    enum        = local.storage_accounts_with_secure_transfer_required_disabled_default_action_enum
   }
-
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.storage_accounts_default_network_access_rule_allowed_enabled_actions
-    enum        = local.storage_accounts_default_network_access_rule_allowed_enabled_actions_enum
+    default     = var.storage_accounts_with_secure_transfer_required_disabled_enabled_actions
+    enum        = local.storage_accounts_with_secure_transfer_required_disabled_enabled_actions_enum
   }
-
 
   step "pipeline" "respond" {
     pipeline = detect_correct.pipeline.correction_handler
@@ -271,7 +286,7 @@ pipeline "correct_one_storage_accounts_default_network_access_rule_allowed" {
       notifier           = param.notifier
       notification_level = param.notification_level
       approvers          = param.approvers
-      detect_msg         = "Detected Storage Account ${param.title} with default network access rule set to Allow."
+      detect_msg         = "Detected Storage Account ${param.title} with secure transfer required disabled."
       default_action     = param.default_action
       enabled_actions    = param.enabled_actions
       actions = {
@@ -283,25 +298,25 @@ pipeline "correct_one_storage_accounts_default_network_access_rule_allowed" {
           pipeline_args = {
             notifier = param.notifier
             send     = param.notification_level == local.level_info
-            text     = "Skipped Storage Account ${param.title} with default network access rule set to Allow."
+            text     = "Skipped Storage Account ${param.title} with secure transfer required disabled."
           }
           success_msg = ""
           error_msg   = ""
         },
-        "update_default_action_deny" = {
-          label        = "Update Default Action to Deny"
-          value        = "update_default_action_deny"
+        "enable_secure_transfer" = {
+          label        = "Enable secure transfer"
+          value        = "enable_secure_transfer"
           style        = local.style_alert
-          pipeline_ref = azure.pipeline.update_storage_account_default_action
+          pipeline_ref = azure.pipeline.update_storage_account_https_only
           pipeline_args = {
-            account_name      = param.name
-            resource_group    = param.resource_group
-            subscription_id   = param.subscription_id
-            conn              = param.conn
-            default_action    = "Deny"
+            account_name           = param.name
+            resource_group         = param.resource_group
+            subscription_id        = param.subscription_id
+            conn                   = param.conn
+            https_only             = true
           }
-          success_msg = "Updated default action to Deny for Storage Account ${param.title}."
-          error_msg   = "Error updating default action to Deny for Storage Account ${param.title}."
+          success_msg = "Enabled secure transfer for Storage Account ${param.title}."
+          error_msg   = "Error enabling secure transfer for Storage Account ${param.title}."
         }
       }
     }

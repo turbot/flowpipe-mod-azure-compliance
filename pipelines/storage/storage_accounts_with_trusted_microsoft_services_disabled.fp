@@ -23,29 +23,46 @@ variable "storage_accounts_with_trusted_microsoft_services_disabled_trigger_enab
   type        = bool
   default     = false
   description = "If true, the trigger is enabled."
+
+  tags = {
+    folder = "Advanced/Storage"
+  }
 }
 
 variable "storage_accounts_with_trusted_microsoft_services_disabled_trigger_schedule" {
   type        = string
   default     = "15m"
   description = "If the trigger is enabled, run it on this schedule."
+
+  tags = {
+    folder = "Advanced/Storage"
+  }
 }
 
 variable "storage_accounts_with_trusted_microsoft_services_disabled_default_action" {
   type        = string
   description = "The default action to use when there are no approvers."
   default     = "notify"
+
+  tags = {
+    folder = "Advanced/Storage"
+  }
 }
 
 variable "storage_accounts_with_trusted_microsoft_services_disabled_enabled_actions" {
   type        = list(string)
   description = "The list of enabled actions to provide to approvers for selection."
   default     = ["skip", "enable_trusted_microsoft_services"]
+
+  tags = {
+    folder = "Advanced/Storage"
+  }
 }
 
 trigger "query" "detect_and_correct_storage_accounts_with_trusted_microsoft_services_disabled" {
   title         = "Detect & correct Storage Accounts with trusted Microsoft services access disabled"
   description   = "Detect Storage Accounts with trusted Microsoft services access disabled and then enable trusted Microsoft services."
+  tags          = local.storage_common_tags
 
   enabled  = var.storage_accounts_with_trusted_microsoft_services_disabled_trigger_enabled
   schedule = var.storage_accounts_with_trusted_microsoft_services_disabled_trigger_schedule
@@ -63,6 +80,7 @@ trigger "query" "detect_and_correct_storage_accounts_with_trusted_microsoft_serv
 pipeline "detect_and_correct_storage_accounts_with_trusted_microsoft_services_disabled" {
   title         = "Detect & correct Storage Accounts with trusted Microsoft services access disabled"
   description   = "Detect Storage Accounts with trusted Microsoft services access disabled and then enable trusted Microsoft services."
+  tags          = local.storage_common_tags
 
   param "database" {
     type        = connection.steampipe
@@ -124,6 +142,7 @@ pipeline "detect_and_correct_storage_accounts_with_trusted_microsoft_services_di
 pipeline "correct_storage_accounts_with_trusted_microsoft_services_disabled" {
   title         = "Correct Storage Accounts with trusted Microsoft services access disabled"
   description   = "Enable trusted Microsoft services for Storage Accounts with trusted Microsoft services access disabled."
+  tags          = merge(local.storage_common_tags, { folder = "Internal" })
 
   param "items" {
     type = list(object({
@@ -198,6 +217,7 @@ pipeline "correct_storage_accounts_with_trusted_microsoft_services_disabled" {
 pipeline "correct_one_storage_account_with_trusted_microsoft_services_disabled" {
   title         = "Correct Storage Account with trusted Microsoft services access disabled"
   description   = "Enable trusted Microsoft services for a Storage Account with trusted Microsoft services access disabled."
+  tags          = merge(local.storage_common_tags, { folder = "Internal" })
 
   param "title" {
     type        = string
