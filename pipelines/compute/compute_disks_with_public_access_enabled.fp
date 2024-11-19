@@ -1,5 +1,5 @@
 locals {
-  compute_os_and_data_disks_not_encrypted_with_cmk_query = <<-EOQ
+  compute_disks_with_public_access_enabled_query = <<-EOQ
     select
       concat(id, ' [', subscription_id, '/', resource_group, ']') as title,
 			name,
@@ -9,15 +9,14 @@ locals {
     from
       azure_compute_disk
     where
-      disk_state = 'Attached'
-      and encryption_type <> 'EncryptionAtRestWithCustomerKey';
+      network_access_policy not in ('DenyAll','AllowPrivate') and public_network_access = 'Enabled';
   EOQ
 
-  compute_os_and_data_disks_not_encrypted_with_cmk_enabled_actions_enum = ["skip", "encrypt_disk"]
-  compute_os_and_data_disks_not_encrypted_with_cmk_default_action_enum = ["notify", "skip", "encrypt_disk"]
+  compute_disks_with_public_access_enabled_enabled_actions_enum = ["skip", "disable_public_access"]
+  compute_disks_with_public_access_enabled_default_action_enum = ["notify", "skip", "c"]
 }
 
-variable "compute_os_and_data_disks_not_encrypted_with_cmk_trigger_enabled" {
+variable "compute_disks_with_public_access_enabled_trigger_enabled" {
   type        = bool
   description = "If true, the trigger is enabled."
   default     = false
@@ -27,7 +26,7 @@ variable "compute_os_and_data_disks_not_encrypted_with_cmk_trigger_enabled" {
   }
 }
 
-variable "compute_os_and_data_disks_not_encrypted_with_cmk_trigger_schedule" {
+variable "compute_disks_with_public_access_enabled_trigger_schedule" {
   type        = string
   description = "If the trigger is enabled, run it on this schedule."
   default     = "15m"
@@ -37,7 +36,7 @@ variable "compute_os_and_data_disks_not_encrypted_with_cmk_trigger_schedule" {
   }
 }
 
-variable "compute_os_and_data_disks_not_encrypted_with_cmk_default_action" {
+variable "compute_disks_with_public_access_enabled_default_action" {
   type        = string
   description = "The default action to use when there are no approvers."
   default     = "notify"
@@ -47,47 +46,47 @@ variable "compute_os_and_data_disks_not_encrypted_with_cmk_default_action" {
   }
 }
 
-variable "compute_os_and_data_disks_not_encrypted_with_cmk_enabled_actions" {
+variable "compute_disks_with_public_access_enabled_enabled_actions" {
   type        = list(string)
   description = "The list of enabled actions to provide to approvers for selection."
-  default     = ["skip", "encrypt_disk"]
+  default     = ["skip", "disable_public_access"]
 
   tags = {
     folder = "Advanced/Compute"
   }
 }
 
-variable "compute_os_and_data_disks_not_encrypted_with_cmk_disk_encryption_set_id" {
+variable "compute_disks_with_public_access_enabled_disk_access_id" {
   type        = string
-  description = "The resource ID of the Disk Encryption Set to use for encryption."
-  default     = "" // Add disk encryption set ID here
+  description = "The resource ID of the Disk Access resource to associate with the disk."
+  default     = " " // Add disk access ID here
 
   tags = {
     folder = "Advanced/Compute"
   }
 }
 
-trigger "query" "detect_and_correct_compute_os_and_data_disks_not_encrypted_with_cmk" {
-  title         = "Detect & correct Compute disks not encrypted with CMK"
-  description   = "Detect Compute disks not encrypted with CMK then encrypt with CMK."
+trigger "query" "detect_and_correct_compute_disks_with_public_access_enabled" {
+  title         = "Detect & correct Compute disks with public access enabled"
+  description   = "Detect Compute disks with public access enabled then disable public access."
   tags          = local.compute_common_tags
 
-  enabled  = var.compute_os_and_data_disks_not_encrypted_with_cmk_trigger_enabled
-  schedule = var.compute_os_and_data_disks_not_encrypted_with_cmk_trigger_schedule
+  enabled  = var.compute_disks_with_public_access_enabled_trigger_enabled
+  schedule = var.compute_disks_with_public_access_enabled_trigger_schedule
   database = var.database
-  sql      = local.compute_os_and_data_disks_not_encrypted_with_cmk_query
+  sql      = local.compute_disks_with_public_access_enabled_query
 
   capture "insert" {
-    pipeline = pipeline.correct_compute_os_and_data_disks_not_encrypted_with_cmk
+    pipeline = pipeline.correct_compute_disks_with_public_access_enabled
     args = {
       items = self.inserted_rows
     }
   }
 }
 
-pipeline "detect_and_correct_compute_os_and_data_disks_not_encrypted_with_cmk" {
-  title         = "Detect & correct Compute disks not encrypted with CMK"
-  description   = "Detect Compute disks not encrypted with CMK then encrypt with CMK."
+pipeline "detect_and_correct_compute_disks_with_public_access_enabled" {
+  title         = "Detect & correct Compute disks with public access enabled"
+  description   = "Detect Compute disks with public access enabled then disable public access."
   tags          = local.compute_common_tags
 
   param "database" {
@@ -118,30 +117,30 @@ pipeline "detect_and_correct_compute_os_and_data_disks_not_encrypted_with_cmk" {
   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.compute_os_and_data_disks_not_encrypted_with_cmk_default_action
-    enum        = local.compute_os_and_data_disks_not_encrypted_with_cmk_default_action_enum
+    default     = var.compute_disks_with_public_access_enabled_default_action
+    enum        = local.compute_disks_with_public_access_enabled_default_action_enum
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.compute_os_and_data_disks_not_encrypted_with_cmk_enabled_actions
-    enum        = local.compute_os_and_data_disks_not_encrypted_with_cmk_enabled_actions_enum
+    default     = var.compute_disks_with_public_access_enabled_enabled_actions
+    enum        = local.compute_disks_with_public_access_enabled_enabled_actions_enum
   }
 
-  param "disk_encryption_set_id" {
+  param "disk_access_id" {
     type        = string
-    description = "The resource ID of the Disk Encryption Set to use for encryption."
-    default     = var.compute_os_and_data_disks_not_encrypted_with_cmk_disk_encryption_set_id
+    description = "The resource ID of the Disk Access resource to associate with the disk."
+    default     = var.compute_disks_with_public_access_enabled_disk_access_id
   }
 
   step "query" "detect" {
     database = param.database
-    sql      = local.compute_os_and_data_disks_not_encrypted_with_cmk_query
+    sql      = local.compute_disks_with_public_access_enabled_query
   }
 
   step "pipeline" "respond" {
-    pipeline = pipeline.correct_compute_os_and_data_disks_not_encrypted_with_cmk
+    pipeline = pipeline.correct_compute_disks_with_public_access_enabled
     args = {
       items                   = step.query.detect.rows
       notifier                = param.notifier
@@ -149,14 +148,14 @@ pipeline "detect_and_correct_compute_os_and_data_disks_not_encrypted_with_cmk" {
       approvers               = param.approvers
       default_action          = param.default_action
       enabled_actions         = param.enabled_actions
-      disk_encryption_set_id  = param.disk_encryption_set_id
+      disk_access_id          = param.disk_access_id
     }
   }
 }
 
-pipeline "correct_compute_os_and_data_disks_not_encrypted_with_cmk" {
-  title         = "Correct Compute disks not encrypted with CMK"
-  description   = "Encrypt Compute disks with CMK for disks not encrypted with CMK."
+pipeline "correct_compute_disks_with_public_access_enabled" {
+  title         = "Correct Compute disks with public access enabled"
+  description   = "Disable public access on a collection of Compute disks with public access enabled."
   tags          = merge(local.compute_common_tags, { folder = "Internal" })
 
   param "items" {
@@ -192,33 +191,33 @@ pipeline "correct_compute_os_and_data_disks_not_encrypted_with_cmk" {
   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.compute_os_and_data_disks_not_encrypted_with_cmk_default_action
-    enum        = local.compute_os_and_data_disks_not_encrypted_with_cmk_default_action_enum
+    default     = var.compute_disks_with_public_access_enabled_default_action
+    enum        = local.compute_disks_with_public_access_enabled_default_action_enum
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.compute_os_and_data_disks_not_encrypted_with_cmk_enabled_actions
-    enum        = local.compute_os_and_data_disks_not_encrypted_with_cmk_enabled_actions_enum
+    default     = var.compute_disks_with_public_access_enabled_enabled_actions
+    enum        = local.compute_disks_with_public_access_enabled_enabled_actions_enum
   }
 
-  param "disk_encryption_set_id" {
+  param "disk_access_id" {
     type        = string
-    description = "The resource ID of the Disk Encryption Set to use for encryption."
-    default     = var.compute_os_and_data_disks_not_encrypted_with_cmk_disk_encryption_set_id
+    description = "The resource ID of the Disk Access resource to associate with the disk."
+    default     = var.compute_disks_with_public_access_enabled_disk_access_id
   }
 
   step "message" "notify_detection_count" {
     if       = var.notification_level == local.level_info
     notifier = param.notifier
-    text     = "Detected ${length(param.items)} Compute disk(s) not encrypted with CMK."
+    text     = "Detected ${length(param.items)} Compute disk(s) with public access enabled."
   }
 
   step "pipeline" "correct_item" {
     for_each        = { for row in param.items : row.title => row }
     max_concurrency = var.max_concurrency
-    pipeline        = pipeline.correct_one_compute_os_and_data_disk_not_encrypted_with_cmk
+    pipeline        = pipeline.correct_one_compute_disk_with_public_access_enabled
     args = {
       title                   = each.value.title
       name                    = each.value.name
@@ -230,14 +229,14 @@ pipeline "correct_compute_os_and_data_disks_not_encrypted_with_cmk" {
       approvers               = param.approvers
       default_action          = param.default_action
       enabled_actions         = param.enabled_actions
-      disk_encryption_set_id  = param.disk_encryption_set_id
+      disk_access_id          = param.disk_access_id
     }
   }
 }
 
-pipeline "correct_one_compute_os_and_data_disk_not_encrypted_with_cmk" {
-  title         = "Correct Compute disk not encrypted with CMK"
-  description   = "Encrypt Compute disk with CMK for disks not encrypted with CMK."
+pipeline "correct_one_compute_disk_with_public_access_enabled" {
+  title         = "Correct one Compute disk with public access enabled"
+  description   = "Disable public access on Compute disk with public access enabled."
   tags          = merge(local.compute_common_tags, { folder = "Internal" })
 
   param "title" {
@@ -287,20 +286,20 @@ pipeline "correct_one_compute_os_and_data_disk_not_encrypted_with_cmk" {
   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.compute_os_and_data_disks_not_encrypted_with_cmk_default_action
-    enum        = local.compute_os_and_data_disks_not_encrypted_with_cmk_default_action_enum
+    default     = var.compute_disks_with_public_access_enabled_default_action
+    enum        = local.compute_disks_with_public_access_enabled_default_action_enum
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.compute_os_and_data_disks_not_encrypted_with_cmk_enabled_actions
-    enum        = local.compute_os_and_data_disks_not_encrypted_with_cmk_enabled_actions_enum
+    default     = var.compute_disks_with_public_access_enabled_enabled_actions
+    enum        = local.compute_disks_with_public_access_enabled_enabled_actions_enum
   }
 
-  param "disk_encryption_set_id" {
+  param "disk_access_id" {
     type        = string
-    description = "The resource ID of the Disk Encryption Set to use for encryption."
+    description = "The resource ID of the Disk Access resource to associate with the disk."
   }
 
   step "pipeline" "respond" {
@@ -309,7 +308,7 @@ pipeline "correct_one_compute_os_and_data_disk_not_encrypted_with_cmk" {
       notifier           = param.notifier
       notification_level = param.notification_level
       approvers          = param.approvers
-      detect_msg         = "Detected Compute disk ${param.title} not encrypted with CMK."
+      detect_msg         = "Detected Compute disk ${param.title} with public access enabled."
       default_action     = param.default_action
       enabled_actions    = param.enabled_actions
       actions = {
@@ -326,24 +325,22 @@ pipeline "correct_one_compute_os_and_data_disk_not_encrypted_with_cmk" {
           success_msg = ""
           error_msg   = ""
         },
-        "encrypt_disk" = {
-          label        = "Update encryption"
-          value        = "encrypt_disk"
+        "disable_public_access" = {
+          label        = "Disable public access"
+          value        = "disable_public_access"
           style        = local.style_alert
-          pipeline_ref = azure.pipeline.update_compute_disk_encryption_with_cmk
+          pipeline_ref = azure.pipeline.update_compute_disk
           pipeline_args = {
             disk_name               = param.name
             resource_group          = param.resource_group
             subscription_id         = param.subscription_id
             conn                    = param.conn
-            disk_encryption_set_id  = param.disk_encryption_set_id
+            disk_access_id          = param.disk_access_id
           }
-          success_msg = "Enabled encryption with CMK for Compute disk ${param.title}."
-          error_msg   = "Error enabling encryption with CMK for Compute disk ${param.title}."
+          success_msg = "Disabled public access for Compute disk ${param.title}."
+          error_msg   = "Error disabling public access for Compute disk ${param.title}."
         }
       }
     }
   }
 }
-
-
