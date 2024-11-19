@@ -23,29 +23,46 @@ variable "keyvault_vaults_non_recoverable_trigger_enabled" {
   type        = bool
   default     = false
   description = "If true, the trigger is enabled."
+
+  tags = {
+    folder = "Advanced/KeyVault"
+  }
 }
 
 variable "keyvault_vaults_non_recoverable_trigger_schedule" {
   type        = string
   default     = "15m"
   description = "If the trigger is enabled, run it on this schedule."
+
+  tags = {
+    folder = "Advanced/KeyVault"
+  }
 }
 
 variable "keyvault_vaults_non_recoverable_default_action" {
   type        = string
   description = "The default action to use when there are no approvers."
   default     = "notify"
+
+  tags = {
+    folder = "Advanced/KeyVault"
+  }
 }
 
 variable "keyvault_vaults_non_recoverable_enabled_actions" {
   type        = list(string)
   description = "The list of enabled actions to provide to approvers for selection."
   default     = ["skip", "enable_purge_protection"]
+
+  tags = {
+    folder = "Advanced/KeyVault"
+  }
 }
 
 trigger "query" "detect_and_correct_keyvault_vaults_non_recoverable" {
   title         = "Detect & correct non-recoverable Key Vaults"
-  description   = "Detects non-recoverable Key Vaults and runs your chosen action."
+  description   = "Detects non-recoverable Key Vaults and then enable purge protection."
+  tags          = local.keyvault_common_tags
 
   enabled  = var.keyvault_vaults_non_recoverable_trigger_enabled
   schedule = var.keyvault_vaults_non_recoverable_trigger_schedule
@@ -62,7 +79,8 @@ trigger "query" "detect_and_correct_keyvault_vaults_non_recoverable" {
 
 pipeline "detect_and_correct_keyvault_vaults_non_recoverable" {
   title         = "Detect & correct non-recoverable Key Vaults"
-  description   = "Detects non-recoverable Key Vaults and runs your chosen action."
+  description   = "Detects non-recoverable Key Vaults and then enable purge protection."
+  tags          = local.keyvault_common_tags
 
   param "database" {
     type        = connection.steampipe
@@ -123,7 +141,8 @@ pipeline "detect_and_correct_keyvault_vaults_non_recoverable" {
 
 pipeline "correct_keyvault_vaults_non_recoverable" {
   title         = "Correct non-recoverable Key Vaults"
-  description   = "Runs corrective action on a collection of non-recoverable Key Vaults."
+  description   = "Enable purge protection on a collection of non-recoverable Key Vaults."
+  tags          = merge(local.keyvault_common_tags, { folder = "Internal" })
 
   param "items" {
     type = list(object({
@@ -201,7 +220,8 @@ pipeline "correct_keyvault_vaults_non_recoverable" {
 
 pipeline "correct_one_keyvault_vaults_non_recoverable" {
   title         = "Correct one non-recoverable Key Vault"
-  description   = "Runs corrective action on a single non-recoverable Key Vault."
+  description   = "Enable purge protection on a single non-recoverable Key Vault."
+  tags          = merge(local.keyvault_common_tags, { folder = "Internal" })
 
   param "title" {
     type        = string
@@ -279,25 +299,25 @@ pipeline "correct_one_keyvault_vaults_non_recoverable" {
           pipeline_args = {
             notifier = param.notifier
             send     = param.notification_level == local.level_info
-            text     = "Skipped Key Vault ${param.title} as non-recoverable."
+            text     = "Skipped Key Vault ${param.title}."
           }
           success_msg = ""
           error_msg   = ""
         },
         "enable_purge_protection" = {
-          label        = "Enable Soft Delete and Purge Protection"
+          label        = "Enable purge protection"
           value        = "enable_purge_protection"
           style        = local.style_alert
           pipeline_ref = azure.pipeline.update_azure_key_vault_purge_protection
           pipeline_args = {
-            resource_group        = param.resource_group
-            subscription_id       = param.subscription_id
-            vault_name            = param.name
-            conn                  = param.conn
+            resource_group          = param.resource_group
+            subscription_id         = param.subscription_id
+            vault_name              = param.name
+            conn                    = param.conn
             enable_purge_protection = true
           }
-          success_msg = "Enabled soft delete and purge protection for Key Vault ${param.title}."
-          error_msg   = "Error enabling soft delete and purge protection for Key Vault ${param.title}."
+          success_msg = "Enabled purge protection for Key Vault ${param.title}."
+          error_msg   = "Error enabling purge protection for Key Vault ${param.title}."
         }
       }
     }
