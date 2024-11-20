@@ -15,43 +15,60 @@ locals {
     where
       sub.subscription_id = s.subscription_id
       and (
-        (f -> 'properties' ->>  'endIpAddress' = '0.0.0.0' and f -> 'properties' ->>  'startIpAddress' = '0.0.0.0')
+        (f -> 'properties' ->> 'endIpAddress' = '0.0.0.0' and f -> 'properties' ->>  'startIpAddress' = '0.0.0.0')
         or
-        ( f -> 'properties' ->>  'endIpAddress' = '255.255.255.255' and f -> 'properties' ->>  'startIpAddress' = '0.0.0.0')
+        ( f -> 'properties' ->> 'endIpAddress' = '255.255.255.255' and f -> 'properties' ->>  'startIpAddress' = '0.0.0.0')
     );
   EOQ
 
-  sql_databases_when_publicly_accessible_enabled_actions_enum = ["skip", "delete_firewall_rule"]
-  sql_databases_when_publicly_accessible_default_action_enum = ["notify", "skip", "delete_firewall_rule"]
+  sql_databases_when_publicly_accessible_enabled_actions_enum = ["skip", "revoke_firewall_rule"]
+  sql_databases_when_publicly_accessible_default_action_enum = ["notify", "skip", "revoke_firewall_rule"]
 }
 
 variable "sql_databases_when_publicly_accessible_trigger_enabled" {
   type        = bool
   default     = false
   description = "If true, the trigger is enabled."
+
+  tags = {
+    folder = "Advanced/SQL"
+  }
 }
 
 variable "sql_databases_when_publicly_accessible_trigger_schedule" {
   type        = string
   default     = "15m"
   description = "If the trigger is enabled, run it on this schedule."
+
+  tags = {
+    folder = "Advanced/SQL"
+  }
 }
 
 variable "sql_databases_when_publicly_accessible_default_action" {
   type        = string
   description = "The default action to use when there are no approvers."
   default     = "notify"
+
+  tags = {
+    folder = "Advanced/SQL"
+  }
 }
 
 variable "sql_databases_when_publicly_accessible_enabled_actions" {
   type        = list(string)
   description = "The list of enabled actions to provide to approvers for selection."
-  default     = ["skip", "delete_firewall_rule"]
+  default     = ["skip", "revoke_firewall_rule"]
+
+  tags = {
+    folder = "Advanced/SQL"
+  }
 }
 
 trigger "query" "detect_and_correct_sql_databases_when_publicly_accessible" {
   title         = "Detect & correct SQL Databases when publicly accessible"
-  description   = "Detect SQL Databases firewall rules allowing public access and then delete the firewall rules."
+  description   = "Detect SQL Databases firewall rules allowing public access and then revoke the firewall rules."
+  tags          = local.sql_common_tags
 
   enabled  = var.sql_databases_when_publicly_accessible_trigger_enabled
   schedule = var.sql_databases_when_publicly_accessible_trigger_schedule
@@ -68,7 +85,8 @@ trigger "query" "detect_and_correct_sql_databases_when_publicly_accessible" {
 
 pipeline "detect_and_correct_sql_databases_when_publicly_accessible" {
   title         = "Detect & correct SQL Databases when publicly accessible"
-  description   = "Detect SQL Databases firewall rules allowing public access and then delete the firewall rules."
+  description   = "Detect SQL Databases firewall rules allowing public access and then revoke the firewall rules."
+  tags          = local.sql_common_tags
 
   param "database" {
     type        = connection.steampipe
@@ -129,7 +147,8 @@ pipeline "detect_and_correct_sql_databases_when_publicly_accessible" {
 
 pipeline "correct_sql_databases_when_publicly_accessible" {
   title         = "Correct SQL Databases when publicly accessible"
-  description   = "Delete firewall rule for SQL Databases allowing public access."
+  description   = "Revoke firewall rule for SQL Databases allowing public access."
+  tags          = merge(local.sql_common_tags, { folder = "Internal" })
 
   param "items" {
     type = list(object({
@@ -205,7 +224,8 @@ pipeline "correct_sql_databases_when_publicly_accessible" {
 
 pipeline "correct_one_sql_database_when_publicly_accessible" {
   title         = "Correct SQL Database when publicly accessible"
-  description   = "Delete firewall rule fora  SQL Database allowing public access."
+  description   = "Revoke firewall rule for a SQL Database allowing public access."
+  tags          = merge(local.sql_common_tags, { folder = "Internal" })
 
   param "title" {
     type        = string
@@ -293,9 +313,9 @@ pipeline "correct_one_sql_database_when_publicly_accessible" {
           success_msg = ""
           error_msg   = ""
         },
-        "delete_firewall_rule" = {
-          label        = "Delete Firewall Rule"
-          value        = "delete_firewall_rule"
+        "revoke_firewall_rule" = {
+          label        = "Revole firewall rule"
+          value        = "revoke_firewall_rule"
           style        = local.style_alert
           pipeline_ref = azure.pipeline.delete_sql_server_firewall_rule
           pipeline_args = {
@@ -305,8 +325,8 @@ pipeline "correct_one_sql_database_when_publicly_accessible" {
             conn               = param.conn
             firewall_rule_name = param.firewall_rule_name
           }
-          success_msg = "Deleted firewall rule allowing public access for SQL Database ${param.title}."
-          error_msg   = "Error deleting firewall rule allowing public access for SQL Database ${param.title}."
+          success_msg = "Revoked firewall rule allowing public access for SQL Database ${param.title}."
+          error_msg   = "Error revoking firewall rule allowing public access for SQL Database ${param.title}."
         }
       }
     }
