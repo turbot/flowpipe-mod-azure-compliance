@@ -27,10 +27,6 @@ locals {
   keyvault_with_non_rbac_secrets_expiration_not_set_default_action_enum = ["notify", "skip", "set_secret_expiration"]
 }
 
-locals {
-  non_rbac_secrets_expiration_date = formatdate("YYYY-MM-DD'T'HH:mm:ss'Z'", timeadd(timestamp(), "2160h"))
-}
-
 variable "keyvault_with_non_rbac_secrets_expiration_not_set_trigger_enabled" {
   type        = bool
   default     = false
@@ -73,7 +69,7 @@ variable "keyvault_with_non_rbac_secrets_expiration_not_set_enabled_actions" {
 
 variable "keyvault_with_non_rbac_secrets_expiration_not_set_expiration_date" {
   type        = string
-  description =  "The expiry date and time for the key in the format Y-m-d'T'H:M:S'Z'."
+  description = "The expiry date and time for the key in the format Y-m-d'T'H:M:S'Z'."
   default     = " "  // Add key expiration date here
 
   tags = {

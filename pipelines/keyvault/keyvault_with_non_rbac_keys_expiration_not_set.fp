@@ -28,10 +28,6 @@ locals {
   keyvault_with_non_rbac_keys_expiration_not_set_default_action_enum = ["notify", "skip", "set_key_expiration"]
 }
 
-locals {
-  non_rbac_keys_expiration_date = formatdate("YYYY-MM-DD'T'HH:mm:ss'Z'", timeadd(timestamp(), "2160h"))
-}
-
 variable "keyvault_with_non_rbac_keys_expiration_not_set_trigger_enabled" {
   type        = bool
   default     = false

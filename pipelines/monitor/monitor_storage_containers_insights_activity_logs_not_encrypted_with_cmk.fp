@@ -1,24 +1,27 @@
 
 locals {
-  storage_accounts_with_encryption_at_rest_using_cmk_disabled_query = <<-EOQ
+  monitor_storage_containers_insights_activity_logs_not_encrypted_with_cmk_query = <<-EOQ
     select
-      concat(id, ' [', subscription_id, '/', resource_group, ']') as title,
-      id as id,
-      name,
-      resource_group,
-      subscription_id,
-      _ctx ->> 'connection_name' as conn
+      concat(a.id, ' [', a.subscription_id, '/', a.resource_group, ']') as title,
+      a.id as id,
+      a.name,
+      a.resource_group,
+      a.subscription_id,
+      a._ctx ->> 'connection_name' as conn
     from
-      azure_storage_account
-    where
-      encryption_key_source = 'Microsoft.Storage';
+      azure_storage_container c,
+      azure_storage_account a
+		where
+      c.name = 'insights-activity-logs'
+      and c.account_name = a.name
+      and a.encryption_key_source <> 'Microsoft.Keyvault';
   EOQ
 
-  storage_accounts_with_encryption_at_rest_using_cmk_disabled_default_action_enum  = ["notify", "skip", "encrypt_storage_account_with_cmk"]
-  storage_accounts_with_encryption_at_rest_using_cmk_disabled_enabled_actions_enum = ["skip", "encrypt_storage_account_with_cmk"]
+  monitor_storage_containers_insights_activity_logs_not_encrypted_with_cmk_default_action_enum  = ["notify", "skip", "encrypt_storage_account_with_cmk"]
+  monitor_storage_containers_insights_activity_logs_not_encrypted_with_cmk_enabled_actions_enum = ["skip", "encrypt_storage_account_with_cmk"]
 }
 
-variable "storage_accounts_with_encryption_at_rest_using_cmk_disabled_trigger_enabled" {
+variable "monitor_storage_containers_insights_activity_logs_not_encrypted_with_cmk_trigger_enabled" {
   type        = bool
   description = "If true, the trigger is enabled."
   default     = false
@@ -28,7 +31,7 @@ variable "storage_accounts_with_encryption_at_rest_using_cmk_disabled_trigger_en
   }
 }
 
-variable "storage_accounts_with_encryption_at_rest_using_cmk_disabled_trigger_schedule" {
+variable "monitor_storage_containers_insights_activity_logs_not_encrypted_with_cmk_trigger_schedule" {
   type        = string
   default     = "15m"
   description = "If the trigger is enabled, run it on this schedule."
@@ -38,7 +41,7 @@ variable "storage_accounts_with_encryption_at_rest_using_cmk_disabled_trigger_sc
   }
 }
 
-variable "storage_accounts_with_encryption_at_rest_using_cmk_disabled_default_action" {
+variable "monitor_storage_containers_insights_activity_logs_not_encrypted_with_cmk_default_action" {
   type        = string
   description = "The default action to use when there are no approvers."
   default     = "notify"
@@ -49,7 +52,7 @@ variable "storage_accounts_with_encryption_at_rest_using_cmk_disabled_default_ac
   }
 }
 
-variable "storage_accounts_with_encryption_at_rest_using_cmk_disabled_enabled_actions" {
+variable "monitor_storage_containers_insights_activity_logs_not_encrypted_with_cmk_enabled_actions" {
   type        = list(string)
   description = "The list of enabled actions approvers can select."
   default     = ["skip", "encrypt_storage_account_with_cmk"]
@@ -60,58 +63,58 @@ variable "storage_accounts_with_encryption_at_rest_using_cmk_disabled_enabled_ac
   }
 }
 
-variable "storage_accounts_with_encryption_at_rest_using_cmk_disabled_key_vault_uri" {
+variable "monitor_storage_containers_insights_activity_logs_not_encrypted_with_cmk_key_vault_uri" {
   type        = string
   description = "Specifies the URI of the Key Vault where the encryption key is stored."
-  default     = "" // Add your key vault URI here.
+  default     = " " // Add your key vault URI here.
 
   tags = {
     folder = "Advanced/Storage"
   }
 }
 
-variable "storage_accounts_with_encryption_at_rest_using_cmk_disabled_encryption_key_version" {
+variable "monitor_storage_containers_insights_activity_logs_not_encrypted_with_cmk_encryption_key_version" {
   type        = string
   description = "Specifies the version of the encryption key in Key Vault. Leave blank for the latest version."
-  default     = "" // Add your key version here.
+  default     = " " // Add your key version here.
 
   tags = {
     folder = "Advanced/Storage"
   }
 }
 
-variable "storage_accounts_with_encryption_at_rest_using_cmk_disabled_encryption_key_name" {
+variable "monitor_storage_containers_insights_activity_logs_not_encrypted_with_cmk_encryption_key_name" {
   type        = string
   description = "Specifies the name of the encryption key in Key Vault."
-  default     = "" // Add your key name here.
+  default     = " " // Add your key name here.
 
   tags = {
     folder = "Advanced/Storage"
   }
 }
 
-trigger "query" "detect_and_correct_storage_accounts_with_encryption_at_rest_using_cmk_disabled" {
-  title       = "Detect & correct Storage accounts with encryption at rest using CMK disabled"
-  description = "Detect Storage accounts with encryption at rest using CMK disabled."
+trigger "query" "detect_and_correct_monitor_storage_containers_insights_activity_logs_not_encrypted_with_cmk" {
+  title       = "Detect & correct Storage account containers insights activity logs not encrypted with CMK"
+  description = "Detect Storage account containers insights activity logs not encrypted with CMK and then enable encryption using CMK."
 
   tags = local.storage_common_tags
 
-  enabled  = var.storage_accounts_with_encryption_at_rest_using_cmk_disabled_trigger_enabled
-  schedule = var.storage_accounts_with_encryption_at_rest_using_cmk_disabled_trigger_schedule
+  enabled  = var.monitor_storage_containers_insights_activity_logs_not_encrypted_with_cmk_trigger_enabled
+  schedule = var.monitor_storage_containers_insights_activity_logs_not_encrypted_with_cmk_trigger_schedule
   database = var.database
-  sql      = local.storage_accounts_with_encryption_at_rest_using_cmk_disabled_query
+  sql      = local.monitor_storage_containers_insights_activity_logs_not_encrypted_with_cmk_query
 
   capture "insert" {
-    pipeline = pipeline.correct_storage_accounts_with_encryption_at_rest_using_cmk_disabled
+    pipeline = pipeline.correct_monitor_storage_containers_insights_activity_logs_not_encrypted_with_cmk
     args = {
       items = self.inserted_rows
     }
   }
 }
 
-pipeline "detect_and_correct_storage_accounts_with_encryption_at_rest_using_cmk_disabled" {
-  title       = "Detect & correct Storage accounts with encryption at rest using CMK disabled"
-  description = "Detect Storage accounts with encryption at rest using CMK disabled."
+pipeline "detect_and_correct_monitor_storage_containers_insights_activity_logs_not_encrypted_with_cmk" {
+  title       = "Detect & correct Storage account containers insights activity logs not encrypted with CMK"
+  description = "Detect Storage containers insights activity logs not encrypted with CMK and then enable encryption using CMK."
 
   tags = local.storage_common_tags
 
@@ -124,19 +127,19 @@ pipeline "detect_and_correct_storage_accounts_with_encryption_at_rest_using_cmk_
   param "encryption_key_name" {
     type        = string
     description = "Specifies the name of the encryption key in Key Vault."
-    default     = var.storage_accounts_with_encryption_at_rest_using_cmk_disabled_encryption_key_name
+    default     = var.monitor_storage_containers_insights_activity_logs_not_encrypted_with_cmk_encryption_key_name
   }
 
   param "encryption_key_version" {
     type        = string
     description = "Specifies the version of the encryption key in Key Vault. Leave blank for the latest version."
-    default     = var.storage_accounts_with_encryption_at_rest_using_cmk_disabled_encryption_key_version
+    default     = var.monitor_storage_containers_insights_activity_logs_not_encrypted_with_cmk_encryption_key_version
   }
 
   param "key_vault_uri" {
     type        = string
     description = "Specifies the URI of the Key Vault where the encryption key is stored."
-    default     = var.storage_accounts_with_encryption_at_rest_using_cmk_disabled_key_vault_uri
+    default     = var.monitor_storage_containers_insights_activity_logs_not_encrypted_with_cmk_key_vault_uri
   }
 
   param "notifier" {
@@ -161,24 +164,24 @@ pipeline "detect_and_correct_storage_accounts_with_encryption_at_rest_using_cmk_
   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.storage_accounts_with_encryption_at_rest_using_cmk_disabled_default_action
-    enum        = local.storage_accounts_with_encryption_at_rest_using_cmk_disabled_default_action_enum
+    default     = var.monitor_storage_containers_insights_activity_logs_not_encrypted_with_cmk_default_action
+    enum        = local.monitor_storage_containers_insights_activity_logs_not_encrypted_with_cmk_default_action_enum
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.storage_accounts_with_encryption_at_rest_using_cmk_disabled_enabled_actions
-    enum        = local.storage_accounts_with_encryption_at_rest_using_cmk_disabled_enabled_actions_enum
+    default     = var.monitor_storage_containers_insights_activity_logs_not_encrypted_with_cmk_enabled_actions
+    enum        = local.monitor_storage_containers_insights_activity_logs_not_encrypted_with_cmk_enabled_actions_enum
   }
 
   step "query" "detect" {
     database = param.database
-    sql      = local.storage_accounts_with_encryption_at_rest_using_cmk_disabled_query
+    sql      = local.monitor_storage_containers_insights_activity_logs_not_encrypted_with_cmk_query
   }
 
   step "pipeline" "respond" {
-    pipeline = pipeline.correct_storage_accounts_with_encryption_at_rest_using_cmk_disabled
+    pipeline = pipeline.correct_monitor_storage_containers_insights_activity_logs_not_encrypted_with_cmk
     args = {
       items                   = step.query.detect.rows
       encryption_key_name     = param.encryption_key_name
@@ -193,9 +196,9 @@ pipeline "detect_and_correct_storage_accounts_with_encryption_at_rest_using_cmk_
   }
 }
 
-pipeline "correct_storage_accounts_with_encryption_at_rest_using_cmk_disabled" {
-  title       = "Correct Storage accounts with encryption at rest using CMK disabled"
-  description = "Executes corrective actions on Storage accounts with encryption at rest using CMK disabled."
+pipeline "correct_monitor_storage_containers_insights_activity_logs_not_encrypted_with_cmk" {
+  title       = "Correct Storage account containers insights activity logs not encrypted with CMK"
+  description = "Executes corrective actions on Storage account containers insights activity logs not encrypted with CMK."
   tags = merge(local.storage_common_tags, { folder = "Internal" })
 
   param "items" {
@@ -211,19 +214,19 @@ pipeline "correct_storage_accounts_with_encryption_at_rest_using_cmk_disabled" {
   param "encryption_key_name" {
     type        = string
     description = "Specifies the name of the encryption key in Key Vault."
-    default     = var.storage_accounts_with_encryption_at_rest_using_cmk_disabled_encryption_key_name
+    default     = var.monitor_storage_containers_insights_activity_logs_not_encrypted_with_cmk_encryption_key_name
   }
 
   param "encryption_key_version" {
     type        = string
     description = "Specifies the version of the encryption key in Key Vault. Leave blank for the latest version."
-    default     = var.storage_accounts_with_encryption_at_rest_using_cmk_disabled_encryption_key_version
+    default     = var.monitor_storage_containers_insights_activity_logs_not_encrypted_with_cmk_encryption_key_version
   }
 
   param "key_vault_uri" {
     type        = string
     description = "Specifies the URI of the Key Vault where the encryption key is stored."
-    default     = var.storage_accounts_with_encryption_at_rest_using_cmk_disabled_key_vault_uri
+    default     = var.monitor_storage_containers_insights_activity_logs_not_encrypted_with_cmk_key_vault_uri
   }
 
   param "notifier" {
@@ -248,27 +251,27 @@ pipeline "correct_storage_accounts_with_encryption_at_rest_using_cmk_disabled" {
   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.storage_accounts_with_encryption_at_rest_using_cmk_disabled_default_action
-    enum        = local.storage_accounts_with_encryption_at_rest_using_cmk_disabled_default_action_enum
+    default     = var.monitor_storage_containers_insights_activity_logs_not_encrypted_with_cmk_default_action
+    enum        = local.monitor_storage_containers_insights_activity_logs_not_encrypted_with_cmk_default_action_enum
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.storage_accounts_with_encryption_at_rest_using_cmk_disabled_enabled_actions
-    enum        = local.storage_accounts_with_encryption_at_rest_using_cmk_disabled_enabled_actions_enum
+    default     = var.monitor_storage_containers_insights_activity_logs_not_encrypted_with_cmk_enabled_actions
+    enum        = local.monitor_storage_containers_insights_activity_logs_not_encrypted_with_cmk_enabled_actions_enum
   }
 
   step "message" "notify_detection_count" {
     if       = var.notification_level == local.level_info
     notifier = param.notifier
-    text     = "Detected ${length(param.items)} Storage account(s) with encryption at rest using CMK disabled."
+    text     = "Detected ${length(param.items)} Storage account container(s) insights activity logs not encrypted with CMK."
   }
 
   step "pipeline" "correct_item" {
     for_each        = { for item in param.items : item.title => item }
     max_concurrency = var.max_concurrency
-    pipeline        = pipeline.correct_one_storage_account_with_encryption_at_rest_using_cmk_disabled
+    pipeline        = pipeline.correct_one_monitor_storage_container_insights_activity_logs_not_encrypted_with_cmk
     args = {
       title                   = each.value.title
       name                    = each.value.name
@@ -287,9 +290,9 @@ pipeline "correct_storage_accounts_with_encryption_at_rest_using_cmk_disabled" {
   }
 }
 
-pipeline "correct_one_storage_account_with_encryption_at_rest_using_cmk_disabled" {
-  title       = "Correct one Storage account with encryption at rest using CMK disabled"
-  description = "Runs corrective action on a single Storage account with encryption at rest using CMK disabled."
+pipeline "correct_one_monitor_storage_container_insights_activity_logs_not_encrypted_with_cmk" {
+  title       = "Correct one Storage account container insights activity logs not encrypted with CMK"
+  description = "Runs corrective action on a single Storage account container insights activity logs not encrypted with CMK."
 
   tags = merge(local.storage_common_tags, { folder = "Internal" })
 
@@ -340,33 +343,33 @@ pipeline "correct_one_storage_account_with_encryption_at_rest_using_cmk_disabled
   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.storage_accounts_with_encryption_at_rest_using_cmk_disabled_default_action
-    enum        = local.storage_accounts_with_encryption_at_rest_using_cmk_disabled_default_action_enum
+    default     = var.monitor_storage_containers_insights_activity_logs_not_encrypted_with_cmk_default_action
+    enum        = local.monitor_storage_containers_insights_activity_logs_not_encrypted_with_cmk_default_action_enum
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.storage_accounts_with_encryption_at_rest_using_cmk_disabled_enabled_actions
-    enum        = local.storage_accounts_with_encryption_at_rest_using_cmk_disabled_enabled_actions_enum
+    default     = var.monitor_storage_containers_insights_activity_logs_not_encrypted_with_cmk_enabled_actions
+    enum        = local.monitor_storage_containers_insights_activity_logs_not_encrypted_with_cmk_enabled_actions_enum
   }
 
   param "encryption_key_name" {
     type        = string
     description = "Specifies the name of the encryption key in Key Vault."
-    default     = var.storage_accounts_with_encryption_at_rest_using_cmk_disabled_encryption_key_name
+    default     = var.monitor_storage_containers_insights_activity_logs_not_encrypted_with_cmk_encryption_key_name
   }
 
   param "encryption_key_version" {
     type        = string
     description = "Specifies the version of the encryption key in Key Vault. Leave blank for the latest version."
-    default     = var.storage_accounts_with_encryption_at_rest_using_cmk_disabled_encryption_key_version
+    default     = var.monitor_storage_containers_insights_activity_logs_not_encrypted_with_cmk_encryption_key_version
   }
 
   param "key_vault_uri" {
     type        = string
     description = "Specifies the URI of the Key Vault where the encryption key is stored."
-    default     = var.storage_accounts_with_encryption_at_rest_using_cmk_disabled_key_vault_uri
+    default     = var.monitor_storage_containers_insights_activity_logs_not_encrypted_with_cmk_key_vault_uri
   }
 
   step "pipeline" "respond" {
@@ -375,7 +378,7 @@ pipeline "correct_one_storage_account_with_encryption_at_rest_using_cmk_disabled
       notifier           = param.notifier
       notification_level = param.notification_level
       approvers          = param.approvers
-      detect_msg         = "Detected Storage account ${param.title} with encryption at rest using CMK disabled."
+      detect_msg         = "Detected Storage account containers insights activity logs ${param.title}  not encrypted with CMK"
       default_action     = param.default_action
       enabled_actions    = param.enabled_actions
       actions = {
@@ -406,8 +409,8 @@ pipeline "correct_one_storage_account_with_encryption_at_rest_using_cmk_disabled
             key_vault_uri          = param.key_vault_uri
             conn                   = param.conn
           }
-          success_msg = "Encrypted Storage account at rest ${param.title} with CMK."
-          error_msg   = "Error encrypting Storage account ar rest ${param.title} with CMK."
+          success_msg = "Encrypted Storage account ${param.title} with CMK."
+          error_msg   = "Error encrypting Storage account ${param.title} with CMK."
         }
       }
     }
