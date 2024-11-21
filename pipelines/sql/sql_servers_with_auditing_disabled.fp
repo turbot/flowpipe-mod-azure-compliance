@@ -1,5 +1,5 @@
 locals {
-  sql_servers_tde_protector_not_encrypted_with_cmk_query = <<-EOQ
+  sql_servers_with_auditing_disabled_query = <<-EOQ
     select
       concat(id, ' [', subscription_id, '/', resource_group, ']') as title,
 			name,
@@ -8,13 +8,13 @@ locals {
       _ctx ->> 'connection_name' as conn
     from
       azure_sql_server,
-      jsonb_array_elements(encryption_protector) encryption
+      jsonb_array_elements(server_audit_policy) audit
     where
-     	encryption ->> 'kind' = 'servicemanaged';
+    	audit -> 'properties' ->> 'state' = 'Disabled';
   EOQ
 }
 
-variable "sql_servers_tde_protector_not_encrypted_with_cmk_trigger_enabled" {
+variable "sql_servers_with_auditing_disabled_trigger_enabled" {
   type        = bool
   description = "If true, the trigger is enabled."
   default     = false
@@ -24,7 +24,7 @@ variable "sql_servers_tde_protector_not_encrypted_with_cmk_trigger_enabled" {
   }
 }
 
-variable "sql_servers_tde_protector_not_encrypted_with_cmk_trigger_schedule" {
+variable "sql_servers_with_auditing_disabled_trigger_schedule" {
   type        = string
   description = "If the trigger is enabled, run it on this schedule."
   default     = "15m"
@@ -34,27 +34,27 @@ variable "sql_servers_tde_protector_not_encrypted_with_cmk_trigger_schedule" {
   }
 }
 
-trigger "query" "detect_and_correct_sql_servers_tde_protector_not_encrypted_with_cmk" {
-  title         = "Detect & correct SQL servers TDE protector not encrypted with CMK"
-  description   = "Detect SQL servers TDE protector not encrypted with CMK."
+trigger "query" "detect_and_correct_sql_servers_with_auditing_disabled" {
+  title         = "Detect & correct SQL servers with auditing disabled"
+  description   = "Detect SQL servers with auditing disabled."
   tags          = local.sql_common_tags
 
-  enabled  = var.sql_servers_tde_protector_not_encrypted_with_cmk_trigger_enabled
-  schedule = var.sql_servers_tde_protector_not_encrypted_with_cmk_trigger_schedule
+  enabled  = var.sql_servers_with_auditing_disabled_trigger_enabled
+  schedule = var.sql_servers_with_auditing_disabled_trigger_schedule
   database = var.database
-  sql      = local.sql_servers_tde_protector_not_encrypted_with_cmk_query
+  sql      = local.sql_servers_with_auditing_disabled_query
 
   capture "insert" {
-    pipeline = pipeline.correct_sql_servers_tde_protector_not_encrypted_with_cmk
+    pipeline = pipeline.correct_sql_servers_with_auditing_disabled
     args = {
       items = self.inserted_rows
     }
   }
 }
 
-pipeline "detect_and_correct_sql_servers_tde_protector_not_encrypted_with_cmk" {
-  title         = "Detect & correct SQL servers TDE protector not encrypted with CMK"
-  description   = "Send notifications for SQL servers TDE protector not encrypted with CMK."
+pipeline "detect_and_correct_sql_servers_with_auditing_disabled" {
+  title         = "Detect & correct SQL servers with auditing disabled"
+  description   = "Detect SQL servers with auditing disabled."
   tags          = local.sql_common_tags
 
   param "database" {
@@ -78,11 +78,11 @@ pipeline "detect_and_correct_sql_servers_tde_protector_not_encrypted_with_cmk" {
 
   step "query" "detect" {
     database = param.database
-    sql      = local.sql_servers_tde_protector_not_encrypted_with_cmk_query
+    sql      = local.sql_servers_with_auditing_disabled_query
   }
 
   step "pipeline" "respond" {
-    pipeline = pipeline.correct_sql_servers_tde_protector_not_encrypted_with_cmk
+    pipeline = pipeline.correct_sql_servers_with_auditing_disabled
     args = {
       items                   = step.query.detect.rows
       notifier                = param.notifier
@@ -91,9 +91,9 @@ pipeline "detect_and_correct_sql_servers_tde_protector_not_encrypted_with_cmk" {
   }
 }
 
-pipeline "correct_sql_servers_tde_protector_not_encrypted_with_cmk" {
-  title         = "Correct SQL servers TDE protector not encrypted with CMK"
-  description   = "Encrypt SQL servers TDE protector not encrypted with CMK for servers not encrypted with CMK."
+pipeline "correct_sql_servers_with_auditing_disabled" {
+  title         = "Correct SQL servers with auditing disabled"
+  description   = "Send notifications for SQL servers with auditing disabled."
   tags          = merge(local.sql_common_tags, { folder = "Internal" })
 
   param "items" {
@@ -120,13 +120,13 @@ pipeline "correct_sql_servers_tde_protector_not_encrypted_with_cmk" {
   step "message" "notify_detection_count" {
     if       = var.notification_level == local.level_info
     notifier = param.notifier
-    text     = "Detected ${length(param.items)} SQL server(s) TDE not encrypted with CMK."
+    text     = "Detected ${length(param.items)} SQL server(s) with auditing disabled."
   }
 
   step "message" "notify_items" {
     if       = var.notification_level == local.level_info
     for_each = param.items
     notifier = param.notifier
-    text     = "Detected SQL server ${each.value.title} TDE not encrypted with CMK."
+    text     = "Detected SQL server ${each.value.title} with auditing disabled."
   }
 }

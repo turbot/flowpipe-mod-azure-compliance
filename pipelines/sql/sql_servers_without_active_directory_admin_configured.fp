@@ -1,5 +1,5 @@
 locals {
-  sql_servers_tde_protector_not_encrypted_with_cmk_query = <<-EOQ
+  sql_servers_without_active_directory_admin_configured_query = <<-EOQ
     select
       concat(id, ' [', subscription_id, '/', resource_group, ']') as title,
 			name,
@@ -10,11 +10,11 @@ locals {
       azure_sql_server,
       jsonb_array_elements(encryption_protector) encryption
     where
-     	encryption ->> 'kind' = 'servicemanaged';
+      server_azure_ad_administrator is null;
   EOQ
 }
 
-variable "sql_servers_tde_protector_not_encrypted_with_cmk_trigger_enabled" {
+variable "sql_servers_without_active_directory_admin_configured_trigger_enabled" {
   type        = bool
   description = "If true, the trigger is enabled."
   default     = false
@@ -24,7 +24,7 @@ variable "sql_servers_tde_protector_not_encrypted_with_cmk_trigger_enabled" {
   }
 }
 
-variable "sql_servers_tde_protector_not_encrypted_with_cmk_trigger_schedule" {
+variable "sql_servers_without_active_directory_admin_configured_trigger_schedule" {
   type        = string
   description = "If the trigger is enabled, run it on this schedule."
   default     = "15m"
@@ -34,27 +34,27 @@ variable "sql_servers_tde_protector_not_encrypted_with_cmk_trigger_schedule" {
   }
 }
 
-trigger "query" "detect_and_correct_sql_servers_tde_protector_not_encrypted_with_cmk" {
-  title         = "Detect & correct SQL servers TDE protector not encrypted with CMK"
-  description   = "Detect SQL servers TDE protector not encrypted with CMK."
+trigger "query" "detect_and_correct_sql_servers_without_active_directory_admin_configured" {
+  title         = "Detect & correct SQL servers without active directory admin configured"
+  description   = "Detect SQL servers without active directory admin configured."
   tags          = local.sql_common_tags
 
-  enabled  = var.sql_servers_tde_protector_not_encrypted_with_cmk_trigger_enabled
-  schedule = var.sql_servers_tde_protector_not_encrypted_with_cmk_trigger_schedule
+  enabled  = var.sql_servers_without_active_directory_admin_configured_trigger_enabled
+  schedule = var.sql_servers_without_active_directory_admin_configured_trigger_schedule
   database = var.database
-  sql      = local.sql_servers_tde_protector_not_encrypted_with_cmk_query
+  sql      = local.sql_servers_without_active_directory_admin_configured_query
 
   capture "insert" {
-    pipeline = pipeline.correct_sql_servers_tde_protector_not_encrypted_with_cmk
+    pipeline = pipeline.correct_sql_servers_without_active_directory_admin_configured
     args = {
       items = self.inserted_rows
     }
   }
 }
 
-pipeline "detect_and_correct_sql_servers_tde_protector_not_encrypted_with_cmk" {
-  title         = "Detect & correct SQL servers TDE protector not encrypted with CMK"
-  description   = "Send notifications for SQL servers TDE protector not encrypted with CMK."
+pipeline "detect_and_correct_sql_servers_without_active_directory_admin_configured" {
+  title         = "Detect & correct SQL servers without active directory admin configured"
+  description   = "Send notifications for SQL servers without active directory admin configured."
   tags          = local.sql_common_tags
 
   param "database" {
@@ -78,11 +78,11 @@ pipeline "detect_and_correct_sql_servers_tde_protector_not_encrypted_with_cmk" {
 
   step "query" "detect" {
     database = param.database
-    sql      = local.sql_servers_tde_protector_not_encrypted_with_cmk_query
+    sql      = local.sql_servers_without_active_directory_admin_configured_query
   }
 
   step "pipeline" "respond" {
-    pipeline = pipeline.correct_sql_servers_tde_protector_not_encrypted_with_cmk
+    pipeline = pipeline.correct_sql_servers_without_active_directory_admin_configured
     args = {
       items                   = step.query.detect.rows
       notifier                = param.notifier
@@ -91,9 +91,9 @@ pipeline "detect_and_correct_sql_servers_tde_protector_not_encrypted_with_cmk" {
   }
 }
 
-pipeline "correct_sql_servers_tde_protector_not_encrypted_with_cmk" {
-  title         = "Correct SQL servers TDE protector not encrypted with CMK"
-  description   = "Encrypt SQL servers TDE protector not encrypted with CMK for servers not encrypted with CMK."
+pipeline "correct_sql_servers_without_active_directory_admin_configured" {
+  title         = "Correct SQL servers without active directory admin configured"
+  description   = "Send notifications for SQL servers without active directory admin configured."
   tags          = merge(local.sql_common_tags, { folder = "Internal" })
 
   param "items" {
@@ -120,13 +120,13 @@ pipeline "correct_sql_servers_tde_protector_not_encrypted_with_cmk" {
   step "message" "notify_detection_count" {
     if       = var.notification_level == local.level_info
     notifier = param.notifier
-    text     = "Detected ${length(param.items)} SQL server(s) TDE not encrypted with CMK."
+    text     = "Detected ${length(param.items)} SQL server(s) without active directory admin configured."
   }
 
   step "message" "notify_items" {
     if       = var.notification_level == local.level_info
     for_each = param.items
     notifier = param.notifier
-    text     = "Detected SQL server ${each.value.title} TDE not encrypted with CMK."
+    text     = "Detected SQL server ${each.value.title} without active directory admin configured."
   }
 }
