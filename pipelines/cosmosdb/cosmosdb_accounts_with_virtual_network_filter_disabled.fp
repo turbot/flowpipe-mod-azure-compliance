@@ -1,14 +1,5 @@
 locals {
-  cosmosdb_accounts_not_using_private_link_query = <<-EOQ
-	 	with cosmosdb_private_connection as (
-      select
-        distinct a.id
-      from
-        azure_cosmosdb_account as a,
-        jsonb_array_elements(private_endpoint_connections) as connection
-      where
-        connection -> 'properties' -> 'privateLinkServiceConnectionState' ->> 'status' = 'Approved'
-    )
+  cosmosdb_accounts_with_virtual_network_filter_disabled_query = <<-EOQ
     select
       concat(a.id, ' [', a.subscription_id, '/', a.resource_group, ']') as title,
       a.id as id,
@@ -16,13 +7,12 @@ locals {
       _ctx ->> 'connection_name' as conn
 		from
    		azure_cosmosdb_account as a
-      left join cosmosdb_private_connection as c on c.id = a.id
 		where
-		  c.id is null;
+		  public_network_access = 'Enabled' and is_virtual_network_filter_enabled = 'false';
   EOQ
 }
 
-variable "cosmosdb_accounts_not_using_private_link_trigger_enabled" {
+variable "cosmosdb_accounts_with_virtual_network_filter_disabled_trigger_enabled" {
   type        = bool
   description = "If true, the trigger is enabled."
   default     = false
@@ -32,7 +22,7 @@ variable "cosmosdb_accounts_not_using_private_link_trigger_enabled" {
   }
 }
 
-variable "cosmosdb_accounts_not_using_private_link_trigger_schedule" {
+variable "cosmosdb_accounts_with_virtual_network_filter_disabled_trigger_schedule" {
   type        = string
   description = "If the trigger is enabled, run it on this schedule."
   default     = "15m"
@@ -42,27 +32,27 @@ variable "cosmosdb_accounts_not_using_private_link_trigger_schedule" {
   }
 }
 
-trigger "query" "detect_and_correct_cosmosdb_accounts_not_using_private_link" {
-  title         = "Detect & correct Cosmos DB accounts not using private link"
-  description   = "Detects Cosmos DB accounts not using private link."
+trigger "query" "detect_and_correct_cosmosdb_accounts_with_virtual_network_filter_disabled" {
+  title         = "Detect & correct Cosmos DB accounts with virtual network filter disabled"
+  description   = "Detects Cosmos DB accounts with virtual network filter disabled."
   tags          = local.cosmosdb_common_tags
 
-  enabled  = var.cosmosdb_accounts_not_using_private_link_trigger_enabled
-  schedule = var.cosmosdb_accounts_not_using_private_link_trigger_schedule
+  enabled  = var.cosmosdb_accounts_with_virtual_network_filter_disabled_trigger_enabled
+  schedule = var.cosmosdb_accounts_with_virtual_network_filter_disabled_trigger_schedule
   database = var.database
-  sql      = local.cosmosdb_accounts_not_using_private_link_query
+  sql      = local.cosmosdb_accounts_with_virtual_network_filter_disabled_query
 
   capture "insert" {
-    pipeline = pipeline.correct_cosmosdb_accounts_not_using_private_link
+    pipeline = pipeline.correct_cosmosdb_accounts_with_virtual_network_filter_disabled
     args = {
       items = self.inserted_rows
     }
   }
 }
 
-pipeline "detect_and_correct_cosmosdb_accounts_not_using_private_link" {
-  title         = "Detect & correct Cosmos DB accounts not using private link"
-  description   = "Detects Cosmos DB accounts not using private link."
+pipeline "detect_and_correct_cosmosdb_accounts_with_virtual_network_filter_disabled" {
+  title         = "Detect & correct Cosmos DB accounts with virtual network filter disabled"
+  description   = "Detects Cosmos DB accounts with virtual network filter disabled."
   tags          = local.cosmosdb_common_tags
 
   param "database" {
@@ -86,11 +76,11 @@ pipeline "detect_and_correct_cosmosdb_accounts_not_using_private_link" {
 
   step "query" "detect" {
     database = param.database
-    sql      = local.cosmosdb_accounts_not_using_private_link_query
+    sql      = local.cosmosdb_accounts_with_virtual_network_filter_disabled_query
   }
 
   step "pipeline" "respond" {
-    pipeline = pipeline.correct_cosmosdb_accounts_not_using_private_link
+    pipeline = pipeline.correct_cosmosdb_accounts_with_virtual_network_filter_disabled
     args = {
       items              = step.query.detect.rows
       notifier           = param.notifier
@@ -99,9 +89,9 @@ pipeline "detect_and_correct_cosmosdb_accounts_not_using_private_link" {
   }
 }
 
-pipeline "correct_cosmosdb_accounts_not_using_private_link" {
-  title         = "Correct Cosmos DB accounts not using private link"
-  description   = "Send notifications for Cosmos DB accounts not using private link."
+pipeline "correct_cosmosdb_accounts_with_virtual_network_filter_disabled" {
+  title         = "Correct Cosmos DB accounts with virtual network filter disabled"
+  description   = "Send notifications for Cosmos DB accounts with virtual network filter disabled."
   tags         = merge(local.cosmosdb_common_tags, { folder = "Internal" })
 
   param "items" {
@@ -128,13 +118,13 @@ pipeline "correct_cosmosdb_accounts_not_using_private_link" {
   step "message" "notify_detection_count" {
     if       = var.notification_level == local.level_info
     notifier = param.notifier
-    text     = "Detected ${length(param.items)} Cosmos DB account(s) not using private link."
+    text     = "Detected ${length(param.items)} Cosmos DB account(s) with virtual network filter disabled."
   }
 
   step "message" "notify_items" {
     if       = var.notification_level == local.level_info
     for_each = param.items
     notifier = param.notifier
-    text     = "Detected Cosmos DB account ${each.value.title} not using private link."
+    text     = "Detected Cosmos DB account ${each.value.title} with virtual network filter disabled."
   }
 }
