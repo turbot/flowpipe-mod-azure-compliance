@@ -2,12 +2,12 @@ locals {
   sql_databases_when_publicly_accessible_query = <<-EOQ
     select
       distinct concat(s.id, ' [', s.subscription_id, '/', s.resource_group, '/firewallrule/', f ->> 'name',']') as title,
-        s.id as id,
-        s.name,
-        f ->> 'name' as firewall_rule_name,
-        s.resource_group,
-        s.subscription_id,
-        s._ctx ->> 'connection_name' as conn
+      s.id as id,
+      s.name,
+      f ->> 'name' as firewall_rule_name,
+      s.resource_group,
+      s.subscription_id,
+      s._ctx ->> 'connection_name' as conn
     from
       azure_sql_server s,
       jsonb_array_elements(firewall_rules) as f,
@@ -242,7 +242,7 @@ pipeline "correct_one_sql_database_when_publicly_accessible" {
     description = local.description_resource_group
   }
 
- 	param "firewall_rule_name" {
+  param "firewall_rule_name" {
     type        = string
     description = "The firewall rule name."
   }

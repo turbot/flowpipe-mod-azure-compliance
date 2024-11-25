@@ -1,6 +1,6 @@
 locals {
   iam_users_allowed_to_register_application_query = <<-EOQ
-		with distinct_tenant as (
+	  with distinct_tenant as (
       select
         distinct tenant_id,
         _ctx
@@ -8,14 +8,14 @@ locals {
         azure_tenant
     )
     select
-			concat(a.id, ' [', t.tenant_id, ']') as title,
+      concat(a.id, ' [', t.tenant_id, ']') as title,
       t.tenant_id ,
-			a._ctx ->> 'connection_name' as conn
+      a._ctx ->> 'connection_name' as conn
     from
       distinct_tenant as t,
       azuread_authorization_policy as a
-		where
-			a.default_user_role_permissions ->> 'allowedToCreateApps' = 'true';
+    where
+      a.default_user_role_permissions ->> 'allowedToCreateApps' = 'true';
   EOQ
 }
 
@@ -98,7 +98,7 @@ pipeline "detect_and_correct_iam_users_allowed_to_register_application" {
 
 pipeline "correct_iam_users_allowed_to_register_application" {
   title         = "Correct authorization policy allowing IAM users to register application"
-  description   = "Send notifications for authorization policy  allowing IAM users to register application."
+  description   = "Send notifications for authorization policy allowing IAM users to register application."
   tags          = merge(local.iam_common_tags, { folder = "Internal" })
 
   param "items" {

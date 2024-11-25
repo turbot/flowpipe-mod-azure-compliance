@@ -2,7 +2,7 @@ locals {
   sql_servers_with_auditing_disabled_query = <<-EOQ
     select
       concat(id, ' [', subscription_id, '/', resource_group, ']') as title,
-			name,
+      name,
       resource_group,
       subscription_id,
       _ctx ->> 'connection_name' as conn
@@ -10,7 +10,7 @@ locals {
       azure_sql_server,
       jsonb_array_elements(server_audit_policy) audit
     where
-    	audit -> 'properties' ->> 'state' = 'Disabled';
+      audit -> 'properties' ->> 'state' = 'Disabled';
   EOQ
 }
 

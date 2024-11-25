@@ -12,10 +12,10 @@ locals {
     from
       azure_network_security_group nsg,
       jsonb_array_elements(security_rules) sg,
-	    jsonb_array_elements_text(
-	      sg -> 'properties' -> 'destinationPortRanges' || (sg -> 'properties' -> 'destinationPortRange') :: jsonb
-	    ) dport,
-	    jsonb_array_elements_text(
+      jsonb_array_elements_text(
+        sg -> 'properties' -> 'destinationPortRanges' || (sg -> 'properties' -> 'destinationPortRange') :: jsonb
+      ) dport,
+      jsonb_array_elements_text(
         sg -> 'properties' -> 'sourceAddressPrefixes' || (sg -> 'properties' -> 'sourceAddressPrefix') :: jsonb
       ) sip
     where
@@ -92,7 +92,7 @@ variable "network_security_groups_allowing_inbound_to_https_port_enabled_actions
 
 trigger "query" "detect_and_correct_network_security_groups_allowing_inbound_to_https_port" {
   title         = "Detect & correct NSGs allowing inbound to HTTPS port"
-  description   = "Detect NSGs that allow inbound from 0.0.0.0/0 to HTTPS port and revoke NSG rule."
+  description   = "Detect NSGs that allow inbound from 0.0.0.0/0 to HTTPS port and then revoke NSG rule."
   tags          = local.network_common_tags
 
   enabled  = var.network_security_groups_allowing_inbound_to_https_port_trigger_enabled
@@ -110,7 +110,7 @@ trigger "query" "detect_and_correct_network_security_groups_allowing_inbound_to_
 
 pipeline "detect_and_correct_network_security_groups_allowing_inbound_to_https_port" {
   title         = "Detect & correct NSGs allowing inbound to HTTPS port"
-  description   = "Detect NSGs that allow inbound from 0.0.0.0/0 to HTTPS port and revoke NSG rule."
+  description   = "Detect NSGs that allow inbound from 0.0.0.0/0 to HTTPS port and then revoke NSG rule."
   tags          = local.network_common_tags
 
   param "database" {
@@ -231,7 +231,7 @@ pipeline "correct_network_security_groups_allowing_inbound_to_https_port" {
   step "pipeline" "correct_item" {
     for_each        = { for row in param.items : row.title => row }
     max_concurrency = var.max_concurrency
-    pipeline        = pipeline.correct_one_network_security_groups_allowing_inbound_to_https_port
+    pipeline        = pipeline.correct_one_network_security_group_allowing_inbound_to_https_port
     args = {
       title              = each.value.title
       rule_name          = each.value.rule_name
@@ -250,7 +250,7 @@ pipeline "correct_network_security_groups_allowing_inbound_to_https_port" {
   }
 }
 
-pipeline "correct_one_network_security_groups_allowing_inbound_to_https_port" {
+pipeline "correct_one_network_security_group_allowing_inbound_to_https_port" {
   title         = "Correct one NSG allowing inbound to HTTPS port"
   description   = "Revoke a NSG rule allowing ingress to HTTPS port from 0.0.0.0/0."
   tags          = merge(local.network_common_tags, { folder = "Internal" })

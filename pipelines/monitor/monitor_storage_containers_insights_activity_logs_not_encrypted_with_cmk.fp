@@ -11,7 +11,7 @@ locals {
     from
       azure_storage_container c,
       azure_storage_account a
-		where
+    where
       c.name = 'insights-activity-logs'
       and c.account_name = a.name
       and a.encryption_key_source <> 'Microsoft.Keyvault';
@@ -27,7 +27,7 @@ variable "monitor_storage_containers_insights_activity_logs_not_encrypted_with_c
   default     = false
 
   tags = {
-    folder = "Advanced/Storage"
+    folder = "Advanced/Monitor"
   }
 }
 
@@ -37,7 +37,7 @@ variable "monitor_storage_containers_insights_activity_logs_not_encrypted_with_c
   description = "If the trigger is enabled, run it on this schedule."
 
   tags = {
-    folder = "Advanced/Storage"
+    folder = "Advanced/Monitor"
   }
 }
 
@@ -48,7 +48,7 @@ variable "monitor_storage_containers_insights_activity_logs_not_encrypted_with_c
   enum        = ["notify", "skip", "encrypt_storage_account_with_cmk"]
 
   tags = {
-    folder = "Advanced/Storage"
+    folder = "Advanced/Monitor"
   }
 }
 
@@ -59,7 +59,7 @@ variable "monitor_storage_containers_insights_activity_logs_not_encrypted_with_c
   enum        = ["skip", "encrypt_storage_account_with_cmk"]
 
   tags = {
-    folder = "Advanced/Storage"
+    folder = "Advanced/Monitor"
   }
 }
 
@@ -69,7 +69,7 @@ variable "monitor_storage_containers_insights_activity_logs_not_encrypted_with_c
   default     = " " // Add your key vault URI here.
 
   tags = {
-    folder = "Advanced/Storage"
+    folder = "Advanced/Monitor"
   }
 }
 
@@ -79,7 +79,7 @@ variable "monitor_storage_containers_insights_activity_logs_not_encrypted_with_c
   default     = " " // Add your key version here.
 
   tags = {
-    folder = "Advanced/Storage"
+    folder = "Advanced/Monitor"
   }
 }
 
@@ -89,7 +89,7 @@ variable "monitor_storage_containers_insights_activity_logs_not_encrypted_with_c
   default     = " " // Add your key name here.
 
   tags = {
-    folder = "Advanced/Storage"
+    folder = "Advanced/Monitor"
   }
 }
 
@@ -97,7 +97,7 @@ trigger "query" "detect_and_correct_monitor_storage_containers_insights_activity
   title       = "Detect & correct Storage account containers insights activity logs not encrypted with CMK"
   description = "Detect Storage account containers insights activity logs not encrypted with CMK and then enable encryption using CMK."
 
-  tags = local.storage_common_tags
+  tags = local.monitor_common_tags
 
   enabled  = var.monitor_storage_containers_insights_activity_logs_not_encrypted_with_cmk_trigger_enabled
   schedule = var.monitor_storage_containers_insights_activity_logs_not_encrypted_with_cmk_trigger_schedule
@@ -116,7 +116,7 @@ pipeline "detect_and_correct_monitor_storage_containers_insights_activity_logs_n
   title       = "Detect & correct Storage account containers insights activity logs not encrypted with CMK"
   description = "Detect Storage containers insights activity logs not encrypted with CMK and then enable encryption using CMK."
 
-  tags = local.storage_common_tags
+  tags = local.monitor_common_tags
 
   param "database" {
     type        = connection.steampipe
@@ -199,7 +199,7 @@ pipeline "detect_and_correct_monitor_storage_containers_insights_activity_logs_n
 pipeline "correct_monitor_storage_containers_insights_activity_logs_not_encrypted_with_cmk" {
   title       = "Correct Storage account containers insights activity logs not encrypted with CMK"
   description = "Executes corrective actions on Storage account containers insights activity logs not encrypted with CMK."
-  tags = merge(local.storage_common_tags, { folder = "Internal" })
+  tags = merge(local.monitor_common_tags, { folder = "Internal" })
 
   param "items" {
     type = list(object({
@@ -294,7 +294,7 @@ pipeline "correct_one_monitor_storage_container_insights_activity_logs_not_encry
   title       = "Correct one Storage account container insights activity logs not encrypted with CMK"
   description = "Runs corrective action on a single Storage account container insights activity logs not encrypted with CMK."
 
-  tags = merge(local.storage_common_tags, { folder = "Internal" })
+  tags = merge(local.monitor_common_tags, { folder = "Internal" })
 
   param "title" {
     type        = string
@@ -378,7 +378,7 @@ pipeline "correct_one_monitor_storage_container_insights_activity_logs_not_encry
       notifier           = param.notifier
       notification_level = param.notification_level
       approvers          = param.approvers
-      detect_msg         = "Detected Storage account containers insights activity logs ${param.title}  not encrypted with CMK"
+      detect_msg         = "Detected Storage account containers insights activity logs ${param.title} not encrypted with CMK"
       default_action     = param.default_action
       enabled_actions    = param.enabled_actions
       actions = {

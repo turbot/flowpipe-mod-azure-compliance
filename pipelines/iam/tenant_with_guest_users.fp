@@ -9,12 +9,12 @@ locals {
         azure_tenant
     )
     select
-			concat(display_name, ' [', u.tenant_id, ']') as title,
-			u.tenant_id,
+      concat(display_name, ' [', u.tenant_id, ']') as title,
+      u.tenant_id,
       u.user_principal_name as user_principal_name,
-			account_enabled,
-			extract(day from current_timestamp - u.created_date_time::timestamp),
-			u._ctx ->> 'connection_name' as conn
+      account_enabled,
+      extract(day from current_timestamp - u.created_date_time::timestamp),
+      u._ctx ->> 'connection_name' as conn
     from
       azuread_user as u
       left join distinct_tenant as t on t.tenant_id = u.tenant_id
@@ -68,7 +68,7 @@ variable "tenant_with_guest_users_enabled_actions" {
 
 trigger "query" "detect_and_correct_tenant_with_guest_users" {
   title         = "Detect & correct tenant with guest users"
-  description   = "Detect  tenant with guest users and then disable and delete guest user."
+  description   = "Detect tenant with guest users and then disable and delete guest user."
   tags          = local.iam_common_tags
 
   enabled  = var.tenant_with_guest_users_trigger_enabled
@@ -86,7 +86,7 @@ trigger "query" "detect_and_correct_tenant_with_guest_users" {
 
 pipeline "detect_and_correct_tenant_with_guest_users" {
   title         = "Detect & correct tenant with guest users"
-  description   = "Detect  tenant with guest users and then disable and delete guest user."
+  description   = "Detect tenant with guest users and then disable and delete guest user."
   tags          = local.iam_common_tags
 
   param "database" {
@@ -154,8 +154,9 @@ pipeline "correct_tenant_with_guest_users" {
   param "items" {
     type = list(object({
       title               = string
-			user_principal_name = string
-			account_enabled     = bool
+      user_principal_name = string
+      tenant_id           = string
+      account_enabled     = bool
       conn                = string
     }))
     description = local.description_items
@@ -197,7 +198,7 @@ pipeline "correct_tenant_with_guest_users" {
   step "message" "notify_detection_count" {
     if       = var.notification_level == local.level_info
     notifier = param.notifier
-    text     = "Detected ${length(param.items)} guest user(s)."
+    text     = "Detected ${length(param.items)} guest user(s) in tenant ${param.tenant_id}."
   }
 
   step "pipeline" "correct_item" {
@@ -207,7 +208,7 @@ pipeline "correct_tenant_with_guest_users" {
     args = {
       title               = each.value.title
       user_principal_name = each.value.user_principal_name
-			account_enabled     = each.value.account_enabled
+		  account_enabled     = each.value.account_enabled
       conn                = connection.azure[each.value.conn]
       notifier            = param.notifier
       notification_level  = param.notification_level
@@ -233,7 +234,12 @@ pipeline "correct_tenant_with_one_guest_user" {
     description = "The user principal name of the guest user."
   }
 
-	param "account_enabled" {
+  param "tenant_id" {
+    type        = string
+    description = "The Tenant ID of Azure."
+  }
+
+  param "account_enabled" {
     type        = bool
     description = "Specifies whether account is enabled or disabled."
   }
@@ -306,6 +312,7 @@ pipeline "correct_tenant_with_one_guest_user" {
           pipeline_ref = pipeline.disable_and_delete_user
           pipeline_args = {
             user_principal_name = param.user_principal_name
+            tenant_id           = param.tenant_id
             conn                = param.conn
           }
           success_msg = "Disabled and deleted the guest user ${param.title}."
@@ -319,6 +326,7 @@ pipeline "correct_tenant_with_one_guest_user" {
 pipeline "disable_and_delete_user" {
   title       = "Disable and Delete Azure AD User"
   description = "Disable a user account in Azure AD and then delete the account."
+  tags        = merge(local.iam_common_tags, { folder = "Internal" })
 
   param "conn" {
     type        = connection.azure

@@ -1,6 +1,6 @@
 locals {
   iam_conditional_access_with_mfa_disabled_query = <<-EOQ
-		with distinct_tenant as (
+    with distinct_tenant as (
       select
         distinct tenant_id
       from
@@ -9,12 +9,12 @@ locals {
     select
       concat(p.id, ' [', t.tenant_id, ']') as title,
       t.tenant_id,
-			_ctx ->> 'connection_name' as conn
+      _ctx ->> 'connection_name' as conn
     from
       distinct_tenant as t,
       azuread_conditional_access_policy as p
-		where
-			not p.built_in_controls @> '["mfa"]';
+    where
+      not p.built_in_controls @> '["mfa"]';
   EOQ
 }
 
@@ -102,8 +102,8 @@ pipeline "correct_iam_conditional_access_with_mfa_disabled" {
 
   param "items" {
     type = list(object({
-      title               = string
-      conn                = string
+      title   = string
+      conn    = string
     }))
     description = local.description_items
   }

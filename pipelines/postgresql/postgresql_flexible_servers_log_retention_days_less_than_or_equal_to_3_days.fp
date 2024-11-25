@@ -124,7 +124,7 @@ pipeline "detect_and_correct_postgresql_flexible_servers_log_retention_days_less
     enum        = local.postgresql_flexible_servers_log_retention_days_less_than_or_equal_to_3_days_default_action_enum
   }
 
-	param "log_retention_days" {
+  param "log_retention_days" {
     type        = string
     description = "The number of days logs should be retained."
     default     = var.postgresql_flexible_servers_log_retention_days_less_than_or_equal_to_3_days_log_retention_days
@@ -206,7 +206,7 @@ pipeline "correct_postgresql_flexible_servers_log_retention_days_less_than_or_eq
     enum        = local.postgresql_flexible_servers_log_retention_days_less_than_or_equal_to_3_days_enabled_actions_enum
   }
 
-	param "log_retention_days" {
+  param "log_retention_days" {
     type        = string
     description = "The number of days logs should be retained."
     default     = var.postgresql_flexible_servers_log_retention_days_less_than_or_equal_to_3_days_log_retention_days
@@ -233,7 +233,7 @@ pipeline "correct_postgresql_flexible_servers_log_retention_days_less_than_or_eq
       approvers          = param.approvers
       default_action     = param.default_action
       enabled_actions    = param.enabled_actions
-			log_retention_days = param.log_retention_days
+		  log_retention_days = param.log_retention_days
     }
   }
 }
@@ -301,7 +301,7 @@ pipeline "correct_one_postgresql_flexible_server_with_log_retention_less_than_3_
     enum        = local.postgresql_flexible_servers_log_retention_days_less_than_or_equal_to_3_days_enabled_actions_enum
   }
 
-	param "log_retention_days" {
+  param "log_retention_days" {
     type        = string
     description = "The number of days logs should be retained."
   }

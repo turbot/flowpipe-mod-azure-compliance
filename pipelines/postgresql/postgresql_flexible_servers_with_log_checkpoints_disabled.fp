@@ -198,7 +198,7 @@ pipeline "correct_postgresql_flexible_servers_with_log_checkpoints_disabled" {
   step "pipeline" "correct_item" {
     for_each        = { for row in param.items : row.id => row }
     max_concurrency = var.max_concurrency
-    pipeline        = pipeline.correct_one_postgresql_flexible_servers_with_log_checkpoints_disabled
+    pipeline        = pipeline.correct_one_postgresql_flexible_server_with_log_checkpoints_disabled
     args = {
       title              = each.value.title
       name               = each.value.name
@@ -214,7 +214,7 @@ pipeline "correct_postgresql_flexible_servers_with_log_checkpoints_disabled" {
   }
 }
 
-pipeline "correct_one_postgresql_flexible_servers_with_log_checkpoints_disabled" {
+pipeline "correct_one_postgresql_flexible_server_with_log_checkpoints_disabled" {
   title         = "Correct PostgreSQL flexible server with log checkpoints disabled"
   description   = "Enable log checkpoints for a PostgreSQL flexible server with log checkpoints disabled."
   tags          = merge(local.postgresql_common_tags, { folder = "Internal" })

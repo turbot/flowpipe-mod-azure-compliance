@@ -8,11 +8,9 @@ locals {
       vault.subscription_id,
       vault._ctx ->> 'connection_name' as conn
     from
-      azure_key_vault as vault,
-      azure_subscription as sub
+      azure_key_vault as vault
     where
-      sub.subscription_id = vault.subscription_id
-      and not (soft_delete_enabled and purge_protection_enabled);
+      not (soft_delete_enabled and purge_protection_enabled);
   EOQ
 
   keyvault_vaults_non_recoverable_enabled_actions_enum = ["skip", "enable_purge_protection"]
@@ -195,14 +193,10 @@ pipeline "correct_keyvault_vaults_non_recoverable" {
     text     = "Detected ${length(param.items)} non-recoverable Key Vaults."
   }
 
-  step "transform" "items_by_id" {
-    value = { for row in param.items : row.id => row }
-  }
-
   step "pipeline" "correct_item" {
-    for_each        = step.transform.items_by_id.value
+    for_each        = { for row in param.items : row.id => row }
     max_concurrency = var.max_concurrency
-    pipeline        = pipeline.correct_one_keyvault_vaults_non_recoverable
+    pipeline        = pipeline.correct_one_keyvault_vault_non_recoverable
     args = {
       title              = each.value.title
       name               = each.value.name
@@ -218,7 +212,7 @@ pipeline "correct_keyvault_vaults_non_recoverable" {
   }
 }
 
-pipeline "correct_one_keyvault_vaults_non_recoverable" {
+pipeline "correct_one_keyvault_vault_non_recoverable" {
   title         = "Correct one non-recoverable Key Vault"
   description   = "Enable purge protection on a single non-recoverable Key Vault."
   tags          = merge(local.keyvault_common_tags, { folder = "Internal" })

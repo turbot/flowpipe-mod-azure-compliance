@@ -1,6 +1,6 @@
 locals {
   keyvault_vaults_not_using_private_link_query = <<-EOQ
-   	select
+    select
       concat(vault.id, ' [', vault.subscription_id, '/', vault.resource_group, ']') as title,
       vault.id as id,
       vault.name,
@@ -10,8 +10,8 @@ locals {
     from
       azure_key_vault as vault
     where
-			private_endpoint_connections is null
-			or ( not private_endpoint_connections @> '[{"PrivateLinkServiceConnectionStateStatus": "Approved"}]');
+      private_endpoint_connections is null
+      or ( not private_endpoint_connections @> '[{"PrivateLinkServiceConnectionStateStatus": "Approved"}]');
   EOQ
 }
 

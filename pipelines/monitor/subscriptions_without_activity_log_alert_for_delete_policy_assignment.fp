@@ -18,7 +18,7 @@ locals {
         and alert.enabled
         and sc = '/subscriptions/' || alert.subscription_id
         and alert.condition -> 'allOf' @> '[{"equals":"Administrative","field":"category"}]'
-    		and alert.condition -> 'allOf' @> '[{"field": "operationName", "equals": "Microsoft.Authorization/policyAssignments/delete"}]'
+        and alert.condition -> 'allOf' @> '[{"field": "operationName", "equals": "Microsoft.Authorization/policyAssignments/delete"}]'
       limit
         1
     )

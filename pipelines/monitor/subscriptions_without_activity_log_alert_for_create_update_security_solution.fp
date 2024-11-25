@@ -18,16 +18,16 @@ locals {
         and alert.enabled
         and sc = '/subscriptions/' || alert.subscription_id
         and (
-				(
-					alert.condition -> 'allOf' @> '[{"equals":"Security","field":"category"}]'
-					and alert.condition -> 'allOf' @> '[{"field": "operationName", "equals": "Microsoft.Security/securitySolutions/write"}]'
-				)
-				or (
-					alert.condition -> 'allOf' @> '[{"equals":"Security","field":"category"}]'
-					and alert.condition -> 'allOf' @> '[{"field": "resourceType", "equals": "microsoft.security/securitysolutions"}]'
-					and jsonb_array_length(alert.condition -> 'allOf') = 2
-				)
-			)
+        (
+          alert.condition -> 'allOf' @> '[{"equals":"Security","field":"category"}]'
+          and alert.condition -> 'allOf' @> '[{"field": "operationName", "equals": "Microsoft.Security/securitySolutions/write"}]'
+        )
+        or (
+          alert.condition -> 'allOf' @> '[{"equals":"Security","field":"category"}]'
+          and alert.condition -> 'allOf' @> '[{"field": "resourceType", "equals": "microsoft.security/securitysolutions"}]'
+          and jsonb_array_length(alert.condition -> 'allOf') = 2
+        )
+      )
       limit
         1
     ), resource_group as (
@@ -84,7 +84,7 @@ variable "subscriptions_without_activity_log_alert_for_create_update_security_so
   }
 }
 
-trigger "query" "f" {
+trigger "query" "detect_and_correct_subscriptions_without_activity_log_alert_for_create_update_security_solution" {
   title         = "Detect & correct subscriptions without activity log alert for create and update security solution"
   description   = "Detects subscriptions without an activity log alert for create and update security solution."
   tags          = local.monitor_common_tags

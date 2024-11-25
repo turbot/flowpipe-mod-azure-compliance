@@ -2,7 +2,7 @@ locals {
   compute_disks_with_data_access_auth_mode_disabled_query = <<-EOQ
     select
       concat(id, ' [', subscription_id, '/', resource_group, ']') as title,
-			name,
+		  name,
       resource_group,
       subscription_id,
       _ctx ->> 'connection_name' as conn

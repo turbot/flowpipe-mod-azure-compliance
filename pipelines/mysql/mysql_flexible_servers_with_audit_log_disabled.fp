@@ -200,7 +200,7 @@ pipeline "correct_mysql_flexible_servers_with_audit_log_disabled" {
   step "pipeline" "correct_item" {
     for_each        = { for row in param.items : row.id => row }
     max_concurrency = var.max_concurrency
-    pipeline        = pipeline.correct_one_mysql_flexible_servers_with_audit_log_disabled
+    pipeline        = pipeline.correct_one_mysql_flexible_server_with_audit_log_disabled
     args = {
       title              = each.value.title
       server_name        = each.value.server_name
@@ -216,7 +216,7 @@ pipeline "correct_mysql_flexible_servers_with_audit_log_disabled" {
   }
 }
 
-pipeline "correct_one_mysql_flexible_servers_with_audit_log_disabled" {
+pipeline "correct_one_mysql_flexible_server_with_audit_log_disabled" {
   title       = "Correct MySQL flexible server with audit log disabled"
   description = "Enable audit log for a MySQL flexible server with audit log disabled"
   tags        = merge(local.mysql_common_tags, { folder = "Internal" })
@@ -312,8 +312,8 @@ pipeline "correct_one_mysql_flexible_servers_with_audit_log_disabled" {
             resource_group     = param.resource_group
             subscription_id    = param.subscription_id
             conn               = param.conn
-						parameter_name     = "audit_log_enabled"
-						parameter_value    = "on"
+            parameter_name     = "audit_log_enabled"
+            parameter_value    = "on"
           }
           success_msg = "Enabled audit log for MySQL flexible server ${param.title}."
           error_msg   = "Error enabling audit log for MySQL flexible server ${param.title}."

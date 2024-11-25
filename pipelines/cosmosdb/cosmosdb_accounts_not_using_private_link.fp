@@ -1,6 +1,6 @@
 locals {
   cosmosdb_accounts_not_using_private_link_query = <<-EOQ
-	 	with cosmosdb_private_connection as (
+    with cosmosdb_private_connection as (
       select
         distinct a.id
       from
@@ -14,11 +14,11 @@ locals {
       a.id as id,
       subscription_id,
       _ctx ->> 'connection_name' as conn
-		from
-   		azure_cosmosdb_account as a
+    from
+      azure_cosmosdb_account as a
       left join cosmosdb_private_connection as c on c.id = a.id
-		where
-		  c.id is null;
+    where
+      c.id is null;
   EOQ
 }
 

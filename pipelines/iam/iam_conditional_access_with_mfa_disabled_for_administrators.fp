@@ -1,25 +1,25 @@
 locals {
   iam_conditional_access_with_mfa_disabled_for_administrators_query = <<-EOQ
-		with distinct_tenant as (
+    with distinct_tenant as (
       select
-       	distinct u.id,
+        distinct u.id,
         tenant_id
       from
         azuread_user as u
         left join azure_role_assignment as a on a.principal_id = u.id
         left join azure_role_definition as d on d.id = a.role_definition_id
       where
-				role_type = 'BuiltInRole' and (role_name like '%Administrator%' or role_name = 'Owner')
+        role_type = 'BuiltInRole' and (role_name like '%Administrator%' or role_name = 'Owner')
     )
     select
-			concat(p.id, ' [', t.tenant_id, ']') as title,
+      concat(p.id, ' [', t.tenant_id, ']') as title,
       t.tenant_id,
-			_ctx ->> 'connection_name' as conn
+      _ctx ->> 'connection_name' as conn
     from
       distinct_tenant as t,
       azuread_conditional_access_policy as p
-		where
-			not p.built_in_controls @> '["mfa"]';
+    where
+      not p.built_in_controls @> '["mfa"]';
   EOQ
 }
 

@@ -196,7 +196,7 @@ pipeline "correct_keyvault_vaults_with_rbac_disabled" {
   step "pipeline" "correct_item" {
     for_each        = { for row in param.items : row.id => row }
     max_concurrency = var.max_concurrency
-    pipeline        = pipeline.correct_one_keyvault_vaults_with_rbac_disabled
+    pipeline        = pipeline.correct_one_keyvault_vault_with_rbac_disabled
     args = {
       title              = each.value.title
       name               = each.value.name
@@ -212,7 +212,7 @@ pipeline "correct_keyvault_vaults_with_rbac_disabled" {
   }
 }
 
-pipeline "correct_one_keyvault_vaults_with_rbac_disabled" {
+pipeline "correct_one_keyvault_vault_with_rbac_disabled" {
   title         = "Correct one Key Vault with RBAC disabled"
   description   = "Enable RBAC on a single Key Vault with RBAC disabled."
   tags          = merge(local.keyvault_common_tags, { folder = "Internal" })

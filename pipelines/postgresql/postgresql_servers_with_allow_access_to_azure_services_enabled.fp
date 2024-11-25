@@ -209,7 +209,7 @@ pipeline "correct_postgresql_servers_with_allow_access_to_azure_services_enabled
   step "pipeline" "correct_item" {
     for_each        = { for row in param.items : row.id => row }
     max_concurrency = var.max_concurrency
-    pipeline        = pipeline.correct_one_postgresql_servers_with_allow_access_to_azure_services_enabled
+    pipeline        = pipeline.correct_one_postgresql_server_with_allow_access_to_azure_services_enabled
     args = {
       title              = each.value.title
       name               = each.value.name
@@ -225,7 +225,7 @@ pipeline "correct_postgresql_servers_with_allow_access_to_azure_services_enabled
   }
 }
 
-pipeline "correct_one_postgresql_servers_with_allow_access_to_azure_services_enabled" {
+pipeline "correct_one_postgresql_server_with_allow_access_to_azure_services_enabled" {
   title         = "Correct PostgreSQL server allowing access to Azure services"
   description   = "Disable access to Azure services for a PostgreSQL server with enabled access to Azure services."
   tags          = merge(local.postgresql_common_tags, { folder = "Internal" })

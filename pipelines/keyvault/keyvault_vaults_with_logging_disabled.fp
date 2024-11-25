@@ -1,6 +1,6 @@
 locals {
   keyvault_vaults_with_logging_disabled_query = <<-EOQ
-		with logging_details as (
+    with logging_details as (
       select
         name as key_vault_name
       from
@@ -14,7 +14,7 @@ locals {
         and log ->> 'category' = 'AuditEvent'
         and (log -> 'retentionPolicy') :: JSONB ? 'days'
     )
-   	select
+    select
       concat(v.id, ' [', v.subscription_id, '/', v.resource_group, ']') as title,
       v.id as id,
       v.name,
@@ -23,10 +23,10 @@ locals {
       v._ctx ->> 'connection_name' as conn
     from
       azure_key_vault v
-			left join logging_details l on l.key_vault_name = v.name
-		where
-			v.diagnostic_settings is null
-			or l.key_vault_name not like concat('%', v.name, '%');
+      left join logging_details l on l.key_vault_name = v.name
+    where
+      v.diagnostic_settings is null
+      or l.key_vault_name not like concat('%', v.name, '%');
   EOQ
 }
 
@@ -109,7 +109,7 @@ pipeline "detect_and_correct_keyvault_vaults_with_logging_disabled" {
 
 pipeline "correct_keyvault_vaults_with_logging_disabled" {
   title         = "Correct Key Vaults with logging disabled"
-  description   = "Send notifications for Key Vaults with logging disabled"
+  description   = "Send notifications for Key Vaults with logging disabled."
   tags         = merge(local.keyvault_common_tags, { folder = "Internal" })
 
   param "items" {

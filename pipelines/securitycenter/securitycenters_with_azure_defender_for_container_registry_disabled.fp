@@ -294,7 +294,7 @@ pipeline "correct_one_securitycenter_with_azure_defender_for_container_registry_
           error_msg   = ""
         },
         "enable_container_registry_azure_defender" = {
-          label        = "Enable Container Registry Azure Defender"
+          label        = "Enable container registry Azure Defender"
           value        = "enable_container_registry_azure_defender"
           style        = local.style_alert
           pipeline_ref = azure.pipeline.create_security_pricing

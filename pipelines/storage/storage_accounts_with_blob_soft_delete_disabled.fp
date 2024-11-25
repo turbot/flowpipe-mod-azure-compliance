@@ -12,7 +12,7 @@ locals {
       azure_subscription as sub
     where
       sub.subscription_id = sa.subscription_id
-			and not blob_soft_delete_enabled;
+      and not blob_soft_delete_enabled;
   EOQ
 
   storage_accounts_with_blob_soft_delete_disabled_enabled_actions_enum = ["skip", "enable_blob_soft_delete"]

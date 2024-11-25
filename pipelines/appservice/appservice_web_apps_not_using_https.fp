@@ -8,11 +8,9 @@ locals {
       app.subscription_id,
       app._ctx ->> 'connection_name' as conn
     from
-      azure_app_service_web_app as app,
-      azure_subscription as sub
+      azure_app_service_web_app as app
     where
-      sub.subscription_id = app.subscription_id
-      and not https_only;
+      not https_only;
   EOQ
 
   appservice_web_apps_not_using_https_enabled_actions_enum = ["skip", "enable_https"]

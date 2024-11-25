@@ -80,7 +80,7 @@ variable "keyvault_with_rbac_secrets_expiration_not_set_expiration_date" {
 
 trigger "query" "detect_and_correct_keyvault_with_rbac_secrets_expiration_not_set" {
   title         = "Detect & correct Key Vaults with RBAC secrets without expiration date"
-  description   = "Detects Key Vaults with RBAC secrets that do not have an expiration date set and runs your chosen action."
+  description   = "Detects Key Vaults with RBAC secrets that do not have an expiration date set and then set expiration date."
   tags          = local.keyvault_common_tags
 
   enabled  = var.keyvault_with_rbac_secrets_expiration_not_set_trigger_enabled
@@ -98,7 +98,7 @@ trigger "query" "detect_and_correct_keyvault_with_rbac_secrets_expiration_not_se
 
 pipeline "detect_and_correct_keyvault_with_rbac_secrets_expiration_not_set" {
   title         = "Detect & correct Key Vaults with RBAC secrets without expiration date"
-  description   = "Detects Key Vaults with RBAC secrets that do not have an expiration date set and runs your chosen action."
+  description   = "Detects Key Vaults with RBAC secrets that do not have an expiration date set and then set expiration date."
   tags          = local.keyvault_common_tags
 
   param "database" {
@@ -230,7 +230,7 @@ pipeline "correct_keyvault_with_rbac_secrets_expiration_not_set" {
   step "pipeline" "correct_item" {
     for_each        = { for row in param.items : row.id => row }
     max_concurrency = var.max_concurrency
-    pipeline        = pipeline.correct_one_keyvault_with_rbac_secrets_expiration_not_set
+    pipeline        = pipeline.correct_one_keyvault_with_rbac_secret_expiration_not_set
     args = {
       title              = each.value.title
       name               = each.value.name
@@ -247,7 +247,7 @@ pipeline "correct_keyvault_with_rbac_secrets_expiration_not_set" {
   }
 }
 
-pipeline "correct_one_keyvault_with_rbac_secrets_expiration_not_set" {
+pipeline "correct_one_keyvault_with_rbac_secret_expiration_not_set" {
   title         = "Correct one Key Vault with RBAC secret without expiration date"
   description   = "Runs corrective action on a single Key Vault with RBAC secret without expiration date."
   tags          = merge(local.keyvault_common_tags, { folder = "Internal" })
@@ -333,7 +333,7 @@ pipeline "correct_one_keyvault_with_rbac_secrets_expiration_not_set" {
           pipeline_args = {
             notifier = param.notifier
             send     = param.notification_level == local.level_info
-            text     = "Skipped Key Vault secret ${param.title} without expiration date."
+            text     = "Skipped Key Vault secret ${param.title}."
           }
           success_msg = ""
           error_msg   = ""

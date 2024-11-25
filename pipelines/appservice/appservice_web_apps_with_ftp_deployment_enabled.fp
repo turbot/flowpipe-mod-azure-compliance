@@ -8,11 +8,9 @@ locals {
       app.subscription_id,
       app._ctx ->> 'connection_name' as conn
     from
-      azure_app_service_web_app as app,
-      azure_subscription as sub
+      azure_app_service_web_app as app
     where
-      sub.subscription_id = app.subscription_id
-      and configuration -> 'properties' ->> 'ftpsState' = 'AllAllowed';
+      configuration -> 'properties' ->> 'ftpsState' = 'AllAllowed';
   EOQ
 
   appservice_web_apps_with_ftp_deployment_enabled_enabled_actions_enum = ["skip", "disable_ftp_deployment"]

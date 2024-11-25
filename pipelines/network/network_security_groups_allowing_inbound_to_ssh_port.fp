@@ -90,7 +90,7 @@ variable "network_security_groups_allowing_inbound_to_ssh_port_enabled_actions" 
 
 trigger "query" "detect_and_correct_network_security_groups_allowing_inbound_to_ssh_port" {
   title         = "Detect & correct NSGs allowing inbound to SSH port"
-  description   = "Detect NSGs that allow inbound from 0.0.0.0/0 to SSH port and revoke NSG rule."
+  description   = "Detect NSGs that allow inbound from 0.0.0.0/0 to SSH port and then revoke NSG rule."
   tags          = local.network_common_tags
 
   enabled  = var.network_security_groups_allowing_inbound_to_ssh_port_trigger_enabled
@@ -108,7 +108,7 @@ trigger "query" "detect_and_correct_network_security_groups_allowing_inbound_to_
 
 pipeline "detect_and_correct_network_security_groups_allowing_inbound_to_ssh_port" {
   title         = "Detect & correct NSGs allowing inbound to SSH port"
-  description   = "Detect NSGs that allow inbound from 0.0.0.0/0 to SSH port and revoke NSG rule."
+  description   = "Detect NSGs that allow inbound from 0.0.0.0/0 to SSH port and then revoke NSG rule."
   tags          = local.network_common_tags
 
   param "database" {
@@ -229,7 +229,7 @@ pipeline "correct_network_security_groups_allowing_inbound_to_ssh_port" {
   step "pipeline" "correct_item" {
     for_each        = { for row in param.items : row.title => row }
     max_concurrency = var.max_concurrency
-    pipeline        = pipeline.correct_one_network_security_groups_allowing_inbound_to_ssh_port
+    pipeline        = pipeline.correct_one_network_security_group_allowing_inbound_to_ssh_port
     args = {
       title              = each.value.title
       rule_name          = each.value.rule_name
@@ -248,7 +248,7 @@ pipeline "correct_network_security_groups_allowing_inbound_to_ssh_port" {
   }
 }
 
-pipeline "correct_one_network_security_groups_allowing_inbound_to_ssh_port" {
+pipeline "correct_one_network_security_group_allowing_inbound_to_ssh_port" {
   title         = "Correct one NSG allowing inbound to SSH port"
   description   = "Revoke a NSG rule allowing ingress to SSH port from 0.0.0.0/0."
   tags          = merge(local.network_common_tags, { folder = "Internal" })

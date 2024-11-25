@@ -1,8 +1,8 @@
 locals {
   securitycenters_with_automatic_provisioning_monitoring_agent_disabled_query = <<-EOQ
     select
-			concat(name, ' [', '/', subscription_id, ']') as title,
-			_ctx ->> 'connection_name' as conn
+      concat(name, ' [', '/', subscription_id, ']') as title,
+      _ctx ->> 'connection_name' as conn
     from
       azure_security_center_auto_provisioning
     where
@@ -116,7 +116,7 @@ pipeline "correct_securitycenters_with_automatic_provisioning_monitoring_agent_d
   step "message" "notify_detection_count" {
     if       = var.notification_level == local.level_info
     notifier = param.notifier
-    text     = "Detected ${length(param.items)} Security Center auto provisioning settings with automatic provisioning monitoring agent disabled."
+    text     = "Detected ${length(param.items)} Security Center auto provisioning setting(s) with automatic provisioning monitoring agent disabled."
   }
 
   step "message" "notify_items" {

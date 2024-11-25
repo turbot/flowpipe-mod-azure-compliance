@@ -5,10 +5,10 @@ locals {
       a.id as id,
       subscription_id,
       _ctx ->> 'connection_name' as conn
-		from
-   		azure_cosmosdb_account as a
-		where
-		  public_network_access = 'Enabled' and is_virtual_network_filter_enabled = 'false';
+    from
+      azure_cosmosdb_account as a
+    where
+      public_network_access = 'Enabled' and is_virtual_network_filter_enabled = 'false';
   EOQ
 }
 

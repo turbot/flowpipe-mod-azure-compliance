@@ -1,6 +1,6 @@
 locals {
   postgresql_servers_with_infrastructure_encryption_disabled_query = <<-EOQ
-   	select
+    select
       concat(id, ' [', subscription_id, '/', resource_group, ']') as title,
       id as id,
       name,

@@ -196,7 +196,7 @@ pipeline "correct_sql_servers_with_public_network_access_enabled" {
   step "pipeline" "correct_item" {
     for_each        = { for row in param.items : row.title => row }
     max_concurrency = var.max_concurrency
-    pipeline        = pipeline.correct_one_sql_database_with_public_network_access_enabled
+    pipeline        = pipeline.correct_one_sql_server_with_public_network_access_enabled
     args = {
       title              = each.value.title
       name               = each.value.name
@@ -212,7 +212,7 @@ pipeline "correct_sql_servers_with_public_network_access_enabled" {
   }
 }
 
-pipeline "correct_one_sql_database_with_public_network_access_enabled" {
+pipeline "correct_one_sql_server_with_public_network_access_enabled" {
   title         = "Correct SQL servers with public network access enabled"
   description   = "Disable public network access for a SQL servers with public network access enabled."
   tags         = merge(local.sql_common_tags, { folder = "Internal" })
@@ -308,7 +308,7 @@ pipeline "correct_one_sql_database_with_public_network_access_enabled" {
             subscription_id       = param.subscription_id
             server_name           = param.name
             conn                  = param.conn
-						enable_public_network = false
+					  enable_public_network = false
           }
           success_msg = "Disabled public network access for SQL server ${param.title}."
           error_msg   = "Error disabling public network access for SQL server ${param.title}."

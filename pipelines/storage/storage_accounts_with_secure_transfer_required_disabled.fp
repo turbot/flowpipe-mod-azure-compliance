@@ -201,7 +201,7 @@ pipeline "correct_storage_accounts_with_secure_transfer_required_disabled" {
   step "pipeline" "correct_item" {
     for_each        = step.transform.items_by_id.value
     max_concurrency = var.max_concurrency
-    pipeline        = pipeline.correct_one_storage_accounts_with_secure_transfer_required_disabled
+    pipeline        = pipeline.correct_one_storage_account_with_secure_transfer_required_disabled
     args = {
       title              = each.value.title
       name               = each.value.name
@@ -217,7 +217,7 @@ pipeline "correct_storage_accounts_with_secure_transfer_required_disabled" {
   }
 }
 
-pipeline "correct_one_storage_accounts_with_secure_transfer_required_disabled" {
+pipeline "correct_one_storage_account_with_secure_transfer_required_disabled" {
   title         = "Correct one Storage Account with secure transfer required disabled"
   description   = "Runs corrective action on a single Storage Account with secure transfer required disabled."
   tags          = merge(local.storage_common_tags, { folder = "Internal" })

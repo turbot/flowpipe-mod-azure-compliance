@@ -1,6 +1,6 @@
 locals {
   storage_accounts_not_using_private_link_query = <<-EOQ
-	 	with storage_account_connection as (
+    with storage_account_connection as (
       select
         distinct a.id
       from
@@ -16,10 +16,10 @@ locals {
       resource_group,
       subscription_id,
       _ctx ->> 'connection_name' as conn
-		from
-   		azure_storage_account
-		where
-		  id not in (select id from storage_account_connection);
+    from
+      azure_storage_account
+    where
+      id not in (select id from storage_account_connection);
   EOQ
 }
 

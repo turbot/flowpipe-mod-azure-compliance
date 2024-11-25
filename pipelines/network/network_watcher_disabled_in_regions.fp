@@ -199,7 +199,7 @@ pipeline "correct_network_watcher_disabled_in_regions" {
   step "pipeline" "correct_item" {
     for_each        = { for row in param.items : row.title => row }
     max_concurrency = var.max_concurrency
-    pipeline        = pipeline.correct_one_network_watcher_disabled_in_regions
+    pipeline        = pipeline.correct_one_network_watcher_disabled_in_region
     args = {
       title              = each.value.title
       region             = each.value.region
@@ -215,7 +215,7 @@ pipeline "correct_network_watcher_disabled_in_regions" {
   }
 }
 
-pipeline "correct_one_network_watcher_disabled_in_regions" {
+pipeline "correct_one_network_watcher_disabled_in_region" {
   title         = "Correct one region with network watcher disabled"
   description   = "Enable network watcher in a region with network watcher disabled."
   tags          = merge(local.network_common_tags, { folder = "Internal" })
@@ -310,7 +310,7 @@ pipeline "correct_one_network_watcher_disabled_in_regions" {
           pipeline_args = {
             subscription_id = param.subscription_id
             resource_group  = param.resource_group
-						region          = param.region
+            region          = param.region
             conn            = param.conn
           }
           success_msg = "Enabled network watcher in region ${param.title}."
@@ -322,8 +322,9 @@ pipeline "correct_one_network_watcher_disabled_in_regions" {
 }
 
 pipeline "create_resource_group_for_network_watcher" {
-  title = "Create Resource Group"
-  description = "Create resource group."
+  title        = "Create Resource Group"
+  description  = "Create resource group."
+  tags         = merge(local.network_common_tags, { folder = "Internal" })
 
   param "region" {
     type        = string
@@ -376,8 +377,9 @@ pipeline "create_resource_group_for_network_watcher" {
 }
 
 pipeline "enable_network_watcher" {
-  title       = "Enable Network Watcher"
-  description = "Enable Network Watcher for a specified region."
+  title        = "Enable Network Watcher"
+  description  = "Enable Network Watcher for a specified region."
+  tags         = merge(local.network_common_tags, { folder = "Internal" })
 
   param "conn" {
     type        = connection.azure
@@ -388,19 +390,16 @@ pipeline "enable_network_watcher" {
   param "subscription_id" {
     type        = string
     description = local.description_subscription_id
-    default     = "d46d7416-f95f-4771-bbb5-529d4c76659c"
   }
 
   param "resource_group" {
     type        = string
     description = local.description_resource_group
-    default     = "australiaeastNetworkWatcherRG"
   }
 
   param "region" {
     type        = string
     description = "The region where the Network Watcher should be enabled."
-    default   = "australiaeast"
   }
 
 	step "pipeline" "create_resource_group_for_network_watcher" {

@@ -1,54 +1,54 @@
 locals {
   network_security_groups_allowing_inbound_to_udp_port_query = <<-EOQ
-    select
-      concat(nsg.id, ' [', nsg.subscription_id, '/', nsg.resource_group, '/', sg ->> 'name', ']') as title,
-      sg ->> 'name' as rule_name,
-      nsg.name as sg_name,
-      nsg.resource_group,
-      nsg.subscription_id,
-      sip as source_address,
-      dport as destination_port,
-      nsg._ctx ->> 'connection_name' as conn
-    from
-    azure_network_security_group nsg,
-    jsonb_array_elements(security_rules) sg,
-    jsonb_array_elements_text(
-      sg -> 'properties' -> 'destinationPortRanges' || (sg -> 'properties' -> 'destinationPortRange') :: jsonb
-    ) dport,
-    jsonb_array_elements_text(
-      sg -> 'properties' -> 'sourceAddressPrefixes' || (sg -> 'properties' -> 'sourceAddressPrefix') :: jsonb
-    ) sip
-  where
-    sg -> 'properties' ->> 'access' = 'Allow'
-    and sg -> 'properties' ->> 'direction' = 'Inbound'
-    and sg -> 'properties' ->> 'protocol' = 'UDP'
-    and sip in (
-      '*',
-      '0.0.0.0',
-      '0.0.0.0/0',
-      'Internet',
-      'any',
-      '<nw>/0',
-      '/0'
-    )
-    and (
-      dport = '*'
-      or (
-        dport like '%-%'
-        and (
-          53 between split_part(dport, '-', 1) :: integer
-          and split_part(dport, '-', 2) :: integer
-          or 123 between split_part(dport, '-', 1) :: integer
-          and split_part(dport, '-', 2) :: integer
-          or 161 between split_part(dport, '-', 1) :: integer
-          and split_part(dport, '-', 2) :: integer
-          or 389 between split_part(dport, '-', 1) :: integer
-          and split_part(dport, '-', 2) :: integer
-          or 1900 between split_part(dport, '-', 1) :: integer
-          and split_part(dport, '-', 2) :: integer
+      select
+        concat(nsg.id, ' [', nsg.subscription_id, '/', nsg.resource_group, '/', sg ->> 'name', ']') as title,
+        sg ->> 'name' as rule_name,
+        nsg.name as sg_name,
+        nsg.resource_group,
+        nsg.subscription_id,
+        sip as source_address,
+        dport as destination_port,
+        nsg._ctx ->> 'connection_name' as conn
+      from
+      azure_network_security_group nsg,
+      jsonb_array_elements(security_rules) sg,
+      jsonb_array_elements_text(
+        sg -> 'properties' -> 'destinationPortRanges' || (sg -> 'properties' -> 'destinationPortRange') :: jsonb
+      ) dport,
+      jsonb_array_elements_text(
+        sg -> 'properties' -> 'sourceAddressPrefixes' || (sg -> 'properties' -> 'sourceAddressPrefix') :: jsonb
+      ) sip
+    where
+      sg -> 'properties' ->> 'access' = 'Allow'
+      and sg -> 'properties' ->> 'direction' = 'Inbound'
+      and sg -> 'properties' ->> 'protocol' = 'UDP'
+      and sip in (
+        '*',
+        '0.0.0.0',
+        '0.0.0.0/0',
+        'Internet',
+        'any',
+        '<nw>/0',
+        '/0'
+      )
+      and (
+        dport = '*'
+        or (
+          dport like '%-%'
+          and (
+            53 between split_part(dport, '-', 1) :: integer
+            and split_part(dport, '-', 2) :: integer
+            or 123 between split_part(dport, '-', 1) :: integer
+            and split_part(dport, '-', 2) :: integer
+            or 161 between split_part(dport, '-', 1) :: integer
+            and split_part(dport, '-', 2) :: integer
+            or 389 between split_part(dport, '-', 1) :: integer
+            and split_part(dport, '-', 2) :: integer
+            or 1900 between split_part(dport, '-', 1) :: integer
+            and split_part(dport, '-', 2) :: integer
+          )
         )
       )
-    )
   EOQ
 
   network_security_groups_allowing_inbound_to_udp_port_enabled_actions_enum = ["skip", "revoke_nsg_rule"]
@@ -97,7 +97,7 @@ variable "network_security_groups_allowing_inbound_to_udp_port_enabled_actions" 
 
 trigger "query" "detect_and_correct_network_security_groups_allowing_inbound_to_udp_port" {
   title         = "Detect & correct NSGs allowing inbound to UDP port"
-  description   = "Detect NSGs that allow inbound from 0.0.0.0/0 to UDP port and revoke NSG rule."
+  description   = "Detect NSGs that allow inbound from 0.0.0.0/0 to UDP port and then revoke NSG rule."
   tags          = local.network_common_tags
 
   enabled  = var.network_security_groups_allowing_inbound_to_udp_port_trigger_enabled
@@ -115,7 +115,7 @@ trigger "query" "detect_and_correct_network_security_groups_allowing_inbound_to_
 
 pipeline "detect_and_correct_network_security_groups_allowing_inbound_to_udp_port" {
   title         = "Detect & correct NSGs allowing inbound to UDP port"
-  description   = "Detect NSGs that allow inbound from 0.0.0.0/0 to UDP port and revoke NSG rule."
+  description   = "Detect NSGs that allow inbound from 0.0.0.0/0 to UDP port and then revoke NSG rule."
   tags          = local.network_common_tags
 
 
@@ -237,7 +237,7 @@ pipeline "correct_network_security_groups_allowing_inbound_to_udp_port" {
   step "pipeline" "correct_item" {
     for_each        = { for row in param.items : row.title => row }
     max_concurrency = var.max_concurrency
-    pipeline        = pipeline.correct_one_network_security_groups_allowing_inbound_to_udp_port
+    pipeline        = pipeline.correct_one_network_security_group_allowing_inbound_to_udp_port
     args = {
       title              = each.value.title
       rule_name          = each.value.rule_name
@@ -256,7 +256,7 @@ pipeline "correct_network_security_groups_allowing_inbound_to_udp_port" {
   }
 }
 
-pipeline "correct_one_network_security_groups_allowing_inbound_to_udp_port" {
+pipeline "correct_one_network_security_group_allowing_inbound_to_udp_port" {
   title         = "Correct one NSG allowing inbound to UDP port"
   description   = "Revoke a NSG rule allowing ingress to UDP port from 0.0.0.0/0."
   tags          = merge(local.network_common_tags, { folder = "Internal" })

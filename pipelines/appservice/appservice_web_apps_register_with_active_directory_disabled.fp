@@ -8,11 +8,9 @@ locals {
       app.subscription_id,
       app._ctx ->> 'connection_name' as conn
     from
-      azure_app_service_web_app as app,
-      azure_subscription as sub
+      azure_app_service_web_app as app
     where
-      sub.subscription_id = app.subscription_id
-      and identity = '{}';
+      identity = '{}';
   EOQ
 
   appservice_web_apps_register_with_active_directory_disabled_enabled_actions_enum = ["skip", "register_active_directory"]
@@ -198,7 +196,7 @@ pipeline "correct_appservice_web_apps_register_with_active_directory_disabled" {
   step "pipeline" "correct_item" {
     for_each        = { for row in param.items : row.id => row }
     max_concurrency = var.max_concurrency
-    pipeline        = pipeline.correct_one_appservice_web_apps_register_with_active_directory_disabled
+    pipeline        = pipeline.correct_one_appservice_web_app_register_with_active_directory_disabled
     args = {
       title              = each.value.title
       name               = each.value.name
@@ -214,7 +212,7 @@ pipeline "correct_appservice_web_apps_register_with_active_directory_disabled" {
   }
 }
 
-pipeline "correct_one_appservice_web_apps_register_with_active_directory_disabled" {
+pipeline "correct_one_appservice_web_app_register_with_active_directory_disabled" {
   title         = "Correct App Service web app not registered with active directory"
   description   = "Register active directory for a App Service web app not registered with active directory."
   tags          = merge(local.appservice_common_tags, { folder = "Internal" })

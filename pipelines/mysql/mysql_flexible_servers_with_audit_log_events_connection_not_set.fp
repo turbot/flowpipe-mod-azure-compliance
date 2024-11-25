@@ -200,7 +200,7 @@ pipeline "correct_mysql_flexible_servers_with_audit_log_events_connection_not_se
   step "pipeline" "correct_item" {
     for_each        = { for row in param.items : row.id => row }
     max_concurrency = var.max_concurrency
-    pipeline        = pipeline.correct_one_mysql_flexible_servers_with_audit_log_events_connection_not_set
+    pipeline        = pipeline.correct_one_mysql_flexible_server_with_audit_log_events_connection_not_set
     args = {
       title              = each.value.title
       server_name        = each.value.server_name
@@ -216,7 +216,7 @@ pipeline "correct_mysql_flexible_servers_with_audit_log_events_connection_not_se
   }
 }
 
-pipeline "correct_one_mysql_flexible_servers_with_audit_log_events_connection_not_set" {
+pipeline "correct_one_mysql_flexible_server_with_audit_log_events_connection_not_set" {
   title       = "Correct MySQL flexible server with audit log events not set to connection"
   description = "Set connection for a MySQL flexible server audit log events with audit log events not set to connection."
   tags        = merge(local.mysql_common_tags, { folder = "Internal" })
@@ -312,8 +312,8 @@ pipeline "correct_one_mysql_flexible_servers_with_audit_log_events_connection_no
             resource_group     = param.resource_group
             subscription_id    = param.subscription_id
             conn               = param.conn
-						parameter_name     = "audit_log_events"
-						parameter_value    = "CONNECTION"
+            parameter_name     = "audit_log_events"
+            parameter_value    = "CONNECTION"
           }
           success_msg = "Enabled connection to audit log events for MySQL flexible server ${param.title}."
           error_msg   = "Error enabling connection to audit log events for MySQL flexible server ${param.title}."

@@ -1,16 +1,16 @@
 locals {
   securitycenter_settings_without_wdatp_integration_query = <<-EOQ
     select
-			concat(sc_sett.id, ' [', sc_sett.subscription_id, ']') as title,
+      concat(sc_sett.id, ' [', sc_sett.subscription_id, ']') as title,
       sc_sett.subscription_id,
-			sc_sett._ctx ->> 'connection_name' as conn,
+      sc_sett._ctx ->> 'connection_name' as conn,
       enabled
     from
       azure_security_center_setting sc_sett
       right join azure_subscription sub on sc_sett.subscription_id = sub.subscription_id
     where
       name = 'WDATP'
-			and (not enabled or enabled is null);
+      and (not enabled or enabled is null);
   EOQ
 }
 
@@ -120,7 +120,7 @@ pipeline "correct_securitycenter_settings_without_wdatp_integration" {
   step "message" "notify_detection_count" {
     if       = var.notification_level == local.level_info
     notifier = param.notifier
-    text     = "Detected ${length(param.items)} Security Center settings without WDATP integration."
+    text     = "Detected ${length(param.items)} Security Center setting(s) without WDATP integration."
   }
 
   step "message" "notify_items" {

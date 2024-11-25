@@ -23,24 +23,24 @@ locals {
         resource_group,
         subscription_id
     ), enabled_settings_count as (
-			select
-				subscription_id,
-				count(*) as enabled_setting_counts
-			from
-				enabled_settings
-			where
-				valid_category_count = 4
-			group by
-				subscription_id
-		)
+      select
+        subscription_id,
+        count(*) as enabled_setting_counts
+      from
+        enabled_settings
+      where
+        valid_category_count = 4
+      group by
+        subscription_id
+    )
     select
       distinct sub.subscription_id as title,
       sub._ctx ->> 'connection_name' as conn
     from
       azure_subscription sub
       left join enabled_settings_count as i on i.subscription_id = sub.subscription_id
-		where
-			enabled_setting_counts = 0 or enabled_setting_counts is null;
+    where
+      enabled_setting_counts = 0 or enabled_setting_counts is null;
   EOQ
 }
 

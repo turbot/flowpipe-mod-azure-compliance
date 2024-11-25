@@ -2,7 +2,7 @@ locals {
   compute_disks_with_public_access_enabled_query = <<-EOQ
     select
       concat(id, ' [', subscription_id, '/', resource_group, ']') as title,
-			name,
+		  name,
       resource_group,
       subscription_id,
       _ctx ->> 'connection_name' as conn
@@ -236,7 +236,7 @@ pipeline "correct_compute_disks_with_public_access_enabled" {
 
 pipeline "correct_one_compute_disk_with_public_access_enabled" {
   title         = "Correct one Compute disk with public access enabled"
-  description   = "Disable public access on Compute disk with public access enabled."
+  description   = "Disable public access on a Compute disk with public access enabled."
   tags          = merge(local.compute_common_tags, { folder = "Internal" })
 
   param "title" {
@@ -246,7 +246,7 @@ pipeline "correct_one_compute_disk_with_public_access_enabled" {
 
   param "name" {
     type        = string
-    description = "The name of the Compute server."
+    description = "The name of the Compute disk."
   }
 
   param "resource_group" {

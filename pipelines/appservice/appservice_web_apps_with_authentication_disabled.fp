@@ -8,11 +8,9 @@ locals {
       app.subscription_id,
       app._ctx ->> 'connection_name' as conn
     from
-      azure_app_service_web_app as app,
-      azure_subscription as sub
+      azure_app_service_web_app as app
     where
-      sub.subscription_id = app.subscription_id
-      and not (auth_settings -> 'properties' ->> 'enabled') :: boolean;
+      not (auth_settings -> 'properties' ->> 'enabled') :: boolean;
   EOQ
 
   appservice_web_apps_with_authentication_disabled_enabled_actions_enum = ["skip", "enable_web_app_authentication"]

@@ -204,7 +204,7 @@ pipeline "correct_storage_accounts_with_default_network_access_rule_allowed" {
   step "pipeline" "correct_item" {
     for_each        = step.transform.items_by_id.value
     max_concurrency = var.max_concurrency
-    pipeline        = pipeline.correct_one_storage_accounts_with_default_network_access_rule_allowed
+    pipeline        = pipeline.correct_one_storage_account_with_default_network_access_rule_allowed
     args = {
       title              = each.value.title
       name               = each.value.name
@@ -220,7 +220,7 @@ pipeline "correct_storage_accounts_with_default_network_access_rule_allowed" {
   }
 }
 
-pipeline "correct_one_storage_accounts_with_default_network_access_rule_allowed" {
+pipeline "correct_one_storage_account_with_default_network_access_rule_allowed" {
   title         = "Correct one Storage Account with default network access rule set to Allow"
   description   = "Runs corrective action on a single Storage Account with default network access rule set to Allow."
   tags          = merge(local.storage_common_tags, { folder = "Internal" })

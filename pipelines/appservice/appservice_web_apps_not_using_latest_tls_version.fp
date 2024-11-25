@@ -8,11 +8,9 @@ locals {
       app.subscription_id,
       app._ctx ->> 'connection_name' as conn
     from
-      azure_app_service_web_app as app,
-      azure_subscription as sub
+      azure_app_service_web_app as app
     where
-      sub.subscription_id = app.subscription_id
-      and configuration -> 'properties' ->> 'minTlsVersion' < '1.2';
+      configuration -> 'properties' ->> 'minTlsVersion' < '1.2';
   EOQ
 
   appservice_web_apps_not_using_latest_tls_version_enabled_actions_enum = ["skip", "enable_latest_tls_version"]

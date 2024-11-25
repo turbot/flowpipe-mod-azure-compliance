@@ -1,31 +1,31 @@
 locals {
   appservice_web_apps_not_using_latest_php_version_query = <<-EOQ
-		select
-			concat(id, ' [', subscription_id, '/', resource_group, ']') as title,
-			id as id,
-			name,
-			resource_group,
-			subscription_id,
-			_ctx ->> 'connection_name' as conn
-		from
-			azure_app_service_web_app
-		where
-			exists (
-				select
-				from
-					unnest(regexp_split_to_array(kind, ',')) elem
-				where
-					elem like 'app%'
-			)
-			and exists (
-				select
-				from
-					unnest(regexp_split_to_array(kind, ',')) elem
-				where
-					elem = 'linux'
-			)
-			and configuration -> 'properties' ->> 'linuxFxVersion' like 'PHP%'
-			and configuration -> 'properties' ->> 'linuxFxVersion' <> 'PHP|8.3';
+    select
+      concat(id, ' [', subscription_id, '/', resource_group, ']') as title,
+      id as id,
+      name,
+      resource_group,
+      subscription_id,
+      _ctx ->> 'connection_name' as conn
+    from
+      azure_app_service_web_app
+    where
+      exists (
+        select
+        from
+          unnest(regexp_split_to_array(kind, ',')) elem
+        where
+          elem like 'app%'
+      )
+      and exists (
+        select
+        from
+          unnest(regexp_split_to_array(kind, ',')) elem
+        where
+          elem = 'linux'
+      )
+      and configuration -> 'properties' ->> 'linuxFxVersion' like 'PHP%'
+      and configuration -> 'properties' ->> 'linuxFxVersion' <> 'PHP|8.3';
   EOQ
 
   appservice_web_apps_not_using_latest_php_version_enabled_actions_enum = ["skip", "enable_latest_php_version"]
@@ -124,7 +124,7 @@ pipeline "detect_and_correct_appservice_web_apps_not_using_latest_php_version" {
     enum        = local.notification_level_enum
   }
 
-	param "linux_fx_version" {
+  param "linux_fx_version" {
     type        = string
     description = "The linux fx version for App Service web app."
     default     = var.appservice_web_apps_not_using_latest_php_version_linux_fx_version
@@ -159,7 +159,7 @@ pipeline "detect_and_correct_appservice_web_apps_not_using_latest_php_version" {
     pipeline = pipeline.correct_appservice_web_apps_not_using_latest_php_version
     args = {
       items              = step.query.detect.rows
-			linux_fx_version   = param.linux_fx_version
+	    linux_fx_version   = param.linux_fx_version
       notifier           = param.notifier
       notification_level = param.notification_level
       approvers          = param.approvers
@@ -192,7 +192,7 @@ pipeline "correct_appservice_web_apps_not_using_latest_php_version" {
     default     = var.notifier
   }
 
-	param "linux_fx_version" {
+  param "linux_fx_version" {
     type        = string
     description = "The linux fx version for App Service web app."
     default     = var.appservice_web_apps_not_using_latest_php_version_linux_fx_version
@@ -241,7 +241,7 @@ pipeline "correct_appservice_web_apps_not_using_latest_php_version" {
       resource_group     = each.value.resource_group
       subscription_id    = each.value.subscription_id
       conn               = connection.azure[each.value.conn]
-			linux_fx_version   = param.linux_fx_version
+	    linux_fx_version   = param.linux_fx_version
       notifier           = param.notifier
       notification_level = param.notification_level
       approvers          = param.approvers
@@ -281,7 +281,7 @@ pipeline "correct_one_appservice_web_app_not_using_latest_php_version" {
     description = local.description_connection
   }
 
-	param "linux_fx_version" {
+  param "linux_fx_version" {
     type        = string
     description = "The linux fx version for App Service web app."
   }
@@ -352,7 +352,7 @@ pipeline "correct_one_appservice_web_app_not_using_latest_php_version" {
             subscription_id  = param.subscription_id
             app_name         = param.name
             conn             = param.conn
-						linux_fx_version = param.linux_fx_version
+					  linux_fx_version = param.linux_fx_version
           }
           success_msg = "Enabled latest PHP version for App Service web app ${param.title}."
           error_msg   = "Error enabling latest PHP version for App Service web app ${param.title}."

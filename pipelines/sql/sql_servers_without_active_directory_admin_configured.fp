@@ -2,7 +2,7 @@ locals {
   sql_servers_without_active_directory_admin_configured_query = <<-EOQ
     select
       concat(id, ' [', subscription_id, '/', resource_group, ']') as title,
-			name,
+      name,
       resource_group,
       subscription_id,
       _ctx ->> 'connection_name' as conn

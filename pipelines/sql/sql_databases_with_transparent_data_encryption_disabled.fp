@@ -318,9 +318,9 @@ pipeline "correct_one_sql_database_with_transparent_data_encryption_disabled" {
             server_name     = param.server_name
             database_name   = param.name
             conn            = param.conn
-						status          = "Enabled"
+            status          = "Enabled"
           }
-          success_msg = "Enabled transparent data tncryption for SQL Database ${param.title}."
+          success_msg = "Enabled transparent data encryption for SQL Database ${param.title}."
           error_msg   = "Error enabling transparent data encryption for SQL Database ${param.title}."
         }
       }

@@ -15,8 +15,8 @@ locals {
     from
       azure_subscription sub
       left join application_insights as i on i.subscription_id = sub.subscription_id
-		where
-			i.subscription_id is null;
+    where
+      i.subscription_id is null;
   EOQ
 }
 
@@ -41,8 +41,8 @@ variable "subscriptions_without_application_insight_configured_trigger_schedule"
 }
 
 trigger "query" "detect_and_correct_subscriptions_without_application_insight_configured" {
-  title         = "Detect & correct subscriptions without activity log alert for create policy assignment"
-  description   = "Detects subscriptions without an activity log alert for create policy assignment."
+  title         = "Detect & correct subscriptions without application insight configured"
+  description   = "Detects subscriptions without application insight configured."
   tags          = local.monitor_common_tags
 
   enabled  = var.subscriptions_without_application_insight_configured_trigger_enabled

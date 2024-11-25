@@ -1,6 +1,6 @@
 locals {
   network_public_ips_with_basic_sku_query = <<-EOQ
-   	select
+    select
       concat(id, ' [', subscription_id, '/', resource_group, ']') as title,
       id as id,
       name,
@@ -10,7 +10,7 @@ locals {
     from
       azure_public_ip
     where
-			sku_name = 'Basic';
+      sku_name = 'Basic';
   EOQ
 }
 

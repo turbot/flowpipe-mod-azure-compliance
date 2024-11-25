@@ -61,8 +61,8 @@ variable "mysql_flexible_servers_with_no_min_tls_1_2_enabled_actions" {
 
 trigger "query" "detect_and_correct_mysql_flexible_servers_with_no_min_tls_1_2" {
   title         = "Detect & correct MySQL flexible servers with TLS version less than 1.2"
-  description   = "Detect MySQL flexible servers with transparent data encryption disabled and then enable TLS version 1.2."
-  tags        = local.mysql_common_tags
+  description   = "Detect MySQL flexible servers with TLS version less than 1.2 and then enable TLS version 1.2."
+  tags          = local.mysql_common_tags
 
   enabled  = var.mysql_flexible_servers_with_no_min_tls_1_2_trigger_enabled
   schedule = var.mysql_flexible_servers_with_no_min_tls_1_2_trigger_schedule
@@ -79,7 +79,7 @@ trigger "query" "detect_and_correct_mysql_flexible_servers_with_no_min_tls_1_2" 
 
 pipeline "detect_and_correct_mysql_flexible_servers_with_no_min_tls_1_2" {
   title         = "Detect & correct MySQL flexible servers with TLS version less than 1.2"
-  description   = "Detect MySQL flexible servers with transparent data encryption disabled and then enable TLS version 1.2."
+  description   = "Detect MySQL flexible servers with TLS version less than 1.2 and then enable TLS version 1.2."
   tags        = local.mysql_common_tags
 
   param "database" {
@@ -199,7 +199,7 @@ pipeline "correct_mysql_flexible_servers_with_no_min_tls_1_2" {
   step "pipeline" "correct_item" {
     for_each        = { for row in param.items : row.title => row }
     max_concurrency = var.max_concurrency
-    pipeline        = pipeline.correct_one_mysql_flexible_servers_with_no_min_tls_1_2
+    pipeline        = pipeline.correct_one_mysql_flexible_server_with_no_min_tls_1_2
     args = {
       title              = each.value.title
       server_name        = each.value.server_name
@@ -215,7 +215,7 @@ pipeline "correct_mysql_flexible_servers_with_no_min_tls_1_2" {
   }
 }
 
-pipeline "correct_one_mysql_flexible_servers_with_no_min_tls_1_2" {
+pipeline "correct_one_mysql_flexible_server_with_no_min_tls_1_2" {
   title         = "Correct MySQL flexible server with TLS version less than 1.2"
   description   = "Enable 1.2 TLS version for a MySQL flexible server with minimum TLS version less than 1.2."
   tags          = merge(local.mysql_common_tags, { folder = "Internal" })

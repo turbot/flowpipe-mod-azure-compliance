@@ -1,31 +1,31 @@
 locals {
   appservice_web_apps_not_using_latest_python_version_query = <<-EOQ
-		select
-			concat(id, ' [', subscription_id, '/', resource_group, ']') as title,
-			id as id,
-			name,
-			resource_group,
-			subscription_id,
-			_ctx ->> 'connection_name' as conn
-		from
-			azure_app_service_web_app
-		where
-			exists (
-				select
-				from
-					unnest(regexp_split_to_array(kind, ',')) elem
-				where
-					elem like 'app%'
-			)
-			and exists (
-				select
-				from
-					unnest(regexp_split_to_array(kind, ',')) elem
-				where
-					elem = 'linux'
-			)
-			and configuration -> 'properties' ->> 'linuxFxVersion' like 'PYTHON%'
-			and configuration -> 'properties' ->> 'linuxFxVersion' <> 'PYTHON|3.12';
+    select
+      concat(id, ' [', subscription_id, '/', resource_group, ']') as title,
+      id as id,
+      name,
+      resource_group,
+      subscription_id,
+      _ctx ->> 'connection_name' as conn
+    from
+      azure_app_service_web_app
+    where
+      exists (
+        select
+        from
+          unnest(regexp_split_to_array(kind, ',')) elem
+        where
+          elem like 'app%'
+      )
+      and exists (
+        select
+        from
+          unnest(regexp_split_to_array(kind, ',')) elem
+        where
+          elem = 'linux'
+      )
+      and configuration -> 'properties' ->> 'linuxFxVersion' like 'PYTHON%'
+      and configuration -> 'properties' ->> 'linuxFxVersion' <> 'PYTHON|3.12';
   EOQ
 
   appservice_web_apps_not_using_latest_python_version_enabled_actions_enum = ["skip", "enable_latest_python_version"]
@@ -134,13 +134,13 @@ pipeline "detect_and_correct_appservice_web_apps_not_using_latest_python_version
     enum        = local.notification_level_enum
   }
 
-	param "python_version" {
+  param "python_version" {
     type        = string
     description = "The python version for App Service web app."
     default     = var.appservice_web_apps_not_using_latest_python_version_python_version
   }
 
-	param "linux_fx_version" {
+  param "linux_fx_version" {
     type        = string
     description = "The linux fx version for App Service web app."
     default     = var.appservice_web_apps_not_using_latest_python_version_linux_fx_version
@@ -175,8 +175,8 @@ pipeline "detect_and_correct_appservice_web_apps_not_using_latest_python_version
     pipeline = pipeline.correct_appservice_web_apps_not_using_latest_python_version
     args = {
       items              = step.query.detect.rows
-			python_version     = param.python_version
-			linux_fx_version   = param.linux_fx_version
+		  python_version     = param.python_version
+		  linux_fx_version   = param.linux_fx_version
       notifier           = param.notifier
       notification_level = param.notification_level
       approvers          = param.approvers
@@ -209,13 +209,13 @@ pipeline "correct_appservice_web_apps_not_using_latest_python_version" {
     default     = var.notifier
   }
 
-	param "python_version" {
+  param "python_version" {
     type        = string
     description = "The python version for App Service web app."
     default     = var.appservice_web_apps_not_using_latest_python_version_python_version
   }
 
-	param "linux_fx_version" {
+  param "linux_fx_version" {
     type        = string
     description = "The linux fx version for App Service web app."
     default     = var.appservice_web_apps_not_using_latest_python_version_linux_fx_version
@@ -264,8 +264,8 @@ pipeline "correct_appservice_web_apps_not_using_latest_python_version" {
       resource_group     = each.value.resource_group
       subscription_id    = each.value.subscription_id
       conn               = connection.azure[each.value.conn]
-			python_version     = param.python_version
-			linux_fx_version   = param.linux_fx_version
+		  python_version     = param.python_version
+		  linux_fx_version   = param.linux_fx_version
       notifier           = param.notifier
       notification_level = param.notification_level
       approvers          = param.approvers
@@ -305,12 +305,12 @@ pipeline "correct_one_appservice_web_app_not_using_latest_python_version" {
     description = local.description_connection
   }
 
-	param "python_version" {
+  param "python_version" {
     type        = string
     description = "The python version for App Service web app."
   }
 
-	param "linux_fx_version" {
+  param "linux_fx_version" {
     type        = string
     description = "The linux fx version for App Service web app."
   }
@@ -382,7 +382,7 @@ pipeline "correct_one_appservice_web_app_not_using_latest_python_version" {
             app_name         = param.name
             conn             = param.conn
             python_version   = param.python_version
-						linux_fx_version = param.linux_fx_version
+					  linux_fx_version = param.linux_fx_version
           }
           success_msg = "Enabled latest python version for App Service web app ${param.title}."
           error_msg   = "Error enabling latest python version for App Service web app ${param.title}."

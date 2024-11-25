@@ -312,8 +312,8 @@ pipeline "correct_one_mysql_flexible_server_with_ssl_disabled" {
             resource_group     = param.resource_group
             subscription_id    = param.subscription_id
             conn               = param.conn
-						parameter_name     = "require_secure_transport"
-						parameter_value    = "ON"
+            parameter_name     = "require_secure_transport"
+            parameter_value    = "ON"
           }
           success_msg = "Enabled SSL for MySQL flexible server ${param.title}."
           error_msg   = "Error enabling SSL for MySQL flexible server ${param.title}."

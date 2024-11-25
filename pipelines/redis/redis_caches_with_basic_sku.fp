@@ -1,6 +1,6 @@
 locals {
   redis_caches_with_basic_sku_query = <<-EOQ
-   	select
+    select
       concat(id, ' [', subscription_id, '/', resource_group, ']') as title,
       id as id,
       name,
@@ -10,7 +10,7 @@ locals {
     from
       azure_redis_cache
     where
-			sku_name = 'Basic';
+      sku_name = 'Basic';
   EOQ
 }
 

@@ -1,6 +1,6 @@
 locals {
   subscriptions_with_no_network_bastion_host_query = <<-EOQ
-		with bastion_hosts as (
+    with bastion_hosts as (
       select
         subscription_id,
         _ctx,
@@ -15,14 +15,14 @@ locals {
         resource_group,
         region
     )
-   	select
+    select
       sub.subscription_id as title,
       sub._ctx ->> 'connection_name' as conn
     from
       azure_subscription as sub
       left join bastion_hosts as i on i.subscription_id = sub.subscription_id
     where
-			i.subscription_id is null;
+      i.subscription_id is null;
   EOQ
 }
 

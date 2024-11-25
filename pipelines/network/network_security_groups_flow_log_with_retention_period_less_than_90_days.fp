@@ -1,6 +1,6 @@
 locals {
   network_securitys_group_flow_log_with_retention_period_less_than_90_days_query = <<-EOQ
-   	select
+    select
       concat(sg.id, ' [', sg.subscription_id, '/', sg.resource_group, ']') as title,
       sg.id as id,
       sg.name,
@@ -11,7 +11,7 @@ locals {
       azure_network_security_group sg
       left join azure_network_watcher_flow_log fl on sg.id = fl.target_resource_id
     where
-			fl.id is null or not fl.enabled or fl.retention_policy_days < 90
+      fl.id is null or not fl.enabled or fl.retention_policy_days < 90
   EOQ
 }
 

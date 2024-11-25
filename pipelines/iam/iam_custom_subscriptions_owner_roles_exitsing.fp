@@ -15,8 +15,8 @@ locals {
       and action in ('*', '*:*');
   EOQ
 
-  iam_custom_subscriptions_owner_roles_existing_enabled_actions_enum = ["skip", "delete_custom_role"]
-  iam_custom_subscriptions_owner_roles_existing_default_action_enum = ["notify", "skip", "delete_custom_role"]
+  iam_custom_subscriptions_owner_roles_existing_enabled_actions_enum = ["skip", "delete_role"]
+  iam_custom_subscriptions_owner_roles_existing_default_action_enum = ["notify", "skip", "delete_role"]
 }
 
 variable "iam_custom_subscriptions_owner_roles_existing_trigger_enabled" {
@@ -52,7 +52,7 @@ variable "iam_custom_subscriptions_owner_roles_existing_default_action" {
 variable "iam_custom_subscriptions_owner_roles_existing_enabled_actions" {
   type        = list(string)
   description = "The list of enabled actions to provide to approvers for selection."
-  default     = ["skip", "delete_custom_role"]
+  default     = ["skip", "delete_role"]
 
   tags = {
     folder = "Advanced/IAM"
@@ -197,7 +197,7 @@ pipeline "correct_iam_custom_subscriptions_owner_roles_existing" {
   step "pipeline" "correct_item" {
     for_each        = { for row in param.items : row.id => row }
     max_concurrency = var.max_concurrency
-    pipeline        = pipeline.correct_one_iam_custom_subscriptions_owner_role_existing
+    pipeline        = pipeline.correct_one_iam_custom_subscription_owner_role_existing
     args = {
       title              = each.value.title
       name               = each.value.name
@@ -212,7 +212,7 @@ pipeline "correct_iam_custom_subscriptions_owner_roles_existing" {
   }
 }
 
-pipeline "correct_one_iam_custom_subscriptions_owner_role_existing" {
+pipeline "correct_one_iam_custom_subscription_owner_role_existing" {
   title         = "Correct one custom subscription owner role existing"
   description   = "Runs corrective action on a single custom subscription owner role that exists."
   tags          = merge(local.iam_common_tags, { folder = "Internal" })
@@ -293,15 +293,14 @@ pipeline "correct_one_iam_custom_subscriptions_owner_role_existing" {
           success_msg = ""
           error_msg   = ""
         },
-        "delete_custom_role" = {
+        "delete_role" = {
           label        = "Delete custom role"
-          value        = "delete_custom_role"
+          value        = "delete_role"
           style        = local.style_alert
           pipeline_ref = azure.pipeline.delete_iam_role
           pipeline_args = {
             role_name        = param.name
             subscription_id  = param.subscription_id
-
             conn             = param.conn
           }
           success_msg = "Deleted custom subscription owner role ${param.title}."

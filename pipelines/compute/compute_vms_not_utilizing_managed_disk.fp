@@ -5,10 +5,10 @@ locals {
       vm_id as id,
       subscription_id,
       _ctx ->> 'connection_name' as conn
-		from
-   		azure_compute_virtual_machine
-		where
-		  managed_disk_id is null;
+    from
+      azure_compute_virtual_machine
+    where
+      managed_disk_id is null;
   EOQ
 }
 

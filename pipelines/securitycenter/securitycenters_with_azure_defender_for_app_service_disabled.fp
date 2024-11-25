@@ -197,7 +197,7 @@ pipeline "correct_securitycenters_with_azure_defender_for_app_service_disabled" 
   step "pipeline" "correct_item" {
     for_each        = { for row in param.items : row.id => row }
     max_concurrency = var.max_concurrency
-    pipeline        = pipeline.correct_one_securitycenters_with_azure_defender_for_app_service_disabled
+    pipeline        = pipeline.correct_one_securitycenter_with_azure_defender_for_app_service_disabled
     args = {
       title              = each.value.title
       name               = each.value.name
@@ -212,7 +212,7 @@ pipeline "correct_securitycenters_with_azure_defender_for_app_service_disabled" 
   }
 }
 
-pipeline "correct_one_securitycenters_with_azure_defender_for_app_service_disabled" {
+pipeline "correct_one_securitycenter_with_azure_defender_for_app_service_disabled" {
   title         = "Correct Security Center with azure defender disabled for App Service"
   description   = "Enable azure defender for App Service in Security Center with  azure defender disabled for App Service."
   tags          = merge(local.securitycenter_common_tags, { folder = "Internal" })

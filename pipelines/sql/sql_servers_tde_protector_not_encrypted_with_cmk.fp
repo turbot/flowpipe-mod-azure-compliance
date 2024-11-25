@@ -2,7 +2,7 @@ locals {
   sql_servers_tde_protector_not_encrypted_with_cmk_query = <<-EOQ
     select
       concat(id, ' [', subscription_id, '/', resource_group, ']') as title,
-			name,
+      name,
       resource_group,
       subscription_id,
       _ctx ->> 'connection_name' as conn
@@ -10,7 +10,7 @@ locals {
       azure_sql_server,
       jsonb_array_elements(encryption_protector) encryption
     where
-     	encryption ->> 'kind' = 'servicemanaged';
+      encryption ->> 'kind' = 'servicemanaged';
   EOQ
 }
 
