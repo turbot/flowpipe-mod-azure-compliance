@@ -198,7 +198,7 @@ pipeline "correct_tenant_with_guest_users" {
   step "message" "notify_detection_count" {
     if       = var.notification_level == local.level_info
     notifier = param.notifier
-    text     = "Detected ${length(param.items)} guest user(s) in tenant ${param.tenant_id}."
+    text     = "Detected ${length(param.items)} guest user(s)."
   }
 
   step "pipeline" "correct_item" {
