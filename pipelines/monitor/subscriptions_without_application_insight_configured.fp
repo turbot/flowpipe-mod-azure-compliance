@@ -41,8 +41,8 @@ variable "subscriptions_without_application_insight_configured_trigger_schedule"
 }
 
 trigger "query" "detect_and_correct_subscriptions_without_application_insight_configured" {
-  title         = "Detect & correct subscriptions without application insight configured"
-  description   = "Detects subscriptions without application insight configured."
+  title         = "Detect & correct Subscriptions without application insight configured"
+  description   = "Detects Subscriptions without application insight configured."
   tags          = local.monitor_common_tags
 
   enabled  = var.subscriptions_without_application_insight_configured_trigger_enabled
@@ -59,8 +59,8 @@ trigger "query" "detect_and_correct_subscriptions_without_application_insight_co
 }
 
 pipeline "detect_and_correct_subscriptions_without_application_insight_configured" {
-  title         = "Detect & correct subscriptions without application insight configured"
-  description   = "Detects subscriptions without application insight configured."
+  title         = "Detect & correct Subscriptions without application insight configured"
+  description   = "Detects Subscriptions without application insight configured."
   tags          = local.monitor_common_tags
 
   param "database" {
@@ -98,8 +98,8 @@ pipeline "detect_and_correct_subscriptions_without_application_insight_configure
 }
 
 pipeline "correct_subscriptions_without_application_insight_configured" {
-  title         = "Correct subscriptions without application insight configured"
-  description   = "Send notifications for subscriptions without application insight configured."
+  title         = "Correct Subscriptions without application insight configured"
+  description   = "Send notifications for Subscriptions without application insight configured."
   tags          = merge(local.monitor_common_tags, { folder = "Internal" })
 
   param "items" {
@@ -126,13 +126,13 @@ pipeline "correct_subscriptions_without_application_insight_configured" {
   step "message" "notify_detection_count" {
     if       = var.notification_level == local.level_info
     notifier = param.notifier
-    text     = "Detected ${length(param.items)} subscription(s) without application insight configured."
+    text     = "Detected ${length(param.items)} Subscription(s) without application insight configured."
   }
 
   step "message" "notify_items" {
     if       = var.notification_level == local.level_info
     for_each = param.items
     notifier = param.notifier
-    text     = "Detected subscription ${each.value.title} without application insight configured."
+    text     = "Detected Subscription ${each.value.title} without application insight configured."
   }
 }

@@ -1,5 +1,5 @@
 locals {
-  tenant_with_guest_users_query = <<-EOQ
+  tenants_with_guest_users_query = <<-EOQ
     with distinct_tenant as (
       select
         distinct tenant_id,
@@ -23,7 +23,7 @@ locals {
   EOQ
 }
 
-variable "tenant_with_guest_users_trigger_enabled" {
+variable "tenants_with_guest_users_trigger_enabled" {
   type        = bool
   description = "If true, the trigger is enabled."
   default     = false
@@ -33,7 +33,7 @@ variable "tenant_with_guest_users_trigger_enabled" {
   }
 }
 
-variable "tenant_with_guest_users_trigger_schedule" {
+variable "tenants_with_guest_users_trigger_schedule" {
   type        = string
   description = "If the trigger is enabled, run it on this schedule."
   default     = "15m"
@@ -43,27 +43,27 @@ variable "tenant_with_guest_users_trigger_schedule" {
   }
 }
 
-trigger "query" "detect_and_correct_tenant_with_guest_users" {
-  title         = "Detect & correct tenant with guest users"
-  description   = "Detect tenant with guest users."
+trigger "query" "detect_and_correct_tenants_with_guest_users" {
+  title         = "Detect & correct Tenants with guest users"
+  description   = "Detect Tenants with guest users."
   tags          = local.iam_common_tags
 
-  enabled  = var.tenant_with_guest_users_trigger_enabled
-  schedule = var.tenant_with_guest_users_trigger_schedule
+  enabled  = var.tenants_with_guest_users_trigger_enabled
+  schedule = var.tenants_with_guest_users_trigger_schedule
   database = var.database
-  sql      = local.tenant_with_guest_users_query
+  sql      = local.tenants_with_guest_users_query
 
   capture "insert" {
-    pipeline = pipeline.correct_tenant_with_guest_users
+    pipeline = pipeline.correct_tenants_with_guest_users
     args = {
       items = self.inserted_rows
     }
   }
 }
 
-pipeline "detect_and_correct_tenant_with_guest_users" {
-  title         = "Detect & correct tenant with guest users"
-  description   = "Detect tenant with guest users."
+pipeline "detect_and_correct_tenants_with_guest_users" {
+  title         = "Detect & correct Tenants with guest users"
+  description   = "Detect Tenants with guest users."
   tags          = local.iam_common_tags
 
   param "database" {
@@ -87,11 +87,11 @@ pipeline "detect_and_correct_tenant_with_guest_users" {
 
   step "query" "detect" {
     database = param.database
-    sql      = local.tenant_with_guest_users_query
+    sql      = local.tenants_with_guest_users_query
   }
 
   step "pipeline" "respond" {
-    pipeline = pipeline.correct_tenant_with_guest_users
+    pipeline = pipeline.correct_tenants_with_guest_users
     args = {
       items              = step.query.detect.rows
       notifier           = param.notifier
@@ -100,15 +100,15 @@ pipeline "detect_and_correct_tenant_with_guest_users" {
   }
 }
 
-pipeline "correct_tenant_with_guest_users" {
-  title         = "Correct tenant with guest users"
-  description   = "Send notifications for tenants with guest users."
+pipeline "correct_tenants_with_guest_users" {
+  title         = "Correct Tenants with guest users"
+  description   = "Send notifications for Tenants with guest users."
   tags          = merge(local.iam_common_tags, { folder = "Internal" })
 
   param "items" {
     type = list(object({
-      title               = string
-      conn                = string
+      title   = string
+      conn    = string
     }))
     description = local.description_items
   }

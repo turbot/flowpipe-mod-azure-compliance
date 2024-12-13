@@ -65,8 +65,8 @@ variable "subscriptions_diagnostic_setting_without_capturing_proper_categories_t
 }
 
 trigger "query" "detect_and_correct_subscriptions_diagnostic_setting_without_capturing_proper_categories" {
-  title         = "Detect & correct subscriptions diagnostic settings without capturing proper categories"
-  description   = "Detects subscriptions diagnostic settings without capturing proper categories"
+  title         = "Detect & correct Subscriptions diagnostic settings without capturing proper categories"
+  description   = "Detects Subscriptions diagnostic settings without capturing proper categories"
   tags          = local.monitor_common_tags
 
   enabled  = var.subscriptions_diagnostic_setting_without_capturing_proper_categories_trigger_enabled
@@ -83,8 +83,8 @@ trigger "query" "detect_and_correct_subscriptions_diagnostic_setting_without_cap
 }
 
 pipeline "detect_and_correct_subscriptions_diagnostic_setting_without_capturing_proper_categories" {
-  title         = "Detect & correct subscriptions diagnostic settings without capturing proper categories"
-  description   = "Detects subscriptions diagnostic settings without capturing proper categories."
+  title         = "Detect & correct Subscriptions diagnostic settings without capturing proper categories"
+  description   = "Detects Subscriptions diagnostic settings without capturing proper categories."
   tags          = local.monitor_common_tags
 
   param "database" {
@@ -122,8 +122,8 @@ pipeline "detect_and_correct_subscriptions_diagnostic_setting_without_capturing_
 }
 
 pipeline "correct_subscriptions_diagnostic_setting_without_capturing_proper_categories" {
-  title         = "Correct subscriptions diagnostic settings without capturing proper categories"
-  description   = "Send notifications for subscriptions diagnostic settings without capturing proper categories."
+  title         = "Correct Subscriptions diagnostic settings without capturing proper categories"
+  description   = "Send notifications for Subscriptions diagnostic settings without capturing proper categories."
   tags          = merge(local.monitor_common_tags, { folder = "Internal" })
 
   param "items" {
@@ -150,13 +150,13 @@ pipeline "correct_subscriptions_diagnostic_setting_without_capturing_proper_cate
   step "message" "notify_detection_count" {
     if       = var.notification_level == local.level_info
     notifier = param.notifier
-    text     = "Detected ${length(param.items)} subscription(s) diagnostic settings without capturing proper categories."
+    text     = "Detected ${length(param.items)} Subscription(s) diagnostic settings without capturing proper categories."
   }
 
   step "message" "notify_items" {
     if       = var.notification_level == local.level_info
     for_each = param.items
     notifier = param.notifier
-    text     = "Detected subscription ${each.value.title} diagnostic settings without capturing proper categories."
+    text     = "Detected Subscription ${each.value.title} diagnostic settings without capturing proper categories."
   }
 }
