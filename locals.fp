@@ -26,7 +26,7 @@ locals {
   description_resource         = "The name of the resource"
   description_database         = "Database connection string."
   description_approvers        = "List of notifiers to be used for obtaining action/approval decisions."
-  description_connection      = "Name of the connection to be used for any authenticated actions."
+  description_connection       = "Name of the connection to be used for any authenticated actions."
   description_resource_group   = "Azure Resource Group. Examples: my-rg, my-rg-123."
   description_subscription_id  = "Azure Subscription Id. Examples: d46d7416-f95f-4771-bbb5-529d4c766."
   description_title            = "Title of the resource, to be used as a display name."

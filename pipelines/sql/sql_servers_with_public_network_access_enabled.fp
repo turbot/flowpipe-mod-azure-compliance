@@ -302,7 +302,7 @@ pipeline "correct_one_sql_server_with_public_network_access_enabled" {
           label        = "Disable public network access"
           value        = "disable_public_network_access"
           style        = local.style_alert
-          pipeline_ref = azure.pipeline.update_sql_server_public_network
+          pipeline_ref = azure.pipeline.update_sql_server_public_network_access
           pipeline_args = {
             resource_group        = param.resource_group
             subscription_id       = param.subscription_id

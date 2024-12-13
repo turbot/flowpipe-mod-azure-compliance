@@ -70,7 +70,7 @@ variable "keyvault_with_non_rbac_keys_expiration_not_set_enabled_actions" {
 
 variable "keyvault_with_non_rbac_keys_expiration_not_set_expiration_date" {
   type        = string
-  description =  "The expiry date and time for the key in the format Y-m-d'T'H:M:S'Z'."
+  description = "The expiry date and time for the key in the format Y-m-d'T'H:M:S'Z'."
   default     = " " // Add key expiration date here
 
   tags = {
@@ -98,7 +98,7 @@ trigger "query" "detect_and_correct_keyvault_with_non_rbac_keys_expiration_not_s
 
 pipeline "detect_and_correct_keyvault_with_non_rbac_keys_expiration_not_set" {
   title         = "Detect & correct Key Vaults with non-RBAC keys without expiration date"
-  description   =  "Detects Key Vaults with non-RBAC keys that do not have an expiration date set and then set expiration date."
+  description   = "Detects Key Vaults with non-RBAC keys that do not have an expiration date set and then set expiration date."
   tags          = local.keyvault_common_tags
 
   param "database" {

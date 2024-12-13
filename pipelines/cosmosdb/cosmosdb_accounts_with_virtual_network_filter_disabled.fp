@@ -92,7 +92,7 @@ pipeline "detect_and_correct_cosmosdb_accounts_with_virtual_network_filter_disab
 pipeline "correct_cosmosdb_accounts_with_virtual_network_filter_disabled" {
   title         = "Correct Cosmos DB accounts with virtual network filter disabled"
   description   = "Send notifications for Cosmos DB accounts with virtual network filter disabled."
-  tags         = merge(local.cosmosdb_common_tags, { folder = "Internal" })
+  tags          = merge(local.cosmosdb_common_tags, { folder = "Internal" })
 
   param "items" {
     type = list(object({

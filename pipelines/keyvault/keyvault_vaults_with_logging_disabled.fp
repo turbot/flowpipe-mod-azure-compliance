@@ -110,7 +110,7 @@ pipeline "detect_and_correct_keyvault_vaults_with_logging_disabled" {
 pipeline "correct_keyvault_vaults_with_logging_disabled" {
   title         = "Correct Key Vaults with logging disabled"
   description   = "Send notifications for Key Vaults with logging disabled."
-  tags         = merge(local.keyvault_common_tags, { folder = "Internal" })
+  tags          = merge(local.keyvault_common_tags, { folder = "Internal" })
 
   param "items" {
     type = list(object({

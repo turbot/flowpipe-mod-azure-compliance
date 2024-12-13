@@ -70,7 +70,7 @@ variable "keyvault_with_rbac_secrets_expiration_not_set_enabled_actions" {
 
 variable "keyvault_with_rbac_secrets_expiration_not_set_expiration_date" {
   type        = string
-  description =  "The expiry date and time for the key in the format Y-m-d'T'H:M:S'Z'."
+  description = "The expiry date and time for the key in the format Y-m-d'T'H:M:S'Z'."
   default     = " "  // Add key expiration date here
 
   tags = {

@@ -14,7 +14,7 @@ locals {
   EOQ
 
   keyvault_vaults_with_rbac_disabled_enabled_actions_enum = ["skip", "enable_rbac"]
-  keyvault_vaults_with_rbac_disabled_default_action_enum = ["notify", "skip", "enable_rbac"]
+  keyvault_vaults_with_rbac_disabled_default_action_enum  = ["notify", "skip", "enable_rbac"]
 }
 
 variable "keyvault_vaults_with_rbac_disabled_trigger_enabled" {
@@ -302,7 +302,7 @@ pipeline "correct_one_keyvault_vault_with_rbac_disabled" {
           label        = "Enable RBAC"
           value        = "enable_rbac"
           style        = local.style_alert
-          pipeline_ref = azure.pipeline.update_azure_key_vault_rbac_authorization
+          pipeline_ref = azure.pipeline.update_key_vault_rbac_authorization
           pipeline_args = {
             resource_group             = param.resource_group
             subscription_id            = param.subscription_id
