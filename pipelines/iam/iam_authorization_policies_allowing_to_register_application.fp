@@ -1,5 +1,5 @@
 locals {
-  iam_users_allowed_to_register_application_query = <<-EOQ
+  iam_authorization_policies_allowing_to_register_application_query = <<-EOQ
 	  with distinct_tenant as (
       select
         distinct tenant_id,
@@ -19,7 +19,7 @@ locals {
   EOQ
 }
 
-variable "iam_users_allowed_to_register_application_trigger_enabled" {
+variable "iam_authorization_policies_allowing_to_register_application_trigger_enabled" {
   type        = bool
   description = "If true, the trigger is enabled."
   default     = false
@@ -29,7 +29,7 @@ variable "iam_users_allowed_to_register_application_trigger_enabled" {
   }
 }
 
-variable "iam_users_allowed_to_register_application_trigger_schedule" {
+variable "iam_authorization_policies_allowing_to_register_application_trigger_schedule" {
   type        = string
   description = "If the trigger is enabled, run it on this schedule."
   default     = "15m"
@@ -39,25 +39,25 @@ variable "iam_users_allowed_to_register_application_trigger_schedule" {
   }
 }
 
-trigger "query" "detect_and_correct_iam_users_allowed_to_register_application" {
+trigger "query" "detect_and_correct_iam_authorization_policies_allowing_to_register_application" {
   title         = "Detect & correct authorization policy allowing IAM users to register application"
   description   = "Detect authorization policy allowing IAM users to register application."
   tags          = local.iam_common_tags
 
-  enabled  = var.iam_users_allowed_to_register_application_trigger_enabled
-  schedule = var.iam_users_allowed_to_register_application_trigger_schedule
+  enabled  = var.iam_authorization_policies_allowing_to_register_application_trigger_enabled
+  schedule = var.iam_authorization_policies_allowing_to_register_application_trigger_schedule
   database = var.database
-  sql      = local.iam_users_allowed_to_register_application_query
+  sql      = local.iam_authorization_policies_allowing_to_register_application_query
 
   capture "insert" {
-    pipeline = pipeline.correct_iam_users_allowed_to_register_application
+    pipeline = pipeline.correct_iam_authorization_policies_allowing_to_register_application
     args = {
       items = self.inserted_rows
     }
   }
 }
 
-pipeline "detect_and_correct_iam_users_allowed_to_register_application" {
+pipeline "detect_and_correct_iam_authorization_policies_allowing_to_register_application" {
   title         = "Detect & correct authorization policy allowing IAM users to register application"
   description   = "Detect authorization policy allowing IAM users to register application."
   tags          = local.iam_common_tags
@@ -83,11 +83,11 @@ pipeline "detect_and_correct_iam_users_allowed_to_register_application" {
 
   step "query" "detect" {
     database = param.database
-    sql      = local.iam_users_allowed_to_register_application_query
+    sql      = local.iam_authorization_policies_allowing_to_register_application_query
   }
 
   step "pipeline" "respond" {
-    pipeline = pipeline.correct_iam_users_allowed_to_register_application
+    pipeline = pipeline.correct_iam_authorization_policies_allowing_to_register_application
     args = {
       items              = step.query.detect.rows
       notifier           = param.notifier
@@ -96,7 +96,7 @@ pipeline "detect_and_correct_iam_users_allowed_to_register_application" {
   }
 }
 
-pipeline "correct_iam_users_allowed_to_register_application" {
+pipeline "correct_iam_authorization_policies_allowing_to_register_application" {
   title         = "Correct authorization policy allowing IAM users to register application"
   description   = "Send notifications for authorization policy allowing IAM users to register application."
   tags          = merge(local.iam_common_tags, { folder = "Internal" })

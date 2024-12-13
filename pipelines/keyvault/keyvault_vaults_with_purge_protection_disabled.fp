@@ -1,5 +1,5 @@
 locals {
-  keyvault_vaults_non_recoverable_query = <<-EOQ
+  keyvault_vaults_with_purge_protection_disabled_query = <<-EOQ
     select
       concat(vault.id, ' [', vault.subscription_id, '/', vault.resource_group, ']') as title,
       vault.id as id,
@@ -13,11 +13,11 @@ locals {
       not (soft_delete_enabled and purge_protection_enabled);
   EOQ
 
-  keyvault_vaults_non_recoverable_enabled_actions_enum = ["skip", "enable_purge_protection"]
-  keyvault_vaults_non_recoverable_default_action_enum = ["notify", "skip", "enable_purge_protection"]
+  keyvault_vaults_with_purge_protection_disabled_enabled_actions_enum = ["skip", "enable_purge_protection"]
+  keyvault_vaults_with_purge_protection_disabled_default_action_enum = ["notify", "skip", "enable_purge_protection"]
 }
 
-variable "keyvault_vaults_non_recoverable_trigger_enabled" {
+variable "keyvault_vaults_with_purge_protection_disabled_trigger_enabled" {
   type        = bool
   default     = false
   description = "If true, the trigger is enabled."
@@ -27,7 +27,7 @@ variable "keyvault_vaults_non_recoverable_trigger_enabled" {
   }
 }
 
-variable "keyvault_vaults_non_recoverable_trigger_schedule" {
+variable "keyvault_vaults_with_purge_protection_disabled_trigger_schedule" {
   type        = string
   default     = "15m"
   description = "If the trigger is enabled, run it on this schedule."
@@ -37,7 +37,7 @@ variable "keyvault_vaults_non_recoverable_trigger_schedule" {
   }
 }
 
-variable "keyvault_vaults_non_recoverable_default_action" {
+variable "keyvault_vaults_with_purge_protection_disabled_default_action" {
   type        = string
   description = "The default action to use when there are no approvers."
   default     = "notify"
@@ -47,7 +47,7 @@ variable "keyvault_vaults_non_recoverable_default_action" {
   }
 }
 
-variable "keyvault_vaults_non_recoverable_enabled_actions" {
+variable "keyvault_vaults_with_purge_protection_disabled_enabled_actions" {
   type        = list(string)
   description = "The list of enabled actions to provide to approvers for selection."
   default     = ["skip", "enable_purge_protection"]
@@ -57,27 +57,27 @@ variable "keyvault_vaults_non_recoverable_enabled_actions" {
   }
 }
 
-trigger "query" "detect_and_correct_keyvault_vaults_non_recoverable" {
-  title         = "Detect & correct non-recoverable Key Vaults"
-  description   = "Detect non-recoverable Key Vaults and then enable purge protection."
+trigger "query" "detect_and_correct_keyvault_vaults_with_purge_protection_disabled" {
+  title         = "Detect & correct Key Vaults with purge protection disabled"
+  description   = "Detect key vaults with purge protection disabled and then enable purge protection."
   tags          = local.keyvault_common_tags
 
-  enabled  = var.keyvault_vaults_non_recoverable_trigger_enabled
-  schedule = var.keyvault_vaults_non_recoverable_trigger_schedule
+  enabled  = var.keyvault_vaults_with_purge_protection_disabled_trigger_enabled
+  schedule = var.keyvault_vaults_with_purge_protection_disabled_trigger_schedule
   database = var.database
-  sql      = local.keyvault_vaults_non_recoverable_query
+  sql      = local.keyvault_vaults_with_purge_protection_disabled_query
 
   capture "insert" {
-    pipeline = pipeline.correct_keyvault_vaults_non_recoverable
+    pipeline = pipeline.correct_keyvault_vaults_with_purge_protection_disabled
     args = {
       items = self.inserted_rows
     }
   }
 }
 
-pipeline "detect_and_correct_keyvault_vaults_non_recoverable" {
-  title         = "Detect & correct non-recoverable Key Vaults"
-  description   = "Detect non-recoverable Key Vaults and then enable purge protection."
+pipeline "detect_and_correct_keyvault_vaults_with_purge_protection_disabled" {
+  title         = "Detect & correct Key Vaults with purge protection disabled"
+  description   = "Detect key vaults with purge protection disabled and then enable purge protection."
   tags          = local.keyvault_common_tags
 
   param "database" {
@@ -108,24 +108,24 @@ pipeline "detect_and_correct_keyvault_vaults_non_recoverable" {
   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.keyvault_vaults_non_recoverable_default_action
-    enum        = local.keyvault_vaults_non_recoverable_default_action_enum
+    default     = var.keyvault_vaults_with_purge_protection_disabled_default_action
+    enum        = local.keyvault_vaults_with_purge_protection_disabled_default_action_enum
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.keyvault_vaults_non_recoverable_enabled_actions
-    enum        = local.keyvault_vaults_non_recoverable_enabled_actions_enum
+    default     = var.keyvault_vaults_with_purge_protection_disabled_enabled_actions
+    enum        = local.keyvault_vaults_with_purge_protection_disabled_enabled_actions_enum
   }
 
   step "query" "detect" {
     database = param.database
-    sql      = local.keyvault_vaults_non_recoverable_query
+    sql      = local.keyvault_vaults_with_purge_protection_disabled_query
   }
 
   step "pipeline" "respond" {
-    pipeline = pipeline.correct_keyvault_vaults_non_recoverable
+    pipeline = pipeline.correct_keyvault_vaults_with_purge_protection_disabled
     args = {
       items              = step.query.detect.rows
       notifier           = param.notifier
@@ -137,9 +137,9 @@ pipeline "detect_and_correct_keyvault_vaults_non_recoverable" {
   }
 }
 
-pipeline "correct_keyvault_vaults_non_recoverable" {
-  title         = "Correct non-recoverable Key Vaults"
-  description   = "Enable purge protection on a collection of non-recoverable Key Vaults."
+pipeline "correct_keyvault_vaults_with_purge_protection_disabled" {
+  title         = "Correct Key Vaults with purge protection disabled"
+  description   = "Enable purge protection on a collection of key vaults with purge protection disabled."
   tags          = merge(local.keyvault_common_tags, { folder = "Internal" })
 
   param "items" {
@@ -176,15 +176,15 @@ pipeline "correct_keyvault_vaults_non_recoverable" {
   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.keyvault_vaults_non_recoverable_default_action
-    enum        = local.keyvault_vaults_non_recoverable_default_action_enum
+    default     = var.keyvault_vaults_with_purge_protection_disabled_default_action
+    enum        = local.keyvault_vaults_with_purge_protection_disabled_default_action_enum
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.keyvault_vaults_non_recoverable_enabled_actions
-    enum        = local.keyvault_vaults_non_recoverable_enabled_actions_enum
+    default     = var.keyvault_vaults_with_purge_protection_disabled_enabled_actions
+    enum        = local.keyvault_vaults_with_purge_protection_disabled_enabled_actions_enum
   }
 
   step "message" "notify_detection_count" {
@@ -213,8 +213,8 @@ pipeline "correct_keyvault_vaults_non_recoverable" {
 }
 
 pipeline "correct_one_keyvault_vault_non_recoverable" {
-  title         = "Correct one non-recoverable Key Vault"
-  description   = "Enable purge protection on a single non-recoverable Key Vault."
+  title         = "Correct one Key Vault with purge protection disabled"
+  description   = "Enable purge protection on a key vault with purge protection disabled."
   tags          = merge(local.keyvault_common_tags, { folder = "Internal" })
 
   param "title" {
@@ -264,15 +264,15 @@ pipeline "correct_one_keyvault_vault_non_recoverable" {
   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.keyvault_vaults_non_recoverable_default_action
-    enum        = local.keyvault_vaults_non_recoverable_default_action_enum
+    default     = var.keyvault_vaults_with_purge_protection_disabled_default_action
+    enum        = local.keyvault_vaults_with_purge_protection_disabled_default_action_enum
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.keyvault_vaults_non_recoverable_enabled_actions
-    enum        = local.keyvault_vaults_non_recoverable_enabled_actions_enum
+    default     = var.keyvault_vaults_with_purge_protection_disabled_enabled_actions
+    enum        = local.keyvault_vaults_with_purge_protection_disabled_enabled_actions_enum
   }
 
   step "pipeline" "respond" {
@@ -281,7 +281,7 @@ pipeline "correct_one_keyvault_vault_non_recoverable" {
       notifier           = param.notifier
       notification_level = param.notification_level
       approvers          = param.approvers
-      detect_msg         = "Detected Key Vault ${param.title} as non-recoverable."
+      detect_msg         = "Detected key vault ${param.title} as non-recoverable."
       default_action     = param.default_action
       enabled_actions    = param.enabled_actions
       actions = {
@@ -293,7 +293,7 @@ pipeline "correct_one_keyvault_vault_non_recoverable" {
           pipeline_args = {
             notifier = param.notifier
             send     = param.notification_level == local.level_info
-            text     = "Skipped Key Vault ${param.title}."
+            text     = "Skipped key vault ${param.title}."
           }
           success_msg = ""
           error_msg   = ""
@@ -310,8 +310,8 @@ pipeline "correct_one_keyvault_vault_non_recoverable" {
             conn                    = param.conn
             enable_purge_protection = true
           }
-          success_msg = "Enabled purge protection for Key Vault ${param.title}."
-          error_msg   = "Error enabling purge protection for Key Vault ${param.title}."
+          success_msg = "Enabled purge protection for key vault ${param.title}."
+          error_msg   = "Error enabling purge protection for key vault ${param.title}."
         }
       }
     }

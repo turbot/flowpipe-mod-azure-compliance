@@ -1,5 +1,5 @@
 locals {
-  iam_users_allowed_to_create_security_group_query = <<-EOQ
+  iam_authorization_policies_allowing_to_create_security_group_query = <<-EOQ
     with distinct_tenant as (
       select
         distinct tenant_id,
@@ -20,7 +20,7 @@ locals {
   EOQ
 }
 
-variable "iam_users_allowed_to_create_security_group_trigger_enabled" {
+variable "iam_authorization_policies_allowing_to_create_security_group_trigger_enabled" {
   type        = bool
   description = "If true, the trigger is enabled."
   default     = false
@@ -30,7 +30,7 @@ variable "iam_users_allowed_to_create_security_group_trigger_enabled" {
   }
 }
 
-variable "iam_users_allowed_to_create_security_group_trigger_schedule" {
+variable "iam_authorization_policies_allowing_to_create_security_group_trigger_schedule" {
   type        = string
   description = "If the trigger is enabled, run it on this schedule."
   default     = "15m"
@@ -40,27 +40,27 @@ variable "iam_users_allowed_to_create_security_group_trigger_schedule" {
   }
 }
 
-trigger "query" "detect_and_correct_iam_users_allowed_to_create_security_group" {
-  title         = "Detect & correct authorization policy allowing IAM users to create security group"
-  description   = "Detect authorization policy allowing IAM users to create security group."
+trigger "query" "detect_and_correct_iam_authorization_policies_allowing_to_create_security_group" {
+  title         = "Detect & correct Authorization policies allowing IAM users to create security group"
+  description   = "Detect authorization policies allowing IAM users to create security group."
   tags          = local.iam_common_tags
 
-  enabled  = var.iam_users_allowed_to_create_security_group_trigger_enabled
-  schedule = var.iam_users_allowed_to_create_security_group_trigger_schedule
+  enabled  = var.iam_authorization_policies_allowing_to_create_security_group_trigger_enabled
+  schedule = var.iam_authorization_policies_allowing_to_create_security_group_trigger_schedule
   database = var.database
-  sql      = local.iam_users_allowed_to_create_security_group_query
+  sql      = local.iam_authorization_policies_allowing_to_create_security_group_query
 
   capture "insert" {
-    pipeline = pipeline.correct_iam_users_allowed_to_create_security_group
+    pipeline = pipeline.correct_iam_authorization_policies_allowing_to_create_security_group
     args = {
       items = self.inserted_rows
     }
   }
 }
 
-pipeline "detect_and_correct_iam_users_allowed_to_create_security_group" {
-  title         = "Detect & correct authorization policy allowing IAM users to create security group"
-  description   = "Detect authorization policy allowing IAM users to create security group."
+pipeline "detect_and_correct_iam_authorization_policies_allowing_to_create_security_group" {
+  title         = "Detect & correct authorization policies allowing IAM users to create security group"
+  description   = "Detect authorization policies allowing IAM users to create security group."
   tags          = local.iam_common_tags
 
   param "database" {
@@ -84,11 +84,11 @@ pipeline "detect_and_correct_iam_users_allowed_to_create_security_group" {
 
   step "query" "detect" {
     database = param.database
-    sql      = local.iam_users_allowed_to_create_security_group_query
+    sql      = local.iam_authorization_policies_allowing_to_create_security_group_query
   }
 
   step "pipeline" "respond" {
-    pipeline = pipeline.correct_iam_users_allowed_to_create_security_group
+    pipeline = pipeline.correct_iam_authorization_policies_allowing_to_create_security_group
     args = {
       items              = step.query.detect.rows
       notifier           = param.notifier
@@ -97,9 +97,9 @@ pipeline "detect_and_correct_iam_users_allowed_to_create_security_group" {
   }
 }
 
-pipeline "correct_iam_users_allowed_to_create_security_group" {
-  title         = "Correct authorization policy allowing IAM users to create security group"
-  description   = "Send notifications for authorization policy allowing IAM users to create security group."
+pipeline "correct_iam_authorization_policies_allowing_to_create_security_group" {
+  title         = "Correct Authorization policies allowing IAM users to create security group"
+  description   = "Send notifications for authorization policies allowing IAM users to create security group."
   tags          = merge(local.iam_common_tags, { folder = "Internal" })
 
   param "items" {
@@ -126,7 +126,7 @@ pipeline "correct_iam_users_allowed_to_create_security_group" {
   step "message" "notify_detection_count" {
     if       = var.notification_level == local.level_info
     notifier = param.notifier
-    text     = "Detected ${length(param.items)} authorization policy allowing users to create security group."
+    text     = "Detected ${length(param.items)} authorization policies allowing users to create security group."
   }
 
   step "message" "notify_items" {
