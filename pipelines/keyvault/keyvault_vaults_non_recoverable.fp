@@ -59,7 +59,7 @@ variable "keyvault_vaults_non_recoverable_enabled_actions" {
 
 trigger "query" "detect_and_correct_keyvault_vaults_non_recoverable" {
   title         = "Detect & correct non-recoverable Key Vaults"
-  description   = "Detects non-recoverable Key Vaults and then enable purge protection."
+  description   = "Detect non-recoverable Key Vaults and then enable purge protection."
   tags          = local.keyvault_common_tags
 
   enabled  = var.keyvault_vaults_non_recoverable_trigger_enabled
@@ -77,7 +77,7 @@ trigger "query" "detect_and_correct_keyvault_vaults_non_recoverable" {
 
 pipeline "detect_and_correct_keyvault_vaults_non_recoverable" {
   title         = "Detect & correct non-recoverable Key Vaults"
-  description   = "Detects non-recoverable Key Vaults and then enable purge protection."
+  description   = "Detect non-recoverable Key Vaults and then enable purge protection."
   tags          = local.keyvault_common_tags
 
   param "database" {

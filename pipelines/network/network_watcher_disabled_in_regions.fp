@@ -39,7 +39,7 @@ variable "network_watcher_disabled_in_regions_trigger_schedule" {
 
 trigger "query" "detect_and_correct_network_watcher_disabled_in_regions" {
   title         = "Detect & correct regions with network watcher disabled"
-  description   = "Detects regions with network watcher disabled and then enable them."
+  description   = "Detect regions with network watcher disabled and then enable them."
   tags          = local.network_common_tags
 
   enabled  = var.network_watcher_disabled_in_regions_trigger_enabled
@@ -57,7 +57,7 @@ trigger "query" "detect_and_correct_network_watcher_disabled_in_regions" {
 
 pipeline "detect_and_correct_network_watcher_disabled_in_regions" {
   title         = "Detect & correct regions with network watcher disabled"
-  description   = "Detects regions with network watcher disabled and then enable them."
+  description   = "Detect regions with network watcher disabled and then enable them."
   tags          = local.network_common_tags
 
   param "database" {

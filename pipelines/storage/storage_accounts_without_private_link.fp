@@ -45,7 +45,7 @@ variable "storage_accounts_without_private_link_trigger_schedule" {
 
 trigger "query" "detect_and_correct_storage_accounts_without_private_link" {
   title         = "Detect & correct Storage Accounts not using private link"
-  description   = "Detects Storage Accounts not using private link."
+  description   = "Detect Storage Accounts not using private link."
   tags          = local.storage_common_tags
 
   enabled  = var.storage_accounts_without_private_link_trigger_enabled
@@ -63,7 +63,7 @@ trigger "query" "detect_and_correct_storage_accounts_without_private_link" {
 
 pipeline "detect_and_correct_storage_accounts_without_private_link" {
   title         = "Detect & correct Storage Accounts not using private link"
-  description   = "Detects Storage Accounts not using private link."
+  description   = "Detect Storage Accounts not using private link."
   tags          = local.storage_common_tags
 
   param "database" {

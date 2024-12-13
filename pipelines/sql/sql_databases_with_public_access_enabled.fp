@@ -66,7 +66,7 @@ variable "sql_databases_with_public_access_enabled_enabled_actions" {
 }
 
 trigger "query" "detect_and_correct_sql_databases_with_public_access_enabled" {
-  title         = "Detect & correct SQL Databases when publicly accessible"
+  title         = "Detect & correct SQL Databases with public access enabled"
   description   = "Detect SQL Databases firewall rules allowing public access and then revoke the firewall rules."
   tags          = local.sql_common_tags
 
@@ -84,7 +84,7 @@ trigger "query" "detect_and_correct_sql_databases_with_public_access_enabled" {
 }
 
 pipeline "detect_and_correct_sql_databases_with_public_access_enabled" {
-  title         = "Detect & correct SQL Databases when publicly accessible"
+  title         = "Detect & correct SQL Databases with public access enabled"
   description   = "Detect SQL Databases firewall rules allowing public access and then revoke the firewall rules."
   tags          = local.sql_common_tags
 
@@ -146,7 +146,7 @@ pipeline "detect_and_correct_sql_databases_with_public_access_enabled" {
 }
 
 pipeline "correct_sql_databases_with_public_access_enabled" {
-  title         = "Correct SQL Databases when publicly accessible"
+  title         = "Correct SQL Databases with public access enabled"
   description   = "Revoke firewall rule for SQL Databases allowing public access."
   tags          = merge(local.sql_common_tags, { folder = "Internal" })
 
@@ -223,7 +223,7 @@ pipeline "correct_sql_databases_with_public_access_enabled" {
 }
 
 pipeline "correct_one_sql_database_with_public_access_enabled" {
-  title         = "Correct SQL Database when publicly accessible"
+  title         = "Correct SQL Database with public access enabled"
   description   = "Revoke firewall rule for a SQL Database allowing public access."
   tags          = merge(local.sql_common_tags, { folder = "Internal" })
 
@@ -314,7 +314,7 @@ pipeline "correct_one_sql_database_with_public_access_enabled" {
           error_msg   = ""
         },
         "revoke_firewall_rule" = {
-          label        = "Revole firewall rule"
+          label        = "Revoke firewall rule"
           value        = "revoke_firewall_rule"
           style        = local.style_alert
           pipeline_ref = azure.pipeline.delete_sql_server_firewall_rule

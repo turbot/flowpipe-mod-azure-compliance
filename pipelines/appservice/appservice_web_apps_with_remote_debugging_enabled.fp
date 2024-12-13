@@ -59,7 +59,7 @@ variable "appservice_web_apps_with_remote_debugging_enabled_enabled_actions" {
 
 trigger "query" "detect_and_correct_appservice_web_apps_with_remote_debugging_enabled" {
   title         = "Detect & correct App Service web apps with remote debugging enabled"
-  description   = "Detects App Service web apps with remote debugging enabled and then disable remote debugging."
+  description   = "Detect App Service web apps with remote debugging enabled and then disable remote debugging."
   tags          = local.appservice_common_tags
 
   enabled  = var.appservice_web_apps_with_remote_debugging_enabled_trigger_enabled
@@ -77,7 +77,7 @@ trigger "query" "detect_and_correct_appservice_web_apps_with_remote_debugging_en
 
 pipeline "detect_and_correct_appservice_web_apps_with_remote_debugging_enabled" {
   title         = "Detect & correct App Service web apps with remote debugging enabled"
-  description   = "Detects App Service web apps with remote debugging enabled and then disable remote debugging."
+  description   = "Detect App Service web apps with remote debugging enabled and then disable remote debugging."
   tags          = local.appservice_common_tags
 
   param "database" {

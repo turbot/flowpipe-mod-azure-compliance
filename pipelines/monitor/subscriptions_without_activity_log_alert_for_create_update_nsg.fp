@@ -75,7 +75,7 @@ variable "subscriptions_without_activity_log_alert_for_create_update_nsg_trigger
 
 trigger "query" "detect_and_correct_subscriptions_without_activity_log_alert_for_create_update_nsg" {
   title         = "Detect & correct Subscriptions without activity log alert for create and update NSG"
-  description   = "Detects Subscriptions without an activity log alert for create and update NSG."
+  description   = "Detect Subscriptions without an activity log alert for create and update NSG."
   tags          = local.monitor_common_tags
 
   enabled  = var.subscriptions_without_activity_log_alert_for_create_update_nsg_trigger_enabled
@@ -93,7 +93,7 @@ trigger "query" "detect_and_correct_subscriptions_without_activity_log_alert_for
 
 pipeline "detect_and_correct_subscriptions_without_activity_log_alert_for_create_update_nsg" {
   title         = "Detect & correct Subscriptions without activity log alert for create and update NSG"
-  description   = "Detects Subscriptions without an activity log alert for create and update NSG."
+  description   = "Detect Subscriptions without an activity log alert for create and update NSG."
   tags          = local.monitor_common_tags
 
   param "database" {

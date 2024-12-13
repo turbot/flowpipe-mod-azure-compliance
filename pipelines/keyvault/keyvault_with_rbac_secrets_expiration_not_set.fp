@@ -48,7 +48,7 @@ variable "keyvault_with_rbac_secrets_expiration_not_set_trigger_schedule" {
 
 trigger "query" "detect_and_correct_keyvault_with_rbac_secrets_expiration_not_set" {
   title         = "Detect & correct Key Vaults with RBAC secrets without expiration date"
-  description   = "Detects Key Vaults with RBAC secrets that do not have an expiration date set and then set expiration date."
+  description   = "Detect Key Vaults with RBAC secrets that do not have an expiration date set and then set expiration date."
   tags          = local.keyvault_common_tags
 
   enabled  = var.keyvault_with_rbac_secrets_expiration_not_set_trigger_enabled
@@ -66,7 +66,7 @@ trigger "query" "detect_and_correct_keyvault_with_rbac_secrets_expiration_not_se
 
 pipeline "detect_and_correct_keyvault_with_rbac_secrets_expiration_not_set" {
   title         = "Detect & correct Key Vaults with RBAC secrets without expiration date"
-  description   = "Detects Key Vaults with RBAC secrets that do not have an expiration date set and then set expiration date."
+  description   = "Detect Key Vaults with RBAC secrets that do not have an expiration date set and then set expiration date."
   tags          = local.keyvault_common_tags
 
   param "database" {

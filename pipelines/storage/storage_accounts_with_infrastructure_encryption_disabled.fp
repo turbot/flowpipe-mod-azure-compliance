@@ -36,7 +36,7 @@ variable "storage_accounts_with_infrastructure_encryption_disabled_trigger_sched
 
 trigger "query" "detect_and_correct_storage_accounts_with_infrastructure_encryption_disabled" {
   title         = "Detect & correct Storage Accounts with infrastructure encryption disabled"
-  description   = "Detects Storage Accounts with infrastructure encryption disabled."
+  description   = "Detect Storage Accounts with infrastructure encryption disabled."
   tags          = local.storage_common_tags
 
   enabled  = var.storage_accounts_with_infrastructure_encryption_disabled_trigger_enabled
@@ -54,7 +54,7 @@ trigger "query" "detect_and_correct_storage_accounts_with_infrastructure_encrypt
 
 pipeline "detect_and_correct_storage_accounts_with_infrastructure_encryption_disabled" {
   title         = "Detect & correct Storage Accounts with infrastructure encryption disabled"
-  description   = "Detects Storage Accounts with infrastructure encryption disabled."
+  description   = "Detect Storage Accounts with infrastructure encryption disabled."
   tags          = local.storage_common_tags
 
   param "database" {

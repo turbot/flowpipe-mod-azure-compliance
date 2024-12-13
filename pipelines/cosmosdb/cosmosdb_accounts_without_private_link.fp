@@ -43,8 +43,8 @@ variable "cosmosdb_accounts_without_private_link_trigger_schedule" {
 }
 
 trigger "query" "detect_and_correct_cosmosdb_accounts_without_private_link" {
-  title         = "Detect & correct Cosmos DB accounts not using private link"
-  description   = "Detects Cosmos DB accounts not using private link."
+  title         = "Detect & correct Cosmos DB accounts without a private link"
+  description   = "Detect Cosmos DB accounts without a private link."
   tags          = local.cosmosdb_common_tags
 
   enabled  = var.cosmosdb_accounts_without_private_link_trigger_enabled
@@ -61,8 +61,8 @@ trigger "query" "detect_and_correct_cosmosdb_accounts_without_private_link" {
 }
 
 pipeline "detect_and_correct_cosmosdb_accounts_without_private_link" {
-  title         = "Detect & correct Cosmos DB accounts not using private link"
-  description   = "Detects Cosmos DB accounts not using private link."
+  title         = "Detect & correct Cosmos DB accounts without a private link"
+  description   = "Detect Cosmos DB accounts without a private link."
   tags          = local.cosmosdb_common_tags
 
   param "database" {
@@ -100,9 +100,9 @@ pipeline "detect_and_correct_cosmosdb_accounts_without_private_link" {
 }
 
 pipeline "correct_cosmosdb_accounts_without_private_link" {
-  title         = "Correct Cosmos DB accounts not using private link"
-  description   = "Send notifications for Cosmos DB accounts not using private link."
-  tags         = merge(local.cosmosdb_common_tags, { folder = "Internal" })
+  title         = "Correct Cosmos DB accounts without a private link"
+  description   = "Send notifications for Cosmos DB accounts without a private link."
+  tags          = merge(local.cosmosdb_common_tags, { folder = "Internal" })
 
   param "items" {
     type = list(object({
@@ -128,13 +128,13 @@ pipeline "correct_cosmosdb_accounts_without_private_link" {
   step "message" "notify_detection_count" {
     if       = var.notification_level == local.level_info
     notifier = param.notifier
-    text     = "Detected ${length(param.items)} Cosmos DB account(s) without private link."
+    text     = "Detected ${length(param.items)} Cosmos DB account(s) without a private link."
   }
 
   step "message" "notify_items" {
     if       = var.notification_level == local.level_info
     for_each = param.items
     notifier = param.notifier
-    text     = "Detected Cosmos DB account ${each.value.title} without private link."
+    text     = "Detected Cosmos DB account ${each.value.title} without a private link."
   }
 }

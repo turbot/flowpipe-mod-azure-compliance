@@ -37,7 +37,7 @@ variable "network_securitys_group_flow_log_with_retention_period_less_than_90_da
 
 trigger "query" "detect_and_correct_network_securitys_group_flow_log_with_retention_period_less_than_90_days" {
   title         = "Detect & correct NSGs flow log with retention period less than 90 days"
-  description   = "Detects NSGs flow log with retention period less than 90 days."
+  description   = "Detect NSGs flow log with retention period less than 90 days."
   tags          = local.network_common_tags
 
   enabled  = var.network_securitys_group_flow_log_with_retention_period_less_than_90_days_trigger_enabled
@@ -55,7 +55,7 @@ trigger "query" "detect_and_correct_network_securitys_group_flow_log_with_retent
 
 pipeline "detect_and_correct_network_securitys_group_flow_log_with_retention_period_less_than_90_days" {
   title         = "Detect & correct NSGs flow log with retention period less than 90 days"
-  description   = "Detects NSGs flow log with retention period less than 90 days."
+  description   = "Detect NSGs flow log with retention period less than 90 days."
   tags          = local.network_common_tags
 
   param "database" {

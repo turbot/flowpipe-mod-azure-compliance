@@ -73,7 +73,7 @@ variable "subscriptions_without_activity_log_alert_for_update_public_ip_address_
 
 trigger "query" "detect_and_correct_subscriptions_without_activity_log_alert_for_update_public_ip_address" {
   title         = "Detect & correct Subscriptions without activity log alert for create update public IP address"
-  description   = "Detects Subscriptions without an activity log alert for create update public IP address."
+  description   = "Detect Subscriptions without an activity log alert for create update public IP address."
   tags          = local.monitor_common_tags
 
   enabled  = var.subscriptions_without_activity_log_alert_for_update_public_ip_address_trigger_enabled
@@ -91,7 +91,7 @@ trigger "query" "detect_and_correct_subscriptions_without_activity_log_alert_for
 
 pipeline "detect_and_correct_subscriptions_without_activity_log_alert_for_update_public_ip_address" {
   title         = "Detect & correct Subscriptions without activity log alert for create update public IP address"
-  description   = "Detects Subscriptions without an activity log alert for create update public IP address."
+  description   = "Detect Subscriptions without an activity log alert for create update public IP address."
   tags          = local.monitor_common_tags
 
   param "database" {

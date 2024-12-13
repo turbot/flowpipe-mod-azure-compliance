@@ -33,8 +33,8 @@ variable "compute_vms_without_managed_disk_trigger_schedule" {
 }
 
 trigger "query" "detect_and_correct_compute_vms_without_managed_disk" {
-  title         = "Detect & correct Compute VMs not utilizing managed disk"
-  description   = "Detects Compute VMs not utilizing managed disk."
+  title         = "Detect & correct Compute VMs without a managed disk"
+  description   = "Detect Compute VMs without a managed disk."
   tags          = local.compute_common_tags
 
   enabled  = var.compute_vms_without_managed_disk_trigger_enabled
@@ -51,8 +51,8 @@ trigger "query" "detect_and_correct_compute_vms_without_managed_disk" {
 }
 
 pipeline "detect_and_correct_compute_vms_without_managed_disk" {
-  title         = "Detect & correct Compute VMs not utilizing managed disk"
-  description   = "Detects Compute VMs not utilizing managed disk."
+  title         = "Detect & correct Compute VMs without a managed disk"
+  description   = "Detect Compute VMs without a managed disk."
   tags          = local.compute_common_tags
 
   param "database" {
@@ -90,9 +90,9 @@ pipeline "detect_and_correct_compute_vms_without_managed_disk" {
 }
 
 pipeline "correct_compute_vms_without_managed_disk" {
-  title         = "Correct Compute VMs not utilizing managed diskk"
-  description   = "Send notifications for Compute VMs not utilizing managed disk."
-  tags         = merge(local.compute_common_tags, { folder = "Internal" })
+  title         = "Correct Compute VMs without a managed diskk"
+  description   = "Send notifications for Compute VMs without a managed disk."
+  tags          = merge(local.compute_common_tags, { folder = "Internal" })
 
   param "items" {
     type = list(object({

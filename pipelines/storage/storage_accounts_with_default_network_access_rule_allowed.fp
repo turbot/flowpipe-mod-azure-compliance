@@ -61,7 +61,7 @@ variable "storage_accounts_with_default_network_access_rule_allowed_enabled_acti
 
 trigger "query" "detect_and_correct_storage_accounts_with_default_network_access_rule_allowed" {
   title         = "Detect & correct Storage Accounts with default network access rule set to Allow"
-  description   = "Detects Storage Accounts with default network access rule set to Allow and runs your chosen action."
+  description   = "Detect Storage Accounts with default network access rule set to Allow and runs your chosen action."
   tags          = local.storage_common_tags
 
   enabled  = var.storage_accounts_with_default_network_access_rule_allowed_trigger_enabled
@@ -79,7 +79,7 @@ trigger "query" "detect_and_correct_storage_accounts_with_default_network_access
 
 pipeline "detect_and_correct_storage_accounts_with_default_network_access_rule_allowed" {
   title         = "Detect & correct Storage Accounts with default network access rule set to Allow"
-  description   = "Detects Storage Accounts with default network access rule set to Allow and runs your chosen action."
+  description   = "Detect Storage Accounts with default network access rule set to Allow and runs your chosen action."
   tags          = local.storage_common_tags
 
   param "database" {

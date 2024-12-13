@@ -58,8 +58,8 @@ variable "appservice_web_apps_without_https_enabled_actions" {
 }
 
 trigger "query" "detect_and_correct_appservice_web_apps_without_https" {
-  title         = "Detect & correct App Service web apps not using HTTPS"
-  description   = "Detects App Services web apps not using HTTPS and then enable HTTPS."
+  title         = "Detect & correct App Service web apps without HTTPS enabled"
+  description   = "Detect App Services web apps without HTTPS enabled and then enable HTTPS."
   tags          = local.appservice_common_tags
 
   enabled  = var.appservice_web_apps_without_https_trigger_enabled
@@ -76,8 +76,8 @@ trigger "query" "detect_and_correct_appservice_web_apps_without_https" {
 }
 
 pipeline "detect_and_correct_appservice_web_apps_without_https" {
-  title         = "Detect & correct App Service web apps not using HTTPS"
-  description   = "Detects App Service web apps not using HTTPS and then enable HTTPS."
+  title         = "Detect & correct App Service web apps without HTTPS enabled"
+  description   = "Detect App Service web apps without HTTPS enabled and then enable HTTPS."
   tags          = local.appservice_common_tags
 
   param "database" {
@@ -138,8 +138,8 @@ pipeline "detect_and_correct_appservice_web_apps_without_https" {
 }
 
 pipeline "correct_appservice_web_apps_without_https" {
-  title         = "Correct App Service web apps not using HTTPS"
-  description   = "Enable HTTPS for App Service web apps not using HTTPS."
+  title         = "Correct App Service web apps without HTTPS enabled"
+  description   = "Enable HTTPS for App Service web apps without HTTPS enabled."
   tags          = merge(local.appservice_common_tags, { folder = "Internal" })
 
   param "items" {
@@ -190,7 +190,7 @@ pipeline "correct_appservice_web_apps_without_https" {
   step "message" "notify_detection_count" {
     if       = var.notification_level == local.level_info
     notifier = param.notifier
-    text     = "Detected ${length(param.items)} App Service web app(s) not using HTTPS."
+    text     = "Detected ${length(param.items)} App Service web app(s) without HTTPS enabled."
   }
 
   step "pipeline" "correct_item" {
@@ -213,8 +213,8 @@ pipeline "correct_appservice_web_apps_without_https" {
 }
 
 pipeline "correct_one_appservice_web_app_without_https" {
-  title         = "Correct App Service web app not using HTTPS"
-  description   = "Enable HTTPS for a App Service web app not using HTTPS."
+  title         = "Correct App Service web app without HTTPS enabled"
+  description   = "Enable HTTPS for a App Service web app without HTTPS enabled."
   tags          = merge(local.appservice_common_tags, { folder = "Internal" })
 
   param "title" {
@@ -281,7 +281,7 @@ pipeline "correct_one_appservice_web_app_without_https" {
       notifier           = param.notifier
       notification_level = param.notification_level
       approvers          = param.approvers
-      detect_msg         = "Detected App Service web app ${param.title} not using HTTPS."
+      detect_msg         = "Detected App Service web app ${param.title} without HTTPS enabled."
       default_action     = param.default_action
       enabled_actions    = param.enabled_actions
       actions = {

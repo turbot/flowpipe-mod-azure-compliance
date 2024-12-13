@@ -73,7 +73,7 @@ variable "subscriptions_without_activity_log_alert_for_delete_security_solution_
 
 trigger "query" "detect_and_correct_subscriptions_without_activity_log_alert_for_delete_security_solution" {
   title         = "Detect & correct Subscriptions without activity log alert for delete security solution"
-  description   = "Detects Subscriptions without an activity log alert for delete security solution."
+  description   = "Detect Subscriptions without an activity log alert for delete security solution."
   tags          = local.monitor_common_tags
 
   enabled  = var.subscriptions_without_activity_log_alert_for_delete_security_solution_trigger_enabled
@@ -91,7 +91,7 @@ trigger "query" "detect_and_correct_subscriptions_without_activity_log_alert_for
 
 pipeline "detect_and_correct_subscriptions_without_activity_log_alert_for_delete_security_solution" {
   title         = "Detect & correct Subscriptions without activity log alert for delete security solution"
-  description   = "Detects Subscriptions without an activity log alert for delete security solution."
+  description   = "Detect Subscriptions without an activity log alert for delete security solution."
   tags          = local.monitor_common_tags
 
   param "database" {

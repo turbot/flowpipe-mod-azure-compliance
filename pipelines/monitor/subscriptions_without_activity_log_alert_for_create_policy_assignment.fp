@@ -64,7 +64,7 @@ variable "subscriptions_without_activity_log_alert_for_create_policy_assignment_
 
 trigger "query" "detect_and_correct_subscriptions_without_activity_log_alert_for_create_policy_assignment" {
   title         = "Detect & correct Subscriptions without activity log alert for create policy assignment"
-  description   = "Detects Subscriptions without an activity log alert for create policy assignment."
+  description   = "Detect Subscriptions without an activity log alert for create policy assignment."
   tags          = local.monitor_common_tags
 
   enabled  = var.subscriptions_without_activity_log_alert_for_create_policy_assignment_trigger_enabled
@@ -82,7 +82,7 @@ trigger "query" "detect_and_correct_subscriptions_without_activity_log_alert_for
 
 pipeline "detect_and_correct_subscriptions_without_activity_log_alert_for_create_policy_assignment" {
   title         = "Detect & correct Subscriptions without activity log alert for create policy assignment"
-  description   = "Detects Subscriptions without an activity log alert for create policy assignment."
+  description   = "Detect Subscriptions without an activity log alert for create policy assignment."
   tags          = local.monitor_common_tags
 
   param "database" {

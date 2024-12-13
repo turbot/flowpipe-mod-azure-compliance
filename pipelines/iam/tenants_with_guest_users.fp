@@ -45,7 +45,7 @@ variable "tenants_with_guest_users_trigger_schedule" {
 
 trigger "query" "detect_and_correct_tenants_with_guest_users" {
   title         = "Detect & correct Tenants with guest users"
-  description   = "Detect Tenants with guest users."
+  description   = "Detect tenants with guest users."
   tags          = local.iam_common_tags
 
   enabled  = var.tenants_with_guest_users_trigger_enabled
@@ -63,7 +63,7 @@ trigger "query" "detect_and_correct_tenants_with_guest_users" {
 
 pipeline "detect_and_correct_tenants_with_guest_users" {
   title         = "Detect & correct Tenants with guest users"
-  description   = "Detect Tenants with guest users."
+  description   = "Detect tenants with guest users."
   tags          = local.iam_common_tags
 
   param "database" {
@@ -102,7 +102,7 @@ pipeline "detect_and_correct_tenants_with_guest_users" {
 
 pipeline "correct_tenants_with_guest_users" {
   title         = "Correct Tenants with guest users"
-  description   = "Send notifications for Tenants with guest users."
+  description   = "Send notifications for tenants with guest users."
   tags          = merge(local.iam_common_tags, { folder = "Internal" })
 
   param "items" {

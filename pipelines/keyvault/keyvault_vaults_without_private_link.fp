@@ -36,8 +36,8 @@ variable "keyvault_vaults_without_private_link_trigger_schedule" {
 }
 
 trigger "query" "detect_and_correct_keyvault_vaults_without_private_link" {
-  title         = "Detect & correct Key Vaults not using private link"
-  description   = "Detects Key Vaults not using private link."
+  title         = "Detect & correct Key Vaults without a private link"
+  description   = "Detect Key Vaults without a private link."
   tags          = local.keyvault_common_tags
 
   enabled  = var.keyvault_vaults_without_private_link_trigger_enabled
@@ -54,8 +54,8 @@ trigger "query" "detect_and_correct_keyvault_vaults_without_private_link" {
 }
 
 pipeline "detect_and_correct_keyvault_vaults_without_private_link" {
-  title         = "Detect & correct Key Vaults not using private link"
-  description   = "Detects Key Vaults not using private link."
+  title         = "Detect & correct Key Vaults without a private link"
+  description   = "Detect Key Vaults without a private link."
   tags          = local.keyvault_common_tags
 
   param "database" {
@@ -93,8 +93,8 @@ pipeline "detect_and_correct_keyvault_vaults_without_private_link" {
 }
 
 pipeline "correct_keyvault_vaults_without_private_link" {
-  title         = "Correct Key Vaults not using private link"
-  description   = "Send notifications for Key Vaults not using private link."
+  title         = "Correct Key Vaults without a private link"
+  description   = "Send notifications for Key Vaults without a private link."
   tags         = merge(local.keyvault_common_tags, { folder = "Internal" })
 
   param "items" {

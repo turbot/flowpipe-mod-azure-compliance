@@ -42,7 +42,7 @@ variable "subscriptions_without_application_insight_configured_trigger_schedule"
 
 trigger "query" "detect_and_correct_subscriptions_without_application_insight_configured" {
   title         = "Detect & correct Subscriptions without application insight configured"
-  description   = "Detects Subscriptions without application insight configured."
+  description   = "Detect Subscriptions without application insight configured."
   tags          = local.monitor_common_tags
 
   enabled  = var.subscriptions_without_application_insight_configured_trigger_enabled
@@ -60,7 +60,7 @@ trigger "query" "detect_and_correct_subscriptions_without_application_insight_co
 
 pipeline "detect_and_correct_subscriptions_without_application_insight_configured" {
   title         = "Detect & correct Subscriptions without application insight configured"
-  description   = "Detects Subscriptions without application insight configured."
+  description   = "Detect Subscriptions without application insight configured."
   tags          = local.monitor_common_tags
 
   param "database" {

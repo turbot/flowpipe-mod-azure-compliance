@@ -81,7 +81,7 @@ trigger "query" "detect_and_correct_postgresql_servers_with_log_disconnections_d
 
 pipeline "detect_and_correct_postgresql_servers_with_log_disconnections_disabled" {
   title         = "Detect & correct PostgreSQL servers with logging disconnections disabled"
-  description   = "Detects PostgreSQL servers with logging disconnections disabled and then enable logging disconnections."
+  description   = "Detect PostgreSQL servers with logging disconnections disabled and then enable logging disconnections."
   tags          = local.postgresql_common_tags
 
   param "database" {

@@ -48,7 +48,7 @@ variable "subscriptions_with_no_network_bastion_host_trigger_schedule" {
 
 trigger "query" "detect_and_correct_subscriptions_with_no_network_bastion_host" {
   title         = "Detect & correct subscriptions with no network bastion host"
-  description   = "Detects subscriptions with no network bastion host."
+  description   = "Detect subscriptions with no network bastion host."
   tags          = local.network_common_tags
 
   enabled  = var.subscriptions_with_no_network_bastion_host_trigger_enabled
@@ -66,7 +66,7 @@ trigger "query" "detect_and_correct_subscriptions_with_no_network_bastion_host" 
 
 pipeline "detect_and_correct_subscriptions_with_no_network_bastion_host" {
   title         = "Detect & correct subscriptions with no network bastion host"
-  description   = "Detects subscriptions with no network bastion host."
+  description   = "Detect subscriptions with no network bastion host."
   tags          = local.network_common_tags
 
   param "database" {

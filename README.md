@@ -46,18 +46,12 @@ For more information on importing connections, please see [Connection Import](ht
 
 For more information on connections in Flowpipe, please see [Managing Connections](https://flowpipe.io/docs/run/connections).
 
-Clone the mod:
+Install the mod:
 
 ```sh
 mkdir azure-compliance
 cd azure-compliance
-git clone git@github.com:turbot/flowpipe-mod-azure-compliance.git
-```
-
-Install the dependencies:
-
-```sh
-flowpipe mod install
+flowpipe mod install github.com/turbot/flowpipe-mod-azure-compliance
 ```
 
 ### Running Detect and Correct Pipelines

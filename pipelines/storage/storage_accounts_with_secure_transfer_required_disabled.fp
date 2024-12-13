@@ -60,7 +60,7 @@ variable "storage_accounts_with_secure_transfer_required_disabled_enabled_action
 
 trigger "query" "detect_and_correct_storage_accounts_with_secure_transfer_required_disabled" {
   title         = "Detect & correct Storage Accounts with secure transfer required disabled"
-  description   = "Detects Storage Accounts with secure transfer required disabled and runs your chosen action."
+  description   = "Detect Storage Accounts with secure transfer required disabled and runs your chosen action."
   tags          = local.storage_common_tags
 
   enabled  = var.storage_accounts_with_secure_transfer_required_disabled_trigger_enabled
@@ -78,7 +78,7 @@ trigger "query" "detect_and_correct_storage_accounts_with_secure_transfer_requir
 
 pipeline "detect_and_correct_storage_accounts_with_secure_transfer_required_disabled" {
   title         = "Detect & correct Storage Accounts with secure transfer required disabled"
-  description   = "Detects Storage Accounts with secure transfer required disabled and runs your chosen action."
+  description   = "Detect Storage Accounts with secure transfer required disabled and runs your chosen action."
   tags          = local.storage_common_tags
 
   param "database" {

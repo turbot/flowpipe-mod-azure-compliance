@@ -36,7 +36,7 @@ variable "network_public_ips_with_basic_sku_trigger_schedule" {
 
 trigger "query" "detect_and_correct_network_public_ips_with_basic_sku" {
   title         = "Detect & correct Network public IPs with basic SKU"
-  description   = "Detects Network public IPs with basic SKU."
+  description   = "Detect Network public IPs with basic SKU."
   tags          = local.network_common_tags
 
   enabled  = var.network_public_ips_with_basic_sku_trigger_enabled
@@ -54,7 +54,7 @@ trigger "query" "detect_and_correct_network_public_ips_with_basic_sku" {
 
 pipeline "detect_and_correct_network_public_ips_with_basic_sku" {
   title         = "Detect & correct Network public IPs with basic SKU"
-  description   = "Detects Network public IPs with basic SKU."
+  description   = "Detect Network public IPs with basic SKU."
   tags          = local.network_common_tags
 
   param "database" {

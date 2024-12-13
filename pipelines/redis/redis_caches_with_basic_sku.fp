@@ -36,7 +36,7 @@ variable "redis_caches_with_basic_sku_trigger_schedule" {
 
 trigger "query" "detect_and_correct_redis_caches_with_basic_sku" {
   title         = "Detect & correct Redis Caches with basic SKU"
-  description   = "Detects Redis Caches with basic SKU."
+  description   = "Detect Redis Caches with basic SKU."
   tags          = local.redis_common_tags
 
   enabled  = var.redis_caches_with_basic_sku_trigger_enabled
@@ -54,7 +54,7 @@ trigger "query" "detect_and_correct_redis_caches_with_basic_sku" {
 
 pipeline "detect_and_correct_redis_caches_with_basic_sku" {
   title         = "Detect & correct Redis Caches with basic SKU"
-  description   = "Detects Redis Caches with basic SKU."
+  description   = "Detect Redis Caches with basic SKU."
   tags          = local.redis_common_tags
 
   param "database" {

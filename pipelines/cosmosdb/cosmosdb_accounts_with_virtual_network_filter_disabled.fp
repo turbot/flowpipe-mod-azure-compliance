@@ -34,7 +34,7 @@ variable "cosmosdb_accounts_with_virtual_network_filter_disabled_trigger_schedul
 
 trigger "query" "detect_and_correct_cosmosdb_accounts_with_virtual_network_filter_disabled" {
   title         = "Detect & correct Cosmos DB accounts with virtual network filter disabled"
-  description   = "Detects Cosmos DB accounts with virtual network filter disabled."
+  description   = "Detect Cosmos DB accounts with virtual network filter disabled."
   tags          = local.cosmosdb_common_tags
 
   enabled  = var.cosmosdb_accounts_with_virtual_network_filter_disabled_trigger_enabled
@@ -52,7 +52,7 @@ trigger "query" "detect_and_correct_cosmosdb_accounts_with_virtual_network_filte
 
 pipeline "detect_and_correct_cosmosdb_accounts_with_virtual_network_filter_disabled" {
   title         = "Detect & correct Cosmos DB accounts with virtual network filter disabled"
-  description   = "Detects Cosmos DB accounts with virtual network filter disabled."
+  description   = "Detect Cosmos DB accounts with virtual network filter disabled."
   tags          = local.cosmosdb_common_tags
 
   param "database" {

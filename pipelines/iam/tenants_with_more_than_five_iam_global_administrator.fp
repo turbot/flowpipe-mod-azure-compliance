@@ -41,7 +41,7 @@ variable "tenants_with_more_than_five_iam_global_administrator_trigger_schedule"
 
 trigger "query" "detect_and_correct_tenants_with_more_than_five_iam_global_administrator" {
   title         = "Detect & correct Tenants with more than five IAM global administrator"
-  description   = "Detect Tenants with more than five IAM global administrator."
+  description   = "Detect tenants with more than five IAM global administrator."
   tags          = local.iam_common_tags
 
   enabled  = var.tenants_with_more_than_five_iam_global_administrator_trigger_enabled
@@ -59,7 +59,7 @@ trigger "query" "detect_and_correct_tenants_with_more_than_five_iam_global_admin
 
 pipeline "detect_and_correct_tenants_with_more_than_five_iam_global_administrator" {
   title         = "Detect & correct Tenants with more than five IAM global administrator"
-  description   = "Detect Tenants with more than five IAM global administrator."
+  description   = "Detect tenants with more than five IAM global administrator."
   tags          = local.iam_common_tags
 
   param "database" {
@@ -98,7 +98,7 @@ pipeline "detect_and_correct_tenants_with_more_than_five_iam_global_administrato
 
 pipeline "correct_tenants_with_more_than_five_iam_global_administrator" {
   title         = "Correct Tenants with more than five IAM global administrator"
-  description   = "Send notifications for Tenants with more than five IAM global administrator."
+  description   = "Send notifications for tenants with more than five IAM global administrator."
   tags          = merge(local.iam_common_tags, { folder = "Internal" })
 
   param "items" {
@@ -126,13 +126,13 @@ pipeline "correct_tenants_with_more_than_five_iam_global_administrator" {
   step "message" "notify_detection_count" {
     if       = var.notification_level == local.level_info
     notifier = param.notifier
-    text     = "Detected ${length(param.items)} Tenant(s) with more than five IAM global administrator."
+    text     = "Detected ${length(param.items)} tenant(s) with more than five IAM global administrator."
   }
 
   step "message" "notify_items" {
     if       = var.notification_level == local.level_info
     for_each = param.items
     notifier = param.notifier
-    text     = "Detected Tenant ${each.value.title} with ${each.value.global_administrator_count} IAM global administrator."
+    text     = "Detected tenant ${each.value.title} with ${each.value.global_administrator_count} IAM global administrator."
   }
 }

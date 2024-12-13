@@ -58,7 +58,7 @@ variable "storage_accounts_with_public_access_enabled_enabled_actions" {
 }
 
 trigger "query" "detect_and_correct_storage_accounts_with_public_access_enabled" {
-  title         = "Detect & correct publicly accessible Storage Accounts"
+  title         = "Detect & correct Storage Accounts with public access enabled"
   description   = "Detect publicly accessible Storage Accounts and then disable public access."
   tags          = local.storage_common_tags
 
@@ -76,7 +76,7 @@ trigger "query" "detect_and_correct_storage_accounts_with_public_access_enabled"
 }
 
 pipeline "detect_and_correct_storage_accounts_with_public_access_enabled" {
-  title         = "Detect & correct publicly accessible Storage Accounts"
+  title         = "Detect & correct Storage Accounts with public access enabled"
   description   = "Detect publicly accessible Storage Accounts and then disable public access."
   tags          = local.storage_common_tags
 
@@ -138,7 +138,7 @@ pipeline "detect_and_correct_storage_accounts_with_public_access_enabled" {
 }
 
 pipeline "correct_storage_accounts_with_public_access_enabled" {
-  title         = "Correct publicly accessible Storage Accounts"
+  title         = "Correct Storage Accounts with public access enabled"
   description   = "Disable public access for publicly accessible Storage Accounts."
   tags          = merge(local.storage_common_tags, { folder = "Internal" })
 

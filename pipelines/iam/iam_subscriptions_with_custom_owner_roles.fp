@@ -61,7 +61,7 @@ variable "iam_subscriptions_with_custom_owner_roles_enabled_actions" {
 
 trigger "query" "detect_and_correct_iam_subscriptions_with_custom_owner_roles" {
   title         = "Detect & correct Subscriptions with custom owner roles"
-  description   = "Detects Subscriptions with custom owner roles and then delete custom subscriptions owner roles."
+  description   = "Detect subscriptions with custom owner roles and then delete custom subscriptions owner roles."
   tags          = local.iam_common_tags
 
   enabled  = var.iam_subscriptions_with_custom_owner_roles_trigger_enabled
@@ -79,7 +79,7 @@ trigger "query" "detect_and_correct_iam_subscriptions_with_custom_owner_roles" {
 
 pipeline "detect_and_correct_iam_subscriptions_with_custom_owner_roles" {
   title         = "Detect & correct Subscriptions with custom owner roles"
-  description   = "Detects Subscriptions with custom owner roles and then delete custom subscriptions owner roles."
+  description   = "Detect subscriptions with custom owner roles and then delete custom subscriptions owner roles."
   tags          = local.iam_common_tags
 
   param "database" {
@@ -141,7 +141,7 @@ pipeline "detect_and_correct_iam_subscriptions_with_custom_owner_roles" {
 
 pipeline "correct_iam_subscriptions_with_custom_owner_roles" {
   title         = "Correct Subscriptions with custom owner roles"
-  description   = "Runs corrective action on a collection of Subscriptions with custom owner roles."
+  description   = "Runs corrective action on a collection of subscriptions with custom owner roles."
   tags          = merge(local.iam_common_tags, { folder = "Internal" })
 
   param "items" {
@@ -191,7 +191,7 @@ pipeline "correct_iam_subscriptions_with_custom_owner_roles" {
   step "message" "notify_detection_count" {
     if       = var.notification_level == local.level_info
     notifier = param.notifier
-    text     = "Detected ${length(param.items)} custom subscription owner roles."
+    text     = "Detected ${length(param.items)} subscription(s) with custom owner roles."
   }
 
   step "pipeline" "correct_item" {
@@ -214,7 +214,7 @@ pipeline "correct_iam_subscriptions_with_custom_owner_roles" {
 
 pipeline "correct_one_iam_custom_subscription_owner_role_existing" {
   title         = "Correct one Subscription with custom owner roles"
-  description   = "Runs corrective action on a single Subscription with custom owner roles."
+  description   = "Runs corrective action on a single subscription with custom owner roles."
   tags          = merge(local.iam_common_tags, { folder = "Internal" })
 
   param "title" {
@@ -276,7 +276,7 @@ pipeline "correct_one_iam_custom_subscription_owner_role_existing" {
       notifier           = param.notifier
       notification_level = param.notification_level
       approvers          = param.approvers
-      detect_msg         = "Detected Subscription custom owner role ${param.title}."
+      detect_msg         = "Detected subscription custom owner role ${param.title}."
       default_action     = param.default_action
       enabled_actions    = param.enabled_actions
       actions = {
@@ -288,7 +288,7 @@ pipeline "correct_one_iam_custom_subscription_owner_role_existing" {
           pipeline_args = {
             notifier = param.notifier
             send     = param.notification_level == local.level_info
-            text     = "Skipped Subscription custom owner role ${param.title}."
+            text     = "Skipped subscription custom owner role ${param.title}."
           }
           success_msg = ""
           error_msg   = ""
@@ -303,8 +303,8 @@ pipeline "correct_one_iam_custom_subscription_owner_role_existing" {
             subscription_id  = param.subscription_id
             conn             = param.conn
           }
-          success_msg = "Deleted Subscriptions with custom owner role ${param.title}."
-          error_msg   = "Error deleting Subscription with custom owner role ${param.title}."
+          success_msg = "Deleted subscriptions with custom owner role ${param.title}."
+          error_msg   = "Error deleting subscription with custom owner role ${param.title}."
         }
       }
     }

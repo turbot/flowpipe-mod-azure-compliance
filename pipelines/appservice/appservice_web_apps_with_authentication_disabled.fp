@@ -59,7 +59,7 @@ variable "appservice_web_apps_with_authentication_disabled_enabled_actions" {
 
 trigger "query" "detect_and_correct_appservice_web_apps_with_authentication_disabled" {
   title         = "Detect & correct App Service web apps with authentication disabled"
-  description   = "Detects App Service web apps with authentication disabled and then enable authentication."
+  description   = "Detect App Service web apps with authentication disabled and then enable authentication."
   tags          = local.appservice_common_tags
 
   enabled  = var.appservice_web_apps_with_authentication_disabled_trigger_enabled
@@ -77,7 +77,7 @@ trigger "query" "detect_and_correct_appservice_web_apps_with_authentication_disa
 
 pipeline "detect_and_correct_appservice_web_apps_with_authentication_disabled" {
   title         = "Detect & correct App Service web apps with authentication disabled"
-  description   = "Detects App Service web apps with authentication disabled and then enable authentication."
+  description   = "Detect App Service web apps with authentication disabled and then enable authentication."
   tags          = local.appservice_common_tags
 
   param "database" {

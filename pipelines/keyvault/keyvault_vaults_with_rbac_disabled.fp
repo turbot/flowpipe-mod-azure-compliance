@@ -59,7 +59,7 @@ variable "keyvault_vaults_with_rbac_disabled_enabled_actions" {
 
 trigger "query" "detect_and_correct_keyvault_vaults_with_rbac_disabled" {
   title         = "Detect & correct Key Vaults with RBAC disabled"
-  description   = "Detects Key Vaults with RBAC disabled."
+  description   = "Detect Key Vaults with RBAC disabled."
   tags          = local.keyvault_common_tags
 
   enabled  = var.keyvault_vaults_with_rbac_disabled_trigger_enabled
@@ -77,7 +77,7 @@ trigger "query" "detect_and_correct_keyvault_vaults_with_rbac_disabled" {
 
 pipeline "detect_and_correct_keyvault_vaults_with_rbac_disabled" {
   title         = "Detect & correct Key Vaults with RBAC disabled"
-  description   = "Detects Key Vaults with RBAC disabled."
+  description   = "Detect Key Vaults with RBAC disabled."
   tags          = local.keyvault_common_tags
 
   param "database" {
@@ -214,7 +214,7 @@ pipeline "correct_keyvault_vaults_with_rbac_disabled" {
 
 pipeline "correct_one_keyvault_vault_with_rbac_disabled" {
   title         = "Correct one Key Vault with RBAC disabled"
-  description   = "Enable RBAC on a single Key Vault with RBAC disabled."
+  description   = "Enable RBAC on a single key vault with RBAC disabled."
   tags          = merge(local.keyvault_common_tags, { folder = "Internal" })
 
   param "title" {

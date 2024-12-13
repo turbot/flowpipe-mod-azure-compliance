@@ -52,7 +52,7 @@ variable "keyvault_vaults_with_logging_disabled_trigger_schedule" {
 
 trigger "query" "detect_and_correct_keyvault_vaults_with_logging_disabled" {
   title         = "Detect & correct Key Vaults with logging disabled"
-  description   = "Detects Key Vaults with logging disabled."
+  description   = "Detect key vaults with logging disabled."
   tags          = local.keyvault_common_tags
 
   enabled  = var.keyvault_vaults_with_logging_disabled_trigger_enabled
@@ -70,7 +70,7 @@ trigger "query" "detect_and_correct_keyvault_vaults_with_logging_disabled" {
 
 pipeline "detect_and_correct_keyvault_vaults_with_logging_disabled" {
   title         = "Detect & correct Key Vaults with logging disabled"
-  description   = "Detects Key Vaults with logging disabled."
+  description   = "Detect key vaults with logging disabled."
   tags          = local.keyvault_common_tags
 
   param "database" {
@@ -109,7 +109,7 @@ pipeline "detect_and_correct_keyvault_vaults_with_logging_disabled" {
 
 pipeline "correct_keyvault_vaults_with_logging_disabled" {
   title         = "Correct Key Vaults with logging disabled"
-  description   = "Send notifications for Key Vaults with logging disabled."
+  description   = "Send notifications for key vaults with logging disabled."
   tags          = merge(local.keyvault_common_tags, { folder = "Internal" })
 
   param "items" {
@@ -136,13 +136,13 @@ pipeline "correct_keyvault_vaults_with_logging_disabled" {
   step "message" "notify_detection_count" {
     if       = var.notification_level == local.level_info
     notifier = param.notifier
-    text     = "Detected ${length(param.items)} Key Vault(s) with logging disabled."
+    text     = "Detected ${length(param.items)} key vault(s) with logging disabled."
   }
 
   step "message" "notify_items" {
     if       = var.notification_level == local.level_info
     for_each = param.items
     notifier = param.notifier
-    text     = "Detected Key Vault ${each.value.title} with logging disabled."
+    text     = "Detected key vault ${each.value.title} with logging disabled."
   }
 }

@@ -59,7 +59,7 @@ variable "appservice_web_apps_register_with_active_directory_disabled_enabled_ac
 
 trigger "query" "detect_and_correct_appservice_web_apps_register_with_active_directory_disabled" {
   title         = "Detect & correct App Service web apps register with active directory disabled"
-  description   = "Detects App Service web apps register with active directory disabled and then register with active directory."
+  description   = "Detect App Service web apps register with active directory disabled and then register with active directory."
   tags          = local.appservice_common_tags
 
   enabled  = var.appservice_web_apps_register_with_active_directory_disabled_trigger_enabled
@@ -77,7 +77,7 @@ trigger "query" "detect_and_correct_appservice_web_apps_register_with_active_dir
 
 pipeline "detect_and_correct_appservice_web_apps_register_with_active_directory_disabled" {
   title         = "Detect & correct App Service web apps register with active directory disabled"
-  description   = "Detects App Service web apps register with active directory disabled and then register with active directory."
+  description   = "Detect App Service web apps register with active directory disabled and then register with active directory."
   tags          = local.appservice_common_tags
 
   param "database" {

@@ -58,8 +58,8 @@ variable "appservice_web_apps_without_latest_http_version_enabled_actions" {
 }
 
 trigger "query" "detect_and_correct_appservice_web_apps_without_latest_http_version" {
-  title         = "Detect & correct App Service web apps not using the latest HTTP version"
-  description   = "Detects App Services web apps not using the latest HTTP version and then enable latest HTTP version."
+  title         = "Detect & correct App Service web apps without latest HTTP version"
+  description   = "Detect App Services web apps without latest HTTP version and then enable latest HTTP version."
   tags          = local.appservice_common_tags
 
   enabled  = var.appservice_web_apps_without_latest_http_version_trigger_enabled
@@ -76,8 +76,8 @@ trigger "query" "detect_and_correct_appservice_web_apps_without_latest_http_vers
 }
 
 pipeline "detect_and_correct_appservice_web_apps_without_latest_http_version" {
-  title         = "Detect & correct App Service web apps not using the latest HTTP version"
-  description   = "Detects App Services web apps not using the latest HTTP version and then enable latest HTTP version."
+  title         = "Detect & correct App Service web apps without latest HTTP version"
+  description   = "Detect App Services web apps without latest HTTP version and then enable latest HTTP version."
   tags          = local.appservice_common_tags
 
   param "database" {
@@ -138,8 +138,8 @@ pipeline "detect_and_correct_appservice_web_apps_without_latest_http_version" {
 }
 
 pipeline "correct_appservice_web_apps_without_latest_http_version" {
-  title         = "Correct App Services web apps not using the latest HTTP version"
-  description   = "Enable latest HTTP version for App Services web apps not using the latest HTTP version."
+  title         = "Correct App Services web apps without latest HTTP version"
+  description   = "Enable latest HTTP version for App Services web apps without latest HTTP version."
   tags          = merge(local.appservice_common_tags, { folder = "Internal" })
 
   param "items" {
@@ -190,7 +190,7 @@ pipeline "correct_appservice_web_apps_without_latest_http_version" {
   step "message" "notify_detection_count" {
     if       = var.notification_level == local.level_info
     notifier = param.notifier
-    text     = "Detected ${length(param.items)} App Services web app(s) not using the latest HTTP version."
+    text     = "Detected ${length(param.items)} App Services web app(s) without latest HTTP version."
   }
 
   step "pipeline" "correct_item" {
@@ -213,8 +213,8 @@ pipeline "correct_appservice_web_apps_without_latest_http_version" {
 }
 
 pipeline "correct_one_appservice_web_app_without_latest_http_version" {
-  title         = "Correct App Services web app not using the latest HTTP version"
-  description   = "Enable latest HTTP version for a App Services web app not using the latest HTTP version."
+  title         = "Correct App Services web app without latest HTTP version"
+  description   = "Enable latest HTTP version for a App Services web app without latest HTTP version."
   tags          = merge(local.appservice_common_tags, { folder = "Internal" })
 
   param "title" {
@@ -281,7 +281,7 @@ pipeline "correct_one_appservice_web_app_without_latest_http_version" {
       notifier           = param.notifier
       notification_level = param.notification_level
       approvers          = param.approvers
-      detect_msg         = "Detected App Service web app ${param.title} not using the latest HTTP version."
+      detect_msg         = "Detected App Service web app ${param.title} without latest HTTP version."
       default_action     = param.default_action
       enabled_actions    = param.enabled_actions
       actions = {

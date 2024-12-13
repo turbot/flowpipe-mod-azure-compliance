@@ -66,7 +66,7 @@ variable "subscriptions_diagnostic_setting_without_capturing_proper_categories_t
 
 trigger "query" "detect_and_correct_subscriptions_diagnostic_setting_without_capturing_proper_categories" {
   title         = "Detect & correct Subscriptions diagnostic settings without capturing proper categories"
-  description   = "Detects Subscriptions diagnostic settings without capturing proper categories"
+  description   = "Detect Subscriptions diagnostic settings without capturing proper categories"
   tags          = local.monitor_common_tags
 
   enabled  = var.subscriptions_diagnostic_setting_without_capturing_proper_categories_trigger_enabled
@@ -84,7 +84,7 @@ trigger "query" "detect_and_correct_subscriptions_diagnostic_setting_without_cap
 
 pipeline "detect_and_correct_subscriptions_diagnostic_setting_without_capturing_proper_categories" {
   title         = "Detect & correct Subscriptions diagnostic settings without capturing proper categories"
-  description   = "Detects Subscriptions diagnostic settings without capturing proper categories."
+  description   = "Detect Subscriptions diagnostic settings without capturing proper categories."
   tags          = local.monitor_common_tags
 
   param "database" {

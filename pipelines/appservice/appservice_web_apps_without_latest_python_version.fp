@@ -93,8 +93,8 @@ variable "appservice_web_apps_without_latest_python_version_linux_fx_version" {
 }
 
 trigger "query" "detect_and_correct_appservice_web_apps_without_latest_python_version" {
-  title         = "Detect & correct App Service web apps not using the latest python version"
-  description   = "Detects App Services web apps not using the latest python version and then enable latest python version."
+  title         = "Detect & correct App Service web apps without the latest python version"
+  description   = "Detect App Services web apps without the latest python version and then enable latest python version."
   tags          = local.appservice_common_tags
 
   enabled  = var.appservice_web_apps_without_latest_python_version_trigger_enabled
@@ -111,8 +111,8 @@ trigger "query" "detect_and_correct_appservice_web_apps_without_latest_python_ve
 }
 
 pipeline "detect_and_correct_appservice_web_apps_without_latest_python_version" {
-  title         = "Detect & correct App Service web apps not using the latest python version"
-  description   = "Detects App Services web apps not using the latest python version and then enable latest python version."
+  title         = "Detect & correct App Service web apps without the latest python version"
+  description   = "Detect App Services web apps without the latest python version and then enable latest python version."
   tags          = local.appservice_common_tags
 
   param "database" {
@@ -187,8 +187,8 @@ pipeline "detect_and_correct_appservice_web_apps_without_latest_python_version" 
 }
 
 pipeline "correct_appservice_web_apps_without_latest_python_version" {
-  title         = "Correct App Services web apps not using the latest python version"
-  description   = "Enable latest python version for App Services web apps not using the latest python version."
+  title         = "Correct App Services web apps without the latest python version"
+  description   = "Enable latest python version for App Services web apps without the latest python version."
   tags          = merge(local.appservice_common_tags, { folder = "Internal" })
 
   param "items" {
@@ -251,7 +251,7 @@ pipeline "correct_appservice_web_apps_without_latest_python_version" {
   step "message" "notify_detection_count" {
     if       = var.notification_level == local.level_info
     notifier = param.notifier
-    text     = "Detected ${length(param.items)} App Services web app(s) not using the latest python version."
+    text     = "Detected ${length(param.items)} App Services web app(s) without the latest python version."
   }
 
   step "pipeline" "correct_item" {
@@ -276,8 +276,8 @@ pipeline "correct_appservice_web_apps_without_latest_python_version" {
 }
 
 pipeline "correct_one_appservice_web_app_without_latest_python_version" {
-  title         = "Correct App Services web app not using the latest python version"
-  description   = "Enable latest python version for a App Services web app not using the latest python version."
+  title         = "Correct App Services web app without the latest python version"
+  description   = "Enable latest python version for a App Services web app without the latest python version."
   tags          = merge(local.appservice_common_tags, { folder = "Internal" })
 
   param "title" {
@@ -354,7 +354,7 @@ pipeline "correct_one_appservice_web_app_without_latest_python_version" {
       notifier           = param.notifier
       notification_level = param.notification_level
       approvers          = param.approvers
-      detect_msg         = "Detected App Service web app ${param.title} not using the latest python version."
+      detect_msg         = "Detected App Service web app ${param.title} without the latest python version."
       default_action     = param.default_action
       enabled_actions    = param.enabled_actions
       actions = {
