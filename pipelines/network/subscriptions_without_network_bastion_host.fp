@@ -1,5 +1,5 @@
 locals {
-  subscriptions_with_no_network_bastion_host_query = <<-EOQ
+  subscriptions_without_network_bastion_host_query = <<-EOQ
     with bastion_hosts as (
       select
         subscription_id,
@@ -26,7 +26,7 @@ locals {
   EOQ
 }
 
-variable "subscriptions_with_no_network_bastion_host_trigger_enabled" {
+variable "subscriptions_without_network_bastion_host_trigger_enabled" {
   type        = bool
   description = "If true, the trigger is enabled."
   default     = false
@@ -36,7 +36,7 @@ variable "subscriptions_with_no_network_bastion_host_trigger_enabled" {
   }
 }
 
-variable "subscriptions_with_no_network_bastion_host_trigger_schedule" {
+variable "subscriptions_without_network_bastion_host_trigger_schedule" {
   type        = string
   description = "If the trigger is enabled, run it on this schedule."
   default     = "15m"
@@ -46,27 +46,27 @@ variable "subscriptions_with_no_network_bastion_host_trigger_schedule" {
   }
 }
 
-trigger "query" "detect_and_correct_subscriptions_with_no_network_bastion_host" {
-  title         = "Detect & correct subscriptions with no network bastion host"
-  description   = "Detect subscriptions with no network bastion host."
+trigger "query" "detect_and_correct_subscriptions_without_network_bastion_host" {
+  title         = "Detect & correct subscriptions without network bastion host"
+  description   = "Detect subscriptions without network bastion host."
   tags          = local.network_common_tags
 
-  enabled  = var.subscriptions_with_no_network_bastion_host_trigger_enabled
-  schedule = var.subscriptions_with_no_network_bastion_host_trigger_schedule
+  enabled  = var.subscriptions_without_network_bastion_host_trigger_enabled
+  schedule = var.subscriptions_without_network_bastion_host_trigger_schedule
   database = var.database
-  sql      = local.subscriptions_with_no_network_bastion_host_query
+  sql      = local.subscriptions_without_network_bastion_host_query
 
   capture "insert" {
-    pipeline = pipeline.correct_subscriptions_with_no_network_bastion_host
+    pipeline = pipeline.correct_subscriptions_without_network_bastion_host
     args = {
       items = self.inserted_rows
     }
   }
 }
 
-pipeline "detect_and_correct_subscriptions_with_no_network_bastion_host" {
-  title         = "Detect & correct subscriptions with no network bastion host"
-  description   = "Detect subscriptions with no network bastion host."
+pipeline "detect_and_correct_subscriptions_without_network_bastion_host" {
+  title         = "Detect & correct subscriptions without network bastion host"
+  description   = "Detect subscriptions without network bastion host."
   tags          = local.network_common_tags
 
   param "database" {
@@ -90,11 +90,11 @@ pipeline "detect_and_correct_subscriptions_with_no_network_bastion_host" {
 
   step "query" "detect" {
     database = param.database
-    sql      = local.subscriptions_with_no_network_bastion_host_query
+    sql      = local.subscriptions_without_network_bastion_host_query
   }
 
   step "pipeline" "respond" {
-    pipeline = pipeline.correct_subscriptions_with_no_network_bastion_host
+    pipeline = pipeline.correct_subscriptions_without_network_bastion_host
     args = {
       items              = step.query.detect.rows
       notifier           = param.notifier
@@ -103,10 +103,10 @@ pipeline "detect_and_correct_subscriptions_with_no_network_bastion_host" {
   }
 }
 
-pipeline "correct_subscriptions_with_no_network_bastion_host" {
-  title         = "Correct subscriptions with no network bastion host"
-  description   = "Send notifications for subscriptions with no network bastion host."
-  tags         = merge(local.network_common_tags, { folder = "Internal" })
+pipeline "correct_subscriptions_without_network_bastion_host" {
+  title         = "Correct subscriptions without network bastion host"
+  description   = "Send notifications for subscriptions without network bastion host."
+  tags          = merge(local.network_common_tags, { folder = "Internal" })
 
   param "items" {
     type = list(object({
@@ -132,13 +132,13 @@ pipeline "correct_subscriptions_with_no_network_bastion_host" {
   step "message" "notify_detection_count" {
     if       = var.notification_level == local.level_info
     notifier = param.notifier
-    text     = "Detected ${length(param.items)} subscription(s) with no network bastion host"
+    text     = "Detected ${length(param.items)} subscription(s) without network bastion host"
   }
 
   step "message" "notify_items" {
     if       = var.notification_level == local.level_info
     for_each = param.items
     notifier = param.notifier
-    text     = "Detected subscription ${each.value.title} with no network bastion host."
+    text     = "Detected subscription ${each.value.title} without network bastion host."
   }
 }

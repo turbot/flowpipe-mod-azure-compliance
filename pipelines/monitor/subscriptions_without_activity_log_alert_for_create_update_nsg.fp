@@ -74,8 +74,8 @@ variable "subscriptions_without_activity_log_alert_for_create_update_nsg_trigger
 
 
 trigger "query" "detect_and_correct_subscriptions_without_activity_log_alert_for_create_update_nsg" {
-  title         = "Detect & correct Subscriptions without activity log alert for create and update NSG"
-  description   = "Detect Subscriptions without an activity log alert for create and update NSG."
+  title         = "Detect & correct subscriptions without activity log alert for create and update NSG"
+  description   = "Detect subscriptions without an activity log alert for create and update NSG."
   tags          = local.monitor_common_tags
 
   enabled  = var.subscriptions_without_activity_log_alert_for_create_update_nsg_trigger_enabled
@@ -92,8 +92,8 @@ trigger "query" "detect_and_correct_subscriptions_without_activity_log_alert_for
 }
 
 pipeline "detect_and_correct_subscriptions_without_activity_log_alert_for_create_update_nsg" {
-  title         = "Detect & correct Subscriptions without activity log alert for create and update NSG"
-  description   = "Detect Subscriptions without an activity log alert for create and update NSG."
+  title         = "Detect & correct subscriptions without activity log alert for create and update NSG"
+  description   = "Detect subscriptions without an activity log alert for create and update NSG."
   tags          = local.monitor_common_tags
 
   param "database" {
@@ -131,8 +131,8 @@ pipeline "detect_and_correct_subscriptions_without_activity_log_alert_for_create
 }
 
 pipeline "correct_subscriptions_without_activity_log_alert_for_create_update_nsg" {
-  title         = "Correct Subscriptions without activity log alert for create and update NSG"
-  description   = "Send notifications for Subscriptions without activity log alert for create and update NSG."
+  title         = "Correct subscriptions without activity log alert for create and update NSG"
+  description   = "Send notifications for subscriptions without activity log alert for create and update NSG."
   tags          = merge(local.monitor_common_tags, { folder = "Internal" })
 
   param "items" {

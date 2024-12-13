@@ -1,5 +1,5 @@
 locals {
-  network_securitys_group_flow_log_with_retention_period_less_than_90_days_query = <<-EOQ
+  network_security_groups_flow_log_with_retention_period_less_than_90_days_query = <<-EOQ
     select
       concat(sg.id, ' [', sg.subscription_id, '/', sg.resource_group, ']') as title,
       sg.id as id,
@@ -15,7 +15,7 @@ locals {
   EOQ
 }
 
-variable "network_securitys_group_flow_log_with_retention_period_less_than_90_days_trigger_enabled" {
+variable "network_security_groups_flow_log_with_retention_period_less_than_90_days_trigger_enabled" {
   type        = bool
   description = "If true, the trigger is enabled."
   default     = false
@@ -25,7 +25,7 @@ variable "network_securitys_group_flow_log_with_retention_period_less_than_90_da
   }
 }
 
-variable "network_securitys_group_flow_log_with_retention_period_less_than_90_days_trigger_schedule" {
+variable "network_security_groups_flow_log_with_retention_period_less_than_90_days_trigger_schedule" {
   type        = string
   description = "If the trigger is enabled, run it on this schedule."
   default     = "15m"
@@ -35,25 +35,25 @@ variable "network_securitys_group_flow_log_with_retention_period_less_than_90_da
   }
 }
 
-trigger "query" "detect_and_correct_network_securitys_group_flow_log_with_retention_period_less_than_90_days" {
+trigger "query" "detect_and_correct_network_security_groups_flow_log_with_retention_period_less_than_90_days" {
   title         = "Detect & correct NSGs flow log with retention period less than 90 days"
   description   = "Detect NSGs flow log with retention period less than 90 days."
   tags          = local.network_common_tags
 
-  enabled  = var.network_securitys_group_flow_log_with_retention_period_less_than_90_days_trigger_enabled
-  schedule = var.network_securitys_group_flow_log_with_retention_period_less_than_90_days_trigger_schedule
+  enabled  = var.network_security_groups_flow_log_with_retention_period_less_than_90_days_trigger_enabled
+  schedule = var.network_security_groups_flow_log_with_retention_period_less_than_90_days_trigger_schedule
   database = var.database
-  sql      = local.network_securitys_group_flow_log_with_retention_period_less_than_90_days_query
+  sql      = local.network_security_groups_flow_log_with_retention_period_less_than_90_days_query
 
   capture "insert" {
-    pipeline = pipeline.correct_network_securitys_group_flow_log_with_retention_period_less_than_90_days
+    pipeline = pipeline.correct_network_security_groups_flow_log_with_retention_period_less_than_90_days
     args = {
       items = self.inserted_rows
     }
   }
 }
 
-pipeline "detect_and_correct_network_securitys_group_flow_log_with_retention_period_less_than_90_days" {
+pipeline "detect_and_correct_network_security_groups_flow_log_with_retention_period_less_than_90_days" {
   title         = "Detect & correct NSGs flow log with retention period less than 90 days"
   description   = "Detect NSGs flow log with retention period less than 90 days."
   tags          = local.network_common_tags
@@ -79,11 +79,11 @@ pipeline "detect_and_correct_network_securitys_group_flow_log_with_retention_per
 
   step "query" "detect" {
     database = param.database
-    sql      = local.network_securitys_group_flow_log_with_retention_period_less_than_90_days_query
+    sql      = local.network_security_groups_flow_log_with_retention_period_less_than_90_days_query
   }
 
   step "pipeline" "respond" {
-    pipeline = pipeline.correct_network_securitys_group_flow_log_with_retention_period_less_than_90_days
+    pipeline = pipeline.correct_network_security_groups_flow_log_with_retention_period_less_than_90_days
     args = {
       items              = step.query.detect.rows
       notifier           = param.notifier
@@ -92,7 +92,7 @@ pipeline "detect_and_correct_network_securitys_group_flow_log_with_retention_per
   }
 }
 
-pipeline "correct_network_securitys_group_flow_log_with_retention_period_less_than_90_days" {
+pipeline "correct_network_security_groups_flow_log_with_retention_period_less_than_90_days" {
   title         = "Correct NSGs flow log with retention period less than 90 days"
   description   = "Send notifications for NSGs flow log with retention period less than 90 days."
   tags         = merge(local.network_common_tags, { folder = "Internal" })

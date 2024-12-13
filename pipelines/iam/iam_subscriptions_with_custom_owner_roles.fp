@@ -60,7 +60,7 @@ variable "iam_subscriptions_with_custom_owner_roles_enabled_actions" {
 }
 
 trigger "query" "detect_and_correct_iam_subscriptions_with_custom_owner_roles" {
-  title         = "Detect & correct Subscriptions with custom owner roles"
+  title         = "Detect & correct subscriptions with custom owner roles"
   description   = "Detect subscriptions with custom owner roles and then delete custom subscriptions owner roles."
   tags          = local.iam_common_tags
 
@@ -78,7 +78,7 @@ trigger "query" "detect_and_correct_iam_subscriptions_with_custom_owner_roles" {
 }
 
 pipeline "detect_and_correct_iam_subscriptions_with_custom_owner_roles" {
-  title         = "Detect & correct Subscriptions with custom owner roles"
+  title         = "Detect & correct subscriptions with custom owner roles"
   description   = "Detect subscriptions with custom owner roles and then delete custom subscriptions owner roles."
   tags          = local.iam_common_tags
 
@@ -140,7 +140,7 @@ pipeline "detect_and_correct_iam_subscriptions_with_custom_owner_roles" {
 }
 
 pipeline "correct_iam_subscriptions_with_custom_owner_roles" {
-  title         = "Correct Subscriptions with custom owner roles"
+  title         = "Correct subscriptions with custom owner roles"
   description   = "Runs corrective action on a collection of subscriptions with custom owner roles."
   tags          = merge(local.iam_common_tags, { folder = "Internal" })
 

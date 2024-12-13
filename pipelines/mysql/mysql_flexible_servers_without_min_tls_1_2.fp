@@ -1,5 +1,5 @@
 locals {
-  mysql_flexible_servers_with_no_min_tls_1_2_query = <<-EOQ
+  mysql_flexible_servers_without_min_tls_1_2_query = <<-EOQ
     select
       concat(id, ' [', subscription_id, '/', resource_group, ']') as title,
       id as id,
@@ -15,11 +15,11 @@ locals {
       and config -> 'ConfigurationProperties' ->> 'value' not in ('TLSv1.3', 'TLSv1.3');
   EOQ
 
-  mysql_flexible_servers_with_no_min_tls_1_2_enabled_actions_enum = ["skip", "enable_min_tls_1_2"]
-  mysql_flexible_servers_with_no_min_tls_1_2_default_action_enum = ["notify", "skip", "enable_min_tls_1_2"]
+  mysql_flexible_servers_without_min_tls_1_2_enabled_actions_enum = ["skip", "enable_min_tls_1_2"]
+  mysql_flexible_servers_without_min_tls_1_2_default_action_enum = ["notify", "skip", "enable_min_tls_1_2"]
 }
 
-variable "mysql_flexible_servers_with_no_min_tls_1_2_trigger_enabled" {
+variable "mysql_flexible_servers_without_min_tls_1_2_trigger_enabled" {
   type        = bool
   default     = false
   description = "If true, the trigger is enabled."
@@ -29,7 +29,7 @@ variable "mysql_flexible_servers_with_no_min_tls_1_2_trigger_enabled" {
   }
 }
 
-variable "mysql_flexible_servers_with_no_min_tls_1_2_trigger_schedule" {
+variable "mysql_flexible_servers_without_min_tls_1_2_trigger_schedule" {
   type        = string
   default     = "15m"
   description = "If the trigger is enabled, run it on this schedule."
@@ -39,7 +39,7 @@ variable "mysql_flexible_servers_with_no_min_tls_1_2_trigger_schedule" {
   }
 }
 
-variable "mysql_flexible_servers_with_no_min_tls_1_2_default_action" {
+variable "mysql_flexible_servers_without_min_tls_1_2_default_action" {
   type        = string
   description = "The default action to use when there are no approvers."
   default     = "notify"
@@ -49,7 +49,7 @@ variable "mysql_flexible_servers_with_no_min_tls_1_2_default_action" {
   }
 }
 
-variable "mysql_flexible_servers_with_no_min_tls_1_2_enabled_actions" {
+variable "mysql_flexible_servers_without_min_tls_1_2_enabled_actions" {
   type        = list(string)
   description = "The list of enabled actions to provide to approvers for selection."
   default     = ["skip", "enable_min_tls_1_2"]
@@ -59,27 +59,27 @@ variable "mysql_flexible_servers_with_no_min_tls_1_2_enabled_actions" {
   }
 }
 
-trigger "query" "detect_and_correct_mysql_flexible_servers_with_no_min_tls_1_2" {
-  title         = "Detect & correct MySQL flexible servers with TLS version less than 1.2"
-  description   = "Detect MySQL flexible servers with TLS version less than 1.2 and then enable TLS version 1.2."
+trigger "query" "detect_and_correct_mysql_flexible_servers_without_min_tls_1_2" {
+  title         = "Detect & correct MySQL flexible servers without minimum TLS 1.2"
+  description   = "Detect MySQL flexible servers without minimum TLS 1.2 and then enable TLS version 1.2."
   tags          = local.mysql_common_tags
 
-  enabled  = var.mysql_flexible_servers_with_no_min_tls_1_2_trigger_enabled
-  schedule = var.mysql_flexible_servers_with_no_min_tls_1_2_trigger_schedule
+  enabled  = var.mysql_flexible_servers_without_min_tls_1_2_trigger_enabled
+  schedule = var.mysql_flexible_servers_without_min_tls_1_2_trigger_schedule
   database = var.database
-  sql      = local.mysql_flexible_servers_with_no_min_tls_1_2_query
+  sql      = local.mysql_flexible_servers_without_min_tls_1_2_query
 
   capture "insert" {
-    pipeline = pipeline.correct_mysql_flexible_servers_with_no_min_tls_1_2
+    pipeline = pipeline.correct_mysql_flexible_servers_without_min_tls_1_2
     args = {
       items = self.inserted_rows
     }
   }
 }
 
-pipeline "detect_and_correct_mysql_flexible_servers_with_no_min_tls_1_2" {
-  title         = "Detect & correct MySQL flexible servers with TLS version less than 1.2"
-  description   = "Detect MySQL flexible servers with TLS version less than 1.2 and then enable TLS version 1.2."
+pipeline "detect_and_correct_mysql_flexible_servers_without_min_tls_1_2" {
+  title         = "Detect & correct MySQL flexible servers without minimum TLS 1.2"
+  description   = "Detect MySQL flexible servers without minimum TLS 1.2 and then enable TLS version 1.2."
   tags        = local.mysql_common_tags
 
   param "database" {
@@ -110,24 +110,24 @@ pipeline "detect_and_correct_mysql_flexible_servers_with_no_min_tls_1_2" {
   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.mysql_flexible_servers_with_no_min_tls_1_2_default_action
-    enum        = local.mysql_flexible_servers_with_no_min_tls_1_2_default_action_enum
+    default     = var.mysql_flexible_servers_without_min_tls_1_2_default_action
+    enum        = local.mysql_flexible_servers_without_min_tls_1_2_default_action_enum
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.mysql_flexible_servers_with_no_min_tls_1_2_enabled_actions
-    enum        = local.mysql_flexible_servers_with_no_min_tls_1_2_enabled_actions_enum
+    default     = var.mysql_flexible_servers_without_min_tls_1_2_enabled_actions
+    enum        = local.mysql_flexible_servers_without_min_tls_1_2_enabled_actions_enum
   }
 
   step "query" "detect" {
     database = param.database
-    sql      = local.mysql_flexible_servers_with_no_min_tls_1_2_query
+    sql      = local.mysql_flexible_servers_without_min_tls_1_2_query
   }
 
   step "pipeline" "respond" {
-    pipeline = pipeline.correct_mysql_flexible_servers_with_no_min_tls_1_2
+    pipeline = pipeline.correct_mysql_flexible_servers_without_min_tls_1_2
     args = {
       items              = step.query.detect.rows
       notifier           = param.notifier
@@ -139,8 +139,8 @@ pipeline "detect_and_correct_mysql_flexible_servers_with_no_min_tls_1_2" {
   }
 }
 
-pipeline "correct_mysql_flexible_servers_with_no_min_tls_1_2" {
-  title         = "Correct MySQL flexible servers with TLS version less than 1.2"
+pipeline "correct_mysql_flexible_servers_without_min_tls_1_2" {
+  title         = "Correct MySQL flexible servers without minimum TLS 1.2"
   description   = "Enable 1.2 TLS version for MySQL flexible servers with minimum TLS version less than 1.2."
   tags          = merge(local.mysql_common_tags, { folder = "Internal" })
 
@@ -179,15 +179,15 @@ pipeline "correct_mysql_flexible_servers_with_no_min_tls_1_2" {
   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.mysql_flexible_servers_with_no_min_tls_1_2_default_action
-    enum        = local.mysql_flexible_servers_with_no_min_tls_1_2_default_action_enum
+    default     = var.mysql_flexible_servers_without_min_tls_1_2_default_action
+    enum        = local.mysql_flexible_servers_without_min_tls_1_2_default_action_enum
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.mysql_flexible_servers_with_no_min_tls_1_2_enabled_actions
-    enum        = local.mysql_flexible_servers_with_no_min_tls_1_2_enabled_actions_enum
+    default     = var.mysql_flexible_servers_without_min_tls_1_2_enabled_actions
+    enum        = local.mysql_flexible_servers_without_min_tls_1_2_enabled_actions_enum
   }
 
   step "message" "notify_detection_count" {
@@ -216,7 +216,7 @@ pipeline "correct_mysql_flexible_servers_with_no_min_tls_1_2" {
 }
 
 pipeline "correct_one_mysql_flexible_server_with_no_min_tls_1_2" {
-  title         = "Correct MySQL flexible server with TLS version less than 1.2"
+  title         = "Correct MySQL flexible server without minimum TLS 1.2"
   description   = "Enable 1.2 TLS version for a MySQL flexible server with minimum TLS version less than 1.2."
   tags          = merge(local.mysql_common_tags, { folder = "Internal" })
 
@@ -267,15 +267,15 @@ pipeline "correct_one_mysql_flexible_server_with_no_min_tls_1_2" {
   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.mysql_flexible_servers_with_no_min_tls_1_2_default_action
-    enum        = local.mysql_flexible_servers_with_no_min_tls_1_2_default_action_enum
+    default     = var.mysql_flexible_servers_without_min_tls_1_2_default_action
+    enum        = local.mysql_flexible_servers_without_min_tls_1_2_default_action_enum
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.mysql_flexible_servers_with_no_min_tls_1_2_enabled_actions
-    enum        = local.mysql_flexible_servers_with_no_min_tls_1_2_enabled_actions_enum
+    default     = var.mysql_flexible_servers_without_min_tls_1_2_enabled_actions
+    enum        = local.mysql_flexible_servers_without_min_tls_1_2_enabled_actions_enum
   }
 
   step "pipeline" "respond" {

@@ -85,8 +85,8 @@ variable "subscriptions_without_activity_log_alert_for_create_update_security_so
 }
 
 trigger "query" "detect_and_correct_subscriptions_without_activity_log_alert_for_create_update_security_solution" {
-  title         = "Detect & correct Subscriptions without activity log alert for create and update security solution"
-  description   = "Detect Subscriptions without an activity log alert for create and update security solution."
+  title         = "Detect & correct subscriptions without activity log alert for create and update security solution"
+  description   = "Detect subscriptions without an activity log alert for create and update security solution."
   tags          = local.monitor_common_tags
 
   enabled  = var.subscriptions_without_activity_log_alert_for_create_update_security_solution_trigger_enabled
@@ -103,8 +103,8 @@ trigger "query" "detect_and_correct_subscriptions_without_activity_log_alert_for
 }
 
 pipeline "detect_and_correct_subscriptions_without_activity_log_alert_for_create_update_security_solution" {
-  title         = "Detect & correct Subscriptions without activity log alert for create and update security solution"
-  description   = "Detect Subscriptions without an activity log alert for create and update security solution."
+  title         = "Detect & correct subscriptions without activity log alert for create and update security solution"
+  description   = "Detect subscriptions without an activity log alert for create and update security solution."
   tags          = local.monitor_common_tags
 
   param "database" {
@@ -142,8 +142,8 @@ pipeline "detect_and_correct_subscriptions_without_activity_log_alert_for_create
 }
 
 pipeline "correct_subscriptions_without_activity_log_alert_for_create_update_security_solution" {
-  title         = "Correct Subscriptions without activity log alert for create and update security solution"
-  description   = "Send notifications for Subscriptions without activity log alert for create and update security solution."
+  title         = "Correct subscriptions without activity log alert for create and update security solution"
+  description   = "Send notifications for subscriptions without activity log alert for create and update security solution."
   tags          = merge(local.monitor_common_tags, { folder = "Internal" })
 
   param "items" {

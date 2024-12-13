@@ -59,7 +59,7 @@ variable "sql_servers_with_public_network_access_enabled_enabled_actions" {
 
 trigger "query" "detect_and_correct_sql_servers_with_public_network_access_enabled" {
   title         = "Detect & correct SQL servers with public network access enabled"
-  description   = "Detect SQL serevrs with public network access enabled and then disable public network access."
+  description   = "Detect SQL servers with public network access enabled and then disable public network access."
   tags          = local.sql_common_tags
 
   enabled  = var.sql_servers_with_public_network_access_enabled_trigger_enabled
@@ -77,7 +77,7 @@ trigger "query" "detect_and_correct_sql_servers_with_public_network_access_enabl
 
 pipeline "detect_and_correct_sql_servers_with_public_network_access_enabled" {
   title         = "Detect & correct SQL servers with public network access enabled"
-  description   = "Detect SQL serevrs with public network access enabled and then disable public network access."
+  description   = "Detect SQL servers with public network access enabled and then disable public network access."
   tags          = local.sql_common_tags
 
   param "database" {

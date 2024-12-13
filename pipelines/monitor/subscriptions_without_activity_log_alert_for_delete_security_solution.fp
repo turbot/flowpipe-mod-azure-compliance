@@ -72,8 +72,8 @@ variable "subscriptions_without_activity_log_alert_for_delete_security_solution_
 }
 
 trigger "query" "detect_and_correct_subscriptions_without_activity_log_alert_for_delete_security_solution" {
-  title         = "Detect & correct Subscriptions without activity log alert for delete security solution"
-  description   = "Detect Subscriptions without an activity log alert for delete security solution."
+  title         = "Detect & correct subscriptions without activity log alert for delete security solution"
+  description   = "Detect subscriptions without an activity log alert for delete security solution."
   tags          = local.monitor_common_tags
 
   enabled  = var.subscriptions_without_activity_log_alert_for_delete_security_solution_trigger_enabled
@@ -90,8 +90,8 @@ trigger "query" "detect_and_correct_subscriptions_without_activity_log_alert_for
 }
 
 pipeline "detect_and_correct_subscriptions_without_activity_log_alert_for_delete_security_solution" {
-  title         = "Detect & correct Subscriptions without activity log alert for delete security solution"
-  description   = "Detect Subscriptions without an activity log alert for delete security solution."
+  title         = "Detect & correct subscriptions without activity log alert for delete security solution"
+  description   = "Detect subscriptions without an activity log alert for delete security solution."
   tags          = local.monitor_common_tags
 
   param "database" {
@@ -129,8 +129,8 @@ pipeline "detect_and_correct_subscriptions_without_activity_log_alert_for_delete
 }
 
 pipeline "correct_subscriptions_without_activity_log_alert_for_delete_security_solution" {
-  title         = "Correct Subscriptions without activity log alert for delete security solution"
-  description   = "Send notifications for Subscriptions without activity log alert for delete security solution."
+  title         = "Correct subscriptions without activity log alert for delete security solution"
+  description   = "Send notifications for subscriptions without activity log alert for delete security solution."
   tags         = merge(local.monitor_common_tags, { folder = "Internal" })
 
   param "items" {

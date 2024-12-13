@@ -73,8 +73,8 @@ variable "subscriptions_without_activity_log_alert_for_create_update_sql_servers
 }
 
 trigger "query" "detect_and_correct_subscriptions_without_activity_log_alert_for_create_update_sql_servers_firewall_rule" {
-  title         = "Detect & correct Subscriptions without activity log alert for create and update SQL servers firewall rule"
-  description   = "Detect Subscriptions without an activity log alert for create and update SQL servers firewall rule."
+  title         = "Detect & correct subscriptions without activity log alert for create and update SQL servers firewall rule"
+  description   = "Detect subscriptions without an activity log alert for create and update SQL servers firewall rule."
   tags          = local.monitor_common_tags
 
   enabled  = var.subscriptions_without_activity_log_alert_for_create_update_sql_servers_firewall_rule_trigger_enabled
@@ -91,8 +91,8 @@ trigger "query" "detect_and_correct_subscriptions_without_activity_log_alert_for
 }
 
 pipeline "detect_and_correct_subscriptions_without_activity_log_alert_for_create_update_sql_servers_firewall_rule" {
-  title         = "Detect & correct Subscriptions without activity log alert for create and update SQL servers firewall rule"
-  description   = "Detect Subscriptions without an activity log alert for create and update SQL servers firewall rule."
+  title         = "Detect & correct subscriptions without activity log alert for create and update SQL servers firewall rule"
+  description   = "Detect subscriptions without an activity log alert for create and update SQL servers firewall rule."
   tags          = local.monitor_common_tags
 
   param "database" {
@@ -130,8 +130,8 @@ pipeline "detect_and_correct_subscriptions_without_activity_log_alert_for_create
 }
 
 pipeline "correct_subscriptions_without_activity_log_alert_for_create_update_sql_servers_firewall_rule" {
-  title         = "Correct Subscriptions without activity log alert for create and update SQL servers firewall rule"
-  description   = "Send notifications for Subscriptions without activity log alert for create and update SQL servers firewall rule."
+  title         = "Correct subscriptions without activity log alert for create and update SQL servers firewall rule"
+  description   = "Send notifications for subscriptions without activity log alert for create and update SQL servers firewall rule."
   tags          = merge(local.monitor_common_tags, { folder = "Internal" })
 
   param "items" {

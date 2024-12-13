@@ -72,8 +72,8 @@ variable "subscriptions_without_activity_log_alert_for_update_public_ip_address_
 }
 
 trigger "query" "detect_and_correct_subscriptions_without_activity_log_alert_for_update_public_ip_address" {
-  title         = "Detect & correct Subscriptions without activity log alert for create update public IP address"
-  description   = "Detect Subscriptions without an activity log alert for create update public IP address."
+  title         = "Detect & correct subscriptions without activity log alert for create update public IP address"
+  description   = "Detect subscriptions without an activity log alert for create update public IP address."
   tags          = local.monitor_common_tags
 
   enabled  = var.subscriptions_without_activity_log_alert_for_update_public_ip_address_trigger_enabled
@@ -90,8 +90,8 @@ trigger "query" "detect_and_correct_subscriptions_without_activity_log_alert_for
 }
 
 pipeline "detect_and_correct_subscriptions_without_activity_log_alert_for_update_public_ip_address" {
-  title         = "Detect & correct Subscriptions without activity log alert for create update public IP address"
-  description   = "Detect Subscriptions without an activity log alert for create update public IP address."
+  title         = "Detect & correct subscriptions without activity log alert for create update public IP address"
+  description   = "Detect subscriptions without an activity log alert for create update public IP address."
   tags          = local.monitor_common_tags
 
   param "database" {
@@ -129,8 +129,8 @@ pipeline "detect_and_correct_subscriptions_without_activity_log_alert_for_update
 }
 
 pipeline "correct_subscriptions_without_activity_log_alert_for_update_public_ip_address" {
-  title         = "Correct Subscriptions without activity log alert for create update public IP address"
-  description   = "Send notifications for Subscriptions without activity log alert for create update public IP address."
+  title         = "Correct subscriptions without activity log alert for create update public IP address"
+  description   = "Send notifications for subscriptions without activity log alert for create update public IP address."
   tags          = merge(local.monitor_common_tags, { folder = "Internal" })
 
   param "items" {
@@ -157,7 +157,7 @@ pipeline "correct_subscriptions_without_activity_log_alert_for_update_public_ip_
   step "message" "notify_detection_count" {
     if       = var.notification_level == local.level_info
     notifier = param.notifier
-    text     = "Detected ${length(param.items)} Subscriptions(s)  without activity log alert for create update public IP address."
+    text     = "Detected ${length(param.items)} subscriptions(s)  without activity log alert for create update public IP address."
   }
 
   step "message" "notify_items" {
