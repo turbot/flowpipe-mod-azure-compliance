@@ -87,10 +87,6 @@ pipeline "detect_and_correct_compute_unattached_disks_not_encrypted_with_cmk" {
       items                   = step.query.detect.rows
       notifier                = param.notifier
       notification_level      = param.notification_level
-      approvers               = param.approvers
-      default_action          = param.default_action
-      enabled_actions         = param.enabled_actions
-      disk_encryption_set_id  = param.disk_encryption_set_id
     }
   }
 }

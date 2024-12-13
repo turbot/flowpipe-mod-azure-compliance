@@ -7,8 +7,7 @@ locals {
       subscription_id,
       _ctx ->> 'connection_name' as conn
     from
-      azure_sql_server,
-      jsonb_array_elements(encryption_protector) encryption
+      azure_sql_server
     where
       server_azure_ad_administrator is null;
   EOQ
