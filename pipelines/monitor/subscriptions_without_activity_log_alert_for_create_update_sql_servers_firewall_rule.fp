@@ -130,7 +130,7 @@ pipeline "detect_and_correct_subscriptions_without_activity_log_alert_for_create
 }
 
 pipeline "correct_subscriptions_without_activity_log_alert_for_create_update_sql_servers_firewall_rule" {
-  title         = "correct subscriptions without activity log alert for create and update SQL servers firewall rule"
+  title         = "Correct subscriptions without activity log alert for create and update SQL servers firewall rule"
   description   = "Send notifications for subscriptions without activity log alert for create and update SQL servers firewall rule."
   tags          = merge(local.monitor_common_tags, { folder = "Internal" })
 

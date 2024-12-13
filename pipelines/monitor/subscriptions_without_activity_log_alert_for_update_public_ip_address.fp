@@ -129,7 +129,7 @@ pipeline "detect_and_correct_subscriptions_without_activity_log_alert_for_update
 }
 
 pipeline "correct_subscriptions_without_activity_log_alert_for_update_public_ip_address" {
-  title         = "correct subscriptions without activity log alert for create update public IP address"
+  title         = "Correct subscriptions without activity log alert for create update public IP address"
   description   = "Send notifications for subscriptions without activity log alert for create update public IP address."
   tags          = merge(local.monitor_common_tags, { folder = "Internal" })
 

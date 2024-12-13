@@ -129,7 +129,7 @@ pipeline "detect_and_correct_subscriptions_without_activity_log_alert_for_delete
 }
 
 pipeline "correct_subscriptions_without_activity_log_alert_for_delete_security_solution" {
-  title         = "correct subscriptions without activity log alert for delete security solution"
+  title         = "Correct subscriptions without activity log alert for delete security solution"
   description   = "Send notifications for subscriptions without activity log alert for delete security solution."
   tags         = merge(local.monitor_common_tags, { folder = "Internal" })
 

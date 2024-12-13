@@ -13,11 +13,14 @@ mod "azure_compliance" {
   }
 
   require {
-    mod "github.com/turbot/flowpipe-mod-azure" {
-      version = "v1.1.0-rc.0"
+    flowpipe {
+      min_version = "1.0.0"
     }
     mod "github.com/turbot/flowpipe-mod-detect-correct" {
-      version = "*"
+      version = "^1"
+    }
+    mod "github.com/turbot/flowpipe-mod-azure" {
+      version = "^1"
     }
   }
 }

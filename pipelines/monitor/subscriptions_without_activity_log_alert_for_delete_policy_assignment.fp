@@ -120,7 +120,7 @@ pipeline "detect_and_correct_subscriptions_without_activity_log_alert_for_delete
 }
 
 pipeline "correct_subscriptions_without_activity_log_alert_for_delete_policy_assignment" {
-  title         = "correct subscriptions without activity log alert for delete policy assignment"
+  title         = "Correct subscriptions without activity log alert for delete policy assignment"
   description   = "Send notifications for subscriptions without activity log alert for delete policy assignment."
   tags          = merge(local.monitor_common_tags, { folder = "Internal" })
 

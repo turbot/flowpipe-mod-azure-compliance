@@ -131,7 +131,7 @@ pipeline "detect_and_correct_subscriptions_without_activity_log_alert_for_create
 }
 
 pipeline "correct_subscriptions_without_activity_log_alert_for_create_update_nsg" {
-  title         = "correct subscriptions without activity log alert for create and update NSG"
+  title         = "Correct subscriptions without activity log alert for create and update NSG"
   description   = "Send notifications for subscriptions without activity log alert for create and update NSG."
   tags          = merge(local.monitor_common_tags, { folder = "Internal" })
 

@@ -129,7 +129,7 @@ pipeline "detect_and_correct_subscriptions_without_activity_log_alert_for_delete
 }
 
 pipeline "correct_subscriptions_without_activity_log_alert_for_delete_public_ip_address" {
-  title         = "correct subscriptions without activity log alert for delete public IP address"
+  title         = "Correct subscriptions without activity log alert for delete public IP address"
   description   = "Send notifications for subscriptions without activity log alert for delete public IP address."
   tags         = merge(local.monitor_common_tags, { folder = "Internal" })
 
