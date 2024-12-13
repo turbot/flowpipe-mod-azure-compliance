@@ -1,5 +1,5 @@
 locals {
-  appservice_web_apps_not_using_latest_php_version_query = <<-EOQ
+  appservice_web_apps_without_latest_php_version_query = <<-EOQ
     select
       concat(id, ' [', subscription_id, '/', resource_group, ']') as title,
       id as id,
@@ -28,11 +28,11 @@ locals {
       and configuration -> 'properties' ->> 'linuxFxVersion' <> 'PHP|8.3';
   EOQ
 
-  appservice_web_apps_not_using_latest_php_version_enabled_actions_enum = ["skip", "enable_latest_php_version"]
-  appservice_web_apps_not_using_latest_php_version_default_action_enum  = ["notify", "skip", "enable_latest_php_version"]
+  appservice_web_apps_without_latest_php_version_enabled_actions_enum = ["skip", "enable_latest_php_version"]
+  appservice_web_apps_without_latest_php_version_default_action_enum  = ["notify", "skip", "enable_latest_php_version"]
 }
 
-variable "appservice_web_apps_not_using_latest_php_version_trigger_enabled" {
+variable "appservice_web_apps_without_latest_php_version_trigger_enabled" {
   type        = bool
   description = "If true, the trigger is enabled."
   default     = false
@@ -42,7 +42,7 @@ variable "appservice_web_apps_not_using_latest_php_version_trigger_enabled" {
   }
 }
 
-variable "appservice_web_apps_not_using_latest_php_version_trigger_schedule" {
+variable "appservice_web_apps_without_latest_php_version_trigger_schedule" {
   type        = string
   description = "If the trigger is enabled, run it on this schedule."
   default     = "15m"
@@ -52,7 +52,7 @@ variable "appservice_web_apps_not_using_latest_php_version_trigger_schedule" {
   }
 }
 
-variable "appservice_web_apps_not_using_latest_php_version_default_action" {
+variable "appservice_web_apps_without_latest_php_version_default_action" {
   type        = string
   description = "The default action to use when there are no approvers."
   default     = "notify"
@@ -62,7 +62,7 @@ variable "appservice_web_apps_not_using_latest_php_version_default_action" {
   }
 }
 
-variable "appservice_web_apps_not_using_latest_php_version_enabled_actions" {
+variable "appservice_web_apps_without_latest_php_version_enabled_actions" {
   type        = list(string)
   description = "The list of enabled actions approvers can select."
   default     = ["skip", "enable_latest_php_version"]
@@ -72,7 +72,7 @@ variable "appservice_web_apps_not_using_latest_php_version_enabled_actions" {
   }
 }
 
-variable "appservice_web_apps_not_using_latest_php_version_linux_fx_version" {
+variable "appservice_web_apps_without_latest_php_version_linux_fx_version" {
   type        = string
   description = "The linux fx version for App Service web app."
   default     = "PHP|8.3"
@@ -82,25 +82,25 @@ variable "appservice_web_apps_not_using_latest_php_version_linux_fx_version" {
   }
 }
 
-trigger "query" "detect_and_correct_appservice_web_apps_not_using_latest_php_version" {
+trigger "query" "detect_and_correct_appservice_web_apps_without_latest_php_version" {
   title         = "Detect & correct App Service web apps not using the latest PHP version"
   description   = "Detects App Services web apps not using the latest PHP version and then enable latest PHP version."
   tags          = local.appservice_common_tags
 
-  enabled  = var.appservice_web_apps_not_using_latest_php_version_trigger_enabled
-  schedule = var.appservice_web_apps_not_using_latest_php_version_trigger_schedule
+  enabled  = var.appservice_web_apps_without_latest_php_version_trigger_enabled
+  schedule = var.appservice_web_apps_without_latest_php_version_trigger_schedule
   database = var.database
-  sql      = local.appservice_web_apps_not_using_latest_php_version_query
+  sql      = local.appservice_web_apps_without_latest_php_version_query
 
   capture "insert" {
-    pipeline = pipeline.correct_appservice_web_apps_not_using_latest_php_version
+    pipeline = pipeline.correct_appservice_web_apps_without_latest_php_version
     args = {
       items = self.inserted_rows
     }
   }
 }
 
-pipeline "detect_and_correct_appservice_web_apps_not_using_latest_php_version" {
+pipeline "detect_and_correct_appservice_web_apps_without_latest_php_version" {
   title         = "Detect & correct App Service web apps not using the latest PHP version"
   description   = "Detects App Services web apps not using the latest PHP version and then enable latest PHP version."
   tags          = local.appservice_common_tags
@@ -127,7 +127,7 @@ pipeline "detect_and_correct_appservice_web_apps_not_using_latest_php_version" {
   param "linux_fx_version" {
     type        = string
     description = "The linux fx version for App Service web app."
-    default     = var.appservice_web_apps_not_using_latest_php_version_linux_fx_version
+    default     = var.appservice_web_apps_without_latest_php_version_linux_fx_version
   }
 
   param "approvers" {
@@ -139,24 +139,24 @@ pipeline "detect_and_correct_appservice_web_apps_not_using_latest_php_version" {
   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.appservice_web_apps_not_using_latest_php_version_default_action
-    enum        = local.appservice_web_apps_not_using_latest_php_version_default_action_enum
+    default     = var.appservice_web_apps_without_latest_php_version_default_action
+    enum        = local.appservice_web_apps_without_latest_php_version_default_action_enum
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.appservice_web_apps_not_using_latest_php_version_enabled_actions
-    enum        = local.appservice_web_apps_not_using_latest_php_version_enabled_actions_enum
+    default     = var.appservice_web_apps_without_latest_php_version_enabled_actions
+    enum        = local.appservice_web_apps_without_latest_php_version_enabled_actions_enum
   }
 
   step "query" "detect" {
     database = param.database
-    sql      = local.appservice_web_apps_not_using_latest_php_version_query
+    sql      = local.appservice_web_apps_without_latest_php_version_query
   }
 
   step "pipeline" "respond" {
-    pipeline = pipeline.correct_appservice_web_apps_not_using_latest_php_version
+    pipeline = pipeline.correct_appservice_web_apps_without_latest_php_version
     args = {
       items              = step.query.detect.rows
 	    linux_fx_version   = param.linux_fx_version
@@ -169,7 +169,7 @@ pipeline "detect_and_correct_appservice_web_apps_not_using_latest_php_version" {
   }
 }
 
-pipeline "correct_appservice_web_apps_not_using_latest_php_version" {
+pipeline "correct_appservice_web_apps_without_latest_php_version" {
   title         = "Correct App Services web apps not using the latest PHP version"
   description   = "Enable latest PHP version for App Services web apps not using the latest PHP version."
   tags          = merge(local.appservice_common_tags, { folder = "Internal" })
@@ -195,7 +195,7 @@ pipeline "correct_appservice_web_apps_not_using_latest_php_version" {
   param "linux_fx_version" {
     type        = string
     description = "The linux fx version for App Service web app."
-    default     = var.appservice_web_apps_not_using_latest_php_version_linux_fx_version
+    default     = var.appservice_web_apps_without_latest_php_version_linux_fx_version
   }
 
   param "notification_level" {
@@ -214,15 +214,15 @@ pipeline "correct_appservice_web_apps_not_using_latest_php_version" {
   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.appservice_web_apps_not_using_latest_php_version_default_action
-    enum        = local.appservice_web_apps_not_using_latest_php_version_default_action_enum
+    default     = var.appservice_web_apps_without_latest_php_version_default_action
+    enum        = local.appservice_web_apps_without_latest_php_version_default_action_enum
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.appservice_web_apps_not_using_latest_php_version_enabled_actions
-    enum        = local.appservice_web_apps_not_using_latest_php_version_enabled_actions_enum
+    default     = var.appservice_web_apps_without_latest_php_version_enabled_actions
+    enum        = local.appservice_web_apps_without_latest_php_version_enabled_actions_enum
   }
 
   step "message" "notify_detection_count" {
@@ -234,7 +234,7 @@ pipeline "correct_appservice_web_apps_not_using_latest_php_version" {
   step "pipeline" "correct_item" {
     for_each        = { for row in param.items : row.id => row }
     max_concurrency = var.max_concurrency
-    pipeline        = pipeline.correct_one_appservice_web_app_not_using_latest_php_version
+    pipeline        = pipeline.correct_one_appservice_web_app_without_latest_php_version
     args = {
       title              = each.value.title
       name               = each.value.name
@@ -251,7 +251,7 @@ pipeline "correct_appservice_web_apps_not_using_latest_php_version" {
   }
 }
 
-pipeline "correct_one_appservice_web_app_not_using_latest_php_version" {
+pipeline "correct_one_appservice_web_app_without_latest_php_version" {
   title         = "Correct App Services web app not using the latest PHP version"
   description   = "Enable latest PHP version for a App Services web app not using the latest PHP version."
   tags          = merge(local.appservice_common_tags, { folder = "Internal" })
@@ -308,15 +308,15 @@ pipeline "correct_one_appservice_web_app_not_using_latest_php_version" {
   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.appservice_web_apps_not_using_latest_php_version_default_action
-    enum        = local.appservice_web_apps_not_using_latest_php_version_default_action_enum
+    default     = var.appservice_web_apps_without_latest_php_version_default_action
+    enum        = local.appservice_web_apps_without_latest_php_version_default_action_enum
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.appservice_web_apps_not_using_latest_php_version_enabled_actions
-    enum        = local.appservice_web_apps_not_using_latest_php_version_enabled_actions_enum
+    default     = var.appservice_web_apps_without_latest_php_version_enabled_actions
+    enum        = local.appservice_web_apps_without_latest_php_version_enabled_actions_enum
   }
 
   step "pipeline" "respond" {

@@ -1,84 +1,86 @@
 locals {
-  storage_accounts_when_publicly_accessible_query = <<-EOQ
+  iam_subscriptions_with_custom_owner_roles_query = <<-EOQ
     select
-      concat(sa.id, ' [', sa.subscription_id, '/', sa.resource_group, ']') as title,
-      sa.id as id,
-      sa.name,
-      sa.resource_group,
-      sa.subscription_id,
-      sa._ctx ->> 'connection_name' as conn
+      concat(id, ' [', subscription_id, '/', role_name, ']') as title,
+      id as id,
+      role_name as name,
+      subscription_id,
+      _ctx ->> 'connection_name' as conn
     from
-      azure_storage_account as sa
+      azure_role_definition,
+      jsonb_array_elements(permissions) as s,
+      jsonb_array_elements_text(s -> 'actions') as action
     where
-      sa.public_network_access = 'Enabled';
+      role_type = 'CustomRole'
+      and action in ('*', '*:*');
   EOQ
 
-  storage_accounts_when_publicly_accessible_enabled_actions_enum = ["skip", "disable_public_network_access"]
-  storage_accounts_when_publicly_accessible_default_action_enum = ["notify", "skip", "disable_public_network_access"]
+  iam_subscriptions_with_custom_owner_roles_enabled_actions_enum = ["skip", "delete_role"]
+  iam_subscriptions_with_custom_owner_roles_default_action_enum = ["notify", "skip", "delete_role"]
 }
 
-variable "storage_accounts_when_publicly_accessible_trigger_enabled" {
+variable "iam_subscriptions_with_custom_owner_roles_trigger_enabled" {
   type        = bool
   default     = false
   description = "If true, the trigger is enabled."
 
   tags = {
-    folder = "Advanced/Storage"
+    folder = "Advanced/IAM"
   }
 }
 
-variable "storage_accounts_when_publicly_accessible_trigger_schedule" {
+variable "iam_subscriptions_with_custom_owner_roles_trigger_schedule" {
   type        = string
   default     = "15m"
   description = "If the trigger is enabled, run it on this schedule."
 
   tags = {
-    folder = "Advanced/Storage"
+    folder = "Advanced/IAM"
   }
 }
 
-variable "storage_accounts_when_publicly_accessible_default_action" {
+variable "iam_subscriptions_with_custom_owner_roles_default_action" {
   type        = string
   description = "The default action to use when there are no approvers."
   default     = "notify"
 
   tags = {
-    folder = "Advanced/Storage"
+    folder = "Advanced/IAM"
   }
 }
 
-variable "storage_accounts_when_publicly_accessible_enabled_actions" {
+variable "iam_subscriptions_with_custom_owner_roles_enabled_actions" {
   type        = list(string)
   description = "The list of enabled actions to provide to approvers for selection."
-  default     = ["skip", "disable_public_network_access"]
+  default     = ["skip", "delete_role"]
 
   tags = {
-    folder = "Advanced/Storage"
+    folder = "Advanced/IAM"
   }
 }
 
-trigger "query" "detect_and_correct_storage_accounts_when_publicly_accessible" {
-  title         = "Detect & correct publicly accessible Storage Accounts"
-  description   = "Detect publicly accessible Storage Accounts and then disable public access."
-  tags          = local.storage_common_tags
+trigger "query" "detect_and_correct_iam_subscriptions_with_custom_owner_roles" {
+  title         = "Detect & correct custom subscription owner roles existing"
+  description   = "Detects custom subscription owner roles that exist and then delete custom subscriptions owner roles."
+  tags          = local.iam_common_tags
 
-  enabled  = var.storage_accounts_when_publicly_accessible_trigger_enabled
-  schedule = var.storage_accounts_when_publicly_accessible_trigger_schedule
+  enabled  = var.iam_subscriptions_with_custom_owner_roles_trigger_enabled
+  schedule = var.iam_subscriptions_with_custom_owner_roles_trigger_schedule
   database = var.database
-  sql      = local.storage_accounts_when_publicly_accessible_query
+  sql      = local.iam_subscriptions_with_custom_owner_roles_query
 
   capture "insert" {
-    pipeline = pipeline.correct_storage_accounts_when_publicly_accessible
+    pipeline = pipeline.correct_iam_subscriptions_with_custom_owner_roles
     args = {
       items = self.inserted_rows
     }
   }
 }
 
-pipeline "detect_and_correct_storage_accounts_when_publicly_accessible" {
-  title         = "Detect & correct publicly accessible Storage Accounts"
-  description   = "Detect publicly accessible Storage Accounts and then disable public access."
-  tags          = local.storage_common_tags
+pipeline "detect_and_correct_iam_subscriptions_with_custom_owner_roles" {
+  title         = "Detect & correct custom subscription owner roles existing"
+  description   = "Detects custom subscription owner roles that exist and then delete custom subscriptions owner roles."
+  tags          = local.iam_common_tags
 
   param "database" {
     type        = connection.steampipe
@@ -108,24 +110,24 @@ pipeline "detect_and_correct_storage_accounts_when_publicly_accessible" {
   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.storage_accounts_when_publicly_accessible_default_action
-    enum        = local.storage_accounts_when_publicly_accessible_default_action_enum
+    default     = var.iam_subscriptions_with_custom_owner_roles_default_action
+    enum        = local.iam_subscriptions_with_custom_owner_roles_default_action_enum
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.storage_accounts_when_publicly_accessible_enabled_actions
-    enum        = local.storage_accounts_when_publicly_accessible_enabled_actions_enum
+    default     = var.iam_subscriptions_with_custom_owner_roles_enabled_actions
+    enum        = local.iam_subscriptions_with_custom_owner_roles_enabled_actions_enum
   }
 
   step "query" "detect" {
     database = param.database
-    sql      = local.storage_accounts_when_publicly_accessible_query
+    sql      = local.iam_subscriptions_with_custom_owner_roles_query
   }
 
   step "pipeline" "respond" {
-    pipeline = pipeline.correct_storage_accounts_when_publicly_accessible
+    pipeline = pipeline.correct_iam_subscriptions_with_custom_owner_roles
     args = {
       items              = step.query.detect.rows
       notifier           = param.notifier
@@ -137,17 +139,16 @@ pipeline "detect_and_correct_storage_accounts_when_publicly_accessible" {
   }
 }
 
-pipeline "correct_storage_accounts_when_publicly_accessible" {
-  title         = "Correct publicly accessible Storage Accounts"
-  description   = "Disable public access for publicly accessible Storage Accounts."
-  tags          = merge(local.storage_common_tags, { folder = "Internal" })
+pipeline "correct_iam_subscriptions_with_custom_owner_roles" {
+  title         = "Correct custom subscription owner roles existing"
+  description   = "Runs corrective action on a collection of custom subscription owner roles that exist."
+  tags          = merge(local.iam_common_tags, { folder = "Internal" })
 
   param "items" {
     type = list(object({
       id              = string
       title           = string
       name            = string
-      resource_group  = string
       subscription_id = string
       conn            = string
     }))
@@ -176,31 +177,30 @@ pipeline "correct_storage_accounts_when_publicly_accessible" {
   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.storage_accounts_when_publicly_accessible_default_action
-    enum        = local.storage_accounts_when_publicly_accessible_default_action_enum
+    default     = var.iam_subscriptions_with_custom_owner_roles_default_action
+    enum        = local.iam_subscriptions_with_custom_owner_roles_default_action_enum
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.storage_accounts_when_publicly_accessible_enabled_actions
-    enum        = local.storage_accounts_when_publicly_accessible_enabled_actions_enum
+    default     = var.iam_subscriptions_with_custom_owner_roles_enabled_actions
+    enum        = local.iam_subscriptions_with_custom_owner_roles_enabled_actions_enum
   }
 
   step "message" "notify_detection_count" {
     if       = var.notification_level == local.level_info
     notifier = param.notifier
-    text     = "Detected ${length(param.items)} publicly accessible Storage Account(s)."
+    text     = "Detected ${length(param.items)} custom subscription owner roles."
   }
 
   step "pipeline" "correct_item" {
     for_each        = { for row in param.items : row.id => row }
     max_concurrency = var.max_concurrency
-    pipeline        = pipeline.correct_one_storage_account_when_publicly_accessible
+    pipeline        = pipeline.correct_one_iam_custom_subscription_owner_role_existing
     args = {
       title              = each.value.title
       name               = each.value.name
-      resource_group     = each.value.resource_group
       subscription_id    = each.value.subscription_id
       conn               = connection.azure[each.value.conn]
       notifier           = param.notifier
@@ -212,10 +212,10 @@ pipeline "correct_storage_accounts_when_publicly_accessible" {
   }
 }
 
-pipeline "correct_one_storage_account_when_publicly_accessible" {
-  title         = "Correct publicly accessible Storage Account"
-  description   = "Disable public access for a publicly accessible Storage Account."
-  tags          = merge(local.storage_common_tags, { folder = "Internal" })
+pipeline "correct_one_iam_custom_subscription_owner_role_existing" {
+  title         = "Correct one custom subscription owner role existing"
+  description   = "Runs corrective action on a single custom subscription owner role that exists."
+  tags          = merge(local.iam_common_tags, { folder = "Internal" })
 
   param "title" {
     type        = string
@@ -224,12 +224,7 @@ pipeline "correct_one_storage_account_when_publicly_accessible" {
 
   param "name" {
     type        = string
-    description = "The name of the Storage Account."
-  }
-
-  param "resource_group" {
-    type        = string
-    description = local.description_resource_group
+    description = "The name of the custom subscription owner role."
   }
 
   param "subscription_id" {
@@ -261,18 +256,18 @@ pipeline "correct_one_storage_account_when_publicly_accessible" {
     default     = var.approvers
   }
 
-   param "default_action" {
+  param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.storage_accounts_when_publicly_accessible_default_action
-    enum        = local.storage_accounts_when_publicly_accessible_default_action_enum
+    default     = var.iam_subscriptions_with_custom_owner_roles_default_action
+    enum        = local.iam_subscriptions_with_custom_owner_roles_default_action_enum
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.storage_accounts_when_publicly_accessible_enabled_actions
-    enum        = local.storage_accounts_when_publicly_accessible_enabled_actions_enum
+    default     = var.iam_subscriptions_with_custom_owner_roles_enabled_actions
+    enum        = local.iam_subscriptions_with_custom_owner_roles_enabled_actions_enum
   }
 
   step "pipeline" "respond" {
@@ -281,7 +276,7 @@ pipeline "correct_one_storage_account_when_publicly_accessible" {
       notifier           = param.notifier
       notification_level = param.notification_level
       approvers          = param.approvers
-      detect_msg         = "Detected publicly accessible Storage Account ${param.title}."
+      detect_msg         = "Detected custom subscription owner role ${param.title}."
       default_action     = param.default_action
       enabled_actions    = param.enabled_actions
       actions = {
@@ -293,25 +288,23 @@ pipeline "correct_one_storage_account_when_publicly_accessible" {
           pipeline_args = {
             notifier = param.notifier
             send     = param.notification_level == local.level_info
-            text     = "Skipped Storage Account ${param.title}."
+            text     = "Skipped subscription with custom owner role ${param.title}."
           }
           success_msg = ""
           error_msg   = ""
         },
-        "disable_public_network_access" = {
-          label        = "Disable public access"
-          value        = "disable_public_network_access"
+        "delete_role" = {
+          label        = "Delete custom role"
+          value        = "delete_role"
           style        = local.style_alert
-          pipeline_ref = azure.pipeline.update_storage_account_public_network_access
+          pipeline_ref = azure.pipeline.delete_iam_role
           pipeline_args = {
-            account_name           = param.name
-            resource_group         = param.resource_group
-            subscription_id        = param.subscription_id
-            conn                   = param.conn
-            public_network_access  = false
+            role_name        = param.name
+            subscription_id  = param.subscription_id
+            conn             = param.conn
           }
-          success_msg = "Disabled public access for Storage Account ${param.title}."
-          error_msg   = "Error disabling public access for Storage Account ${param.title}."
+          success_msg = "Deleted subscription with custom owner role ${param.title}."
+          error_msg   = "Error deleting subscription custom owner role ${param.title}."
         }
       }
     }

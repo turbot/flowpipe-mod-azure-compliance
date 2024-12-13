@@ -77,7 +77,7 @@ flowpipe pipeline list | grep "detect_and_correct"
 Then run your chosen pipeline:
 
 ```sh
-flowpipe pipeline run detect_and_correct_sql_databases_when_publicly_accessible
+flowpipe pipeline run detect_and_correct_sql_databases_with_public_access_enabled
 ```
 
 This will then run the pipeline and depending on your configured running mode; perform the relevant action(s), there are 3 running modes:
@@ -99,13 +99,13 @@ To run in `notify` mode, you will need to set the `approvers` variable to an emp
 
 ```hcl
 approvers = []
-sql_databases_when_publicly_accessible_default_action = "notify"
+sql_databases_with_public_access_enabled_default_action = "notify"
 ```
 
 or pass the `approvers` and `default_action` arguments on the command-line.
 
 ```sh
-flowpipe pipeline run detect_and_correct_sql_databases_when_publicly_accessible --arg='default_action=notify' --arg='approvers=[]'
+flowpipe pipeline run detect_and_correct_sql_databases_with_public_access_enabled --arg='default_action=notify' --arg='approvers=[]'
 ```
 
 #### Automatic
@@ -116,13 +116,13 @@ To run in `automatic` mode, you will need to set the `approvers` variable to an 
 
 ```hcl
 approvers = []
-sql_databases_when_publicly_accessible_default_action = "revoke_firewall_rule"
+sql_databases_with_public_access_enabled_default_action = "revoke_firewall_rule"
 ```
 
 or pass the `approvers` and `default_action` argument on the command-line.
 
 ```sh
-flowpipe pipeline run detect_and_correct_sql_databases_when_publicly_accessible --arg='approvers=[] --arg='default_action=revoke_firewall_rule'
+flowpipe pipeline run detect_and_correct_sql_databases_with_public_access_enabled --arg='approvers=[] --arg='default_action=revoke_firewall_rule'
 ```
 
 To further enhance this approach, you can enable the pipelines corresponding [query trigger](#running-query-triggers) to run completely hands-off.
@@ -138,9 +138,9 @@ Let's begin by looking at how to set-up a Query Trigger to automatically resolve
 Firsty, we need to update our `flowpipe.fpvars` file to add or update the following variables - if we want to run our remediation `hourly` and automatically `apply` the corrections:
 
 ```hcl
-sql_databases_when_publicly_accessible_trigger_enabled  = true
-sql_databases_when_publicly_accessible_trigger_schedule = "1h"
-sql_databases_when_publicly_accessible_default_action   = "revoke_firewall_rule"
+sql_databases_with_public_access_enabled_trigger_enabled  = true
+sql_databases_with_public_access_enabled_trigger_schedule = "1h"
+sql_databases_with_public_access_enabled_default_action   = "revoke_firewall_rule"
 ```
 
 Now we'll need to start up our Flowpipe server:
@@ -155,7 +155,7 @@ This will run every hour and detect SQL databases that do not block public acces
 
 Several pipelines have [input variables](https://flowpipe.io/docs/build/mod-variables#input-variables) that can be configured to better match your environment and requirements.
 
-Each variable has a default defined in its source file, e.g, `sql/sql_databases_when_publicly_accessible.fp` (or `variables.fp` for more generic variables), but these can be overwritten in several ways:
+Each variable has a default defined in its source file, e.g, `sql/sql_databases_with_public_access_enabled.fp` (or `variables.fp` for more generic variables), but these can be overwritten in several ways:
 
 The easiest approach is to setup your `flowpipe.fpvars` file, starting with the sample:
 
@@ -163,20 +163,20 @@ The easiest approach is to setup your `flowpipe.fpvars` file, starting with the 
 cp flowpipe.fpvars.example flowpipe.fpvars
 vi flowpipe.fpvars
 
-flowpipe pipeline run detect_and_correct_sql_databases_when_publicly_accessible
+flowpipe pipeline run detect_and_correct_sql_databases_with_public_access_enabled
 ```
 
 Alternatively, you can pass variables on the command line:
 
 ```sh
-flowpipe pipeline run detect_and_correct_sql_databases_when_publicly_accessible --var notifier=notifier.default
+flowpipe pipeline run detect_and_correct_sql_databases_with_public_access_enabled --var notifier=notifier.default
 ```
 
 Or through environment variables:
 
 ```sh
 export FP_VAR_notifier="notifier.default"
-flowpipe pipeline run detect_and_correct_sql_databases_when_publicly_accessible
+flowpipe pipeline run detect_and_correct_sql_databases_with_public_access_enabled
 ```
 
 For more information, please see [Passing Input Variables](https://flowpipe.io/docs/build/mod-variables#passing-input-variables)

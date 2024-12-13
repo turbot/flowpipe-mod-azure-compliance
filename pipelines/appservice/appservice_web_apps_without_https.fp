@@ -1,5 +1,5 @@
 locals {
-  appservice_web_apps_not_using_https_query = <<-EOQ
+  appservice_web_apps_without_https_query = <<-EOQ
     select
       concat(app.id, ' [', app.subscription_id, '/', app.resource_group, ']') as title,
       app.id as id,
@@ -13,11 +13,11 @@ locals {
       not https_only;
   EOQ
 
-  appservice_web_apps_not_using_https_enabled_actions_enum = ["skip", "enable_https"]
-  appservice_web_apps_not_using_https_default_action_enum  = ["notify", "skip", "enable_https"]
+  appservice_web_apps_without_https_enabled_actions_enum = ["skip", "enable_https"]
+  appservice_web_apps_without_https_default_action_enum  = ["notify", "skip", "enable_https"]
 }
 
-variable "appservice_web_apps_not_using_https_trigger_enabled" {
+variable "appservice_web_apps_without_https_trigger_enabled" {
   type        = bool
   description = "If true, the trigger is enabled."
   default     = false
@@ -27,7 +27,7 @@ variable "appservice_web_apps_not_using_https_trigger_enabled" {
   }
 }
 
-variable "appservice_web_apps_not_using_https_trigger_schedule" {
+variable "appservice_web_apps_without_https_trigger_schedule" {
   type        = string
   description = "If the trigger is enabled, run it on this schedule."
   default     = "15m"
@@ -37,7 +37,7 @@ variable "appservice_web_apps_not_using_https_trigger_schedule" {
   }
 }
 
-variable "appservice_web_apps_not_using_https_default_action" {
+variable "appservice_web_apps_without_https_default_action" {
   type        = string
   description = "The default action to use when there are no approvers."
   default     = "notify"
@@ -47,7 +47,7 @@ variable "appservice_web_apps_not_using_https_default_action" {
   }
 }
 
-variable "appservice_web_apps_not_using_https_enabled_actions" {
+variable "appservice_web_apps_without_https_enabled_actions" {
   type        = list(string)
   description = "The list of enabled actions approvers can select."
   default     = ["skip", "enable_https"]
@@ -57,25 +57,25 @@ variable "appservice_web_apps_not_using_https_enabled_actions" {
   }
 }
 
-trigger "query" "detect_and_correct_appservice_web_apps_not_using_https" {
+trigger "query" "detect_and_correct_appservice_web_apps_without_https" {
   title         = "Detect & correct App Service web apps not using HTTPS"
   description   = "Detects App Services web apps not using HTTPS and then enable HTTPS."
   tags          = local.appservice_common_tags
 
-  enabled  = var.appservice_web_apps_not_using_https_trigger_enabled
-  schedule = var.appservice_web_apps_not_using_https_trigger_schedule
+  enabled  = var.appservice_web_apps_without_https_trigger_enabled
+  schedule = var.appservice_web_apps_without_https_trigger_schedule
   database = var.database
-  sql      = local.appservice_web_apps_not_using_https_query
+  sql      = local.appservice_web_apps_without_https_query
 
   capture "insert" {
-    pipeline = pipeline.correct_appservice_web_apps_not_using_https
+    pipeline = pipeline.correct_appservice_web_apps_without_https
     args = {
       items = self.inserted_rows
     }
   }
 }
 
-pipeline "detect_and_correct_appservice_web_apps_not_using_https" {
+pipeline "detect_and_correct_appservice_web_apps_without_https" {
   title         = "Detect & correct App Service web apps not using HTTPS"
   description   = "Detects App Service web apps not using HTTPS and then enable HTTPS."
   tags          = local.appservice_common_tags
@@ -108,24 +108,24 @@ pipeline "detect_and_correct_appservice_web_apps_not_using_https" {
   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.appservice_web_apps_not_using_https_default_action
-    enum        = local.appservice_web_apps_not_using_https_default_action_enum
+    default     = var.appservice_web_apps_without_https_default_action
+    enum        = local.appservice_web_apps_without_https_default_action_enum
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.appservice_web_apps_not_using_https_enabled_actions
-    enum        = local.appservice_web_apps_not_using_https_enabled_actions_enum
+    default     = var.appservice_web_apps_without_https_enabled_actions
+    enum        = local.appservice_web_apps_without_https_enabled_actions_enum
   }
 
   step "query" "detect" {
     database = param.database
-    sql      = local.appservice_web_apps_not_using_https_query
+    sql      = local.appservice_web_apps_without_https_query
   }
 
   step "pipeline" "respond" {
-    pipeline = pipeline.correct_appservice_web_apps_not_using_https
+    pipeline = pipeline.correct_appservice_web_apps_without_https
     args = {
       items              = step.query.detect.rows
       notifier           = param.notifier
@@ -137,7 +137,7 @@ pipeline "detect_and_correct_appservice_web_apps_not_using_https" {
   }
 }
 
-pipeline "correct_appservice_web_apps_not_using_https" {
+pipeline "correct_appservice_web_apps_without_https" {
   title         = "Correct App Service web apps not using HTTPS"
   description   = "Enable HTTPS for App Service web apps not using HTTPS."
   tags          = merge(local.appservice_common_tags, { folder = "Internal" })
@@ -176,15 +176,15 @@ pipeline "correct_appservice_web_apps_not_using_https" {
   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.appservice_web_apps_not_using_https_default_action
-    enum        = local.appservice_web_apps_not_using_https_default_action_enum
+    default     = var.appservice_web_apps_without_https_default_action
+    enum        = local.appservice_web_apps_without_https_default_action_enum
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.appservice_web_apps_not_using_https_enabled_actions
-    enum        = local.appservice_web_apps_not_using_https_enabled_actions_enum
+    default     = var.appservice_web_apps_without_https_enabled_actions
+    enum        = local.appservice_web_apps_without_https_enabled_actions_enum
   }
 
   step "message" "notify_detection_count" {
@@ -196,7 +196,7 @@ pipeline "correct_appservice_web_apps_not_using_https" {
   step "pipeline" "correct_item" {
     for_each        = { for row in param.items : row.id => row }
     max_concurrency = var.max_concurrency
-    pipeline        = pipeline.correct_one_appservice_web_app_not_using_https
+    pipeline        = pipeline.correct_one_appservice_web_app_without_https
     args = {
       title              = each.value.title
       name               = each.value.name
@@ -212,7 +212,7 @@ pipeline "correct_appservice_web_apps_not_using_https" {
   }
 }
 
-pipeline "correct_one_appservice_web_app_not_using_https" {
+pipeline "correct_one_appservice_web_app_without_https" {
   title         = "Correct App Service web app not using HTTPS"
   description   = "Enable HTTPS for a App Service web app not using HTTPS."
   tags          = merge(local.appservice_common_tags, { folder = "Internal" })
@@ -264,15 +264,15 @@ pipeline "correct_one_appservice_web_app_not_using_https" {
   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.appservice_web_apps_not_using_https_default_action
-    enum        = local.appservice_web_apps_not_using_https_default_action_enum
+    default     = var.appservice_web_apps_without_https_default_action
+    enum        = local.appservice_web_apps_without_https_default_action_enum
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.appservice_web_apps_not_using_https_enabled_actions
-    enum        = local.appservice_web_apps_not_using_https_enabled_actions_enum
+    default     = var.appservice_web_apps_without_https_enabled_actions
+    enum        = local.appservice_web_apps_without_https_enabled_actions_enum
   }
 
   step "pipeline" "respond" {

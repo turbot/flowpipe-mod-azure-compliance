@@ -1,5 +1,5 @@
 locals {
-  sql_databases_when_publicly_accessible_query = <<-EOQ
+  sql_databases_with_public_access_enabled_query = <<-EOQ
     select
       distinct concat(s.id, ' [', s.subscription_id, '/', s.resource_group, '/firewallrule/', f ->> 'name',']') as title,
       s.id as id,
@@ -21,11 +21,11 @@ locals {
     );
   EOQ
 
-  sql_databases_when_publicly_accessible_enabled_actions_enum = ["skip", "revoke_firewall_rule"]
-  sql_databases_when_publicly_accessible_default_action_enum = ["notify", "skip", "revoke_firewall_rule"]
+  sql_databases_with_public_access_enabled_enabled_actions_enum = ["skip", "revoke_firewall_rule"]
+  sql_databases_with_public_access_enabled_default_action_enum = ["notify", "skip", "revoke_firewall_rule"]
 }
 
-variable "sql_databases_when_publicly_accessible_trigger_enabled" {
+variable "sql_databases_with_public_access_enabled_trigger_enabled" {
   type        = bool
   default     = false
   description = "If true, the trigger is enabled."
@@ -35,7 +35,7 @@ variable "sql_databases_when_publicly_accessible_trigger_enabled" {
   }
 }
 
-variable "sql_databases_when_publicly_accessible_trigger_schedule" {
+variable "sql_databases_with_public_access_enabled_trigger_schedule" {
   type        = string
   default     = "15m"
   description = "If the trigger is enabled, run it on this schedule."
@@ -45,7 +45,7 @@ variable "sql_databases_when_publicly_accessible_trigger_schedule" {
   }
 }
 
-variable "sql_databases_when_publicly_accessible_default_action" {
+variable "sql_databases_with_public_access_enabled_default_action" {
   type        = string
   description = "The default action to use when there are no approvers."
   default     = "notify"
@@ -55,7 +55,7 @@ variable "sql_databases_when_publicly_accessible_default_action" {
   }
 }
 
-variable "sql_databases_when_publicly_accessible_enabled_actions" {
+variable "sql_databases_with_public_access_enabled_enabled_actions" {
   type        = list(string)
   description = "The list of enabled actions to provide to approvers for selection."
   default     = ["skip", "revoke_firewall_rule"]
@@ -65,25 +65,25 @@ variable "sql_databases_when_publicly_accessible_enabled_actions" {
   }
 }
 
-trigger "query" "detect_and_correct_sql_databases_when_publicly_accessible" {
+trigger "query" "detect_and_correct_sql_databases_with_public_access_enabled" {
   title         = "Detect & correct SQL Databases when publicly accessible"
   description   = "Detect SQL Databases firewall rules allowing public access and then revoke the firewall rules."
   tags          = local.sql_common_tags
 
-  enabled  = var.sql_databases_when_publicly_accessible_trigger_enabled
-  schedule = var.sql_databases_when_publicly_accessible_trigger_schedule
+  enabled  = var.sql_databases_with_public_access_enabled_trigger_enabled
+  schedule = var.sql_databases_with_public_access_enabled_trigger_schedule
   database = var.database
-  sql      = local.sql_databases_when_publicly_accessible_query
+  sql      = local.sql_databases_with_public_access_enabled_query
 
   capture "insert" {
-    pipeline = pipeline.correct_sql_databases_when_publicly_accessible
+    pipeline = pipeline.correct_sql_databases_with_public_access_enabled
     args = {
       items = self.inserted_rows
     }
   }
 }
 
-pipeline "detect_and_correct_sql_databases_when_publicly_accessible" {
+pipeline "detect_and_correct_sql_databases_with_public_access_enabled" {
   title         = "Detect & correct SQL Databases when publicly accessible"
   description   = "Detect SQL Databases firewall rules allowing public access and then revoke the firewall rules."
   tags          = local.sql_common_tags
@@ -116,24 +116,24 @@ pipeline "detect_and_correct_sql_databases_when_publicly_accessible" {
   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.sql_databases_when_publicly_accessible_default_action
-    enum        = local.sql_databases_when_publicly_accessible_default_action_enum
+    default     = var.sql_databases_with_public_access_enabled_default_action
+    enum        = local.sql_databases_with_public_access_enabled_default_action_enum
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.sql_databases_when_publicly_accessible_enabled_actions
-    enum        = local.sql_databases_when_publicly_accessible_enabled_actions_enum
+    default     = var.sql_databases_with_public_access_enabled_enabled_actions
+    enum        = local.sql_databases_with_public_access_enabled_enabled_actions_enum
   }
 
   step "query" "detect" {
     database = param.database
-    sql      = local.sql_databases_when_publicly_accessible_query
+    sql      = local.sql_databases_with_public_access_enabled_query
   }
 
   step "pipeline" "respond" {
-    pipeline = pipeline.correct_sql_databases_when_publicly_accessible
+    pipeline = pipeline.correct_sql_databases_with_public_access_enabled
     args = {
       items              = step.query.detect.rows
       notifier           = param.notifier
@@ -145,7 +145,7 @@ pipeline "detect_and_correct_sql_databases_when_publicly_accessible" {
   }
 }
 
-pipeline "correct_sql_databases_when_publicly_accessible" {
+pipeline "correct_sql_databases_with_public_access_enabled" {
   title         = "Correct SQL Databases when publicly accessible"
   description   = "Revoke firewall rule for SQL Databases allowing public access."
   tags          = merge(local.sql_common_tags, { folder = "Internal" })
@@ -185,15 +185,15 @@ pipeline "correct_sql_databases_when_publicly_accessible" {
   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.sql_databases_when_publicly_accessible_default_action
-    enum        = local.sql_databases_when_publicly_accessible_default_action_enum
+    default     = var.sql_databases_with_public_access_enabled_default_action
+    enum        = local.sql_databases_with_public_access_enabled_default_action_enum
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.sql_databases_when_publicly_accessible_enabled_actions
-    enum        = local.sql_databases_when_publicly_accessible_enabled_actions_enum
+    default     = var.sql_databases_with_public_access_enabled_enabled_actions
+    enum        = local.sql_databases_with_public_access_enabled_enabled_actions_enum
   }
 
   step "message" "notify_detection_count" {
@@ -205,7 +205,7 @@ pipeline "correct_sql_databases_when_publicly_accessible" {
   step "pipeline" "correct_item" {
     for_each        = { for row in param.items : row.title => row }
     max_concurrency = var.max_concurrency
-    pipeline        = pipeline.correct_one_sql_database_when_publicly_accessible
+    pipeline        = pipeline.correct_one_sql_database_with_public_access_enabled
     args = {
       title              = each.value.title
       name               = each.value.name
@@ -222,7 +222,7 @@ pipeline "correct_sql_databases_when_publicly_accessible" {
   }
 }
 
-pipeline "correct_one_sql_database_when_publicly_accessible" {
+pipeline "correct_one_sql_database_with_public_access_enabled" {
   title         = "Correct SQL Database when publicly accessible"
   description   = "Revoke firewall rule for a SQL Database allowing public access."
   tags          = merge(local.sql_common_tags, { folder = "Internal" })
@@ -279,15 +279,15 @@ pipeline "correct_one_sql_database_when_publicly_accessible" {
   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.sql_databases_when_publicly_accessible_default_action
-    enum        = local.sql_databases_when_publicly_accessible_default_action_enum
+    default     = var.sql_databases_with_public_access_enabled_default_action
+    enum        = local.sql_databases_with_public_access_enabled_default_action_enum
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.sql_databases_when_publicly_accessible_enabled_actions
-    enum        = local.sql_databases_when_publicly_accessible_enabled_actions_enum
+    default     = var.sql_databases_with_public_access_enabled_enabled_actions
+    enum        = local.sql_databases_with_public_access_enabled_enabled_actions_enum
   }
 
   step "pipeline" "respond" {

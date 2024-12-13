@@ -1,5 +1,5 @@
 locals {
-  storage_accounts_not_using_private_link_query = <<-EOQ
+  storage_accounts_without_private_link_query = <<-EOQ
     with storage_account_connection as (
       select
         distinct a.id
@@ -23,7 +23,7 @@ locals {
   EOQ
 }
 
-variable "storage_accounts_not_using_private_link_trigger_enabled" {
+variable "storage_accounts_without_private_link_trigger_enabled" {
   type        = bool
   description = "If true, the trigger is enabled."
   default     = false
@@ -33,7 +33,7 @@ variable "storage_accounts_not_using_private_link_trigger_enabled" {
   }
 }
 
-variable "storage_accounts_not_using_private_link_trigger_schedule" {
+variable "storage_accounts_without_private_link_trigger_schedule" {
   type        = string
   description = "If the trigger is enabled, run it on this schedule."
   default     = "15m"
@@ -43,25 +43,25 @@ variable "storage_accounts_not_using_private_link_trigger_schedule" {
   }
 }
 
-trigger "query" "detect_and_correct_storage_accounts_not_using_private_link" {
+trigger "query" "detect_and_correct_storage_accounts_without_private_link" {
   title         = "Detect & correct Storage Accounts not using private link"
   description   = "Detects Storage Accounts not using private link."
   tags          = local.storage_common_tags
 
-  enabled  = var.storage_accounts_not_using_private_link_trigger_enabled
-  schedule = var.storage_accounts_not_using_private_link_trigger_schedule
+  enabled  = var.storage_accounts_without_private_link_trigger_enabled
+  schedule = var.storage_accounts_without_private_link_trigger_schedule
   database = var.database
-  sql      = local.storage_accounts_not_using_private_link_query
+  sql      = local.storage_accounts_without_private_link_query
 
   capture "insert" {
-    pipeline = pipeline.correct_storage_accounts_not_using_private_link
+    pipeline = pipeline.correct_storage_accounts_without_private_link
     args = {
       items = self.inserted_rows
     }
   }
 }
 
-pipeline "detect_and_correct_storage_accounts_not_using_private_link" {
+pipeline "detect_and_correct_storage_accounts_without_private_link" {
   title         = "Detect & correct Storage Accounts not using private link"
   description   = "Detects Storage Accounts not using private link."
   tags          = local.storage_common_tags
@@ -87,11 +87,11 @@ pipeline "detect_and_correct_storage_accounts_not_using_private_link" {
 
   step "query" "detect" {
     database = param.database
-    sql      = local.storage_accounts_not_using_private_link_query
+    sql      = local.storage_accounts_without_private_link_query
   }
 
   step "pipeline" "respond" {
-    pipeline = pipeline.correct_storage_accounts_not_using_private_link
+    pipeline = pipeline.correct_storage_accounts_without_private_link
     args = {
       items              = step.query.detect.rows
       notifier           = param.notifier
@@ -100,7 +100,7 @@ pipeline "detect_and_correct_storage_accounts_not_using_private_link" {
   }
 }
 
-pipeline "correct_storage_accounts_not_using_private_link" {
+pipeline "correct_storage_accounts_without_private_link" {
   title         = "Correct Storage Accounts not using private link"
   description   = "Send notifications for Storage Accounts not using private link."
   tags         = merge(local.storage_common_tags, { folder = "Internal" })
@@ -129,13 +129,13 @@ pipeline "correct_storage_accounts_not_using_private_link" {
   step "message" "notify_detection_count" {
     if       = var.notification_level == local.level_info
     notifier = param.notifier
-    text     = "Detected ${length(param.items)} Storage Account(s) not using private link."
+    text     = "Detected ${length(param.items)} Storage Account(s) without private link."
   }
 
   step "message" "notify_items" {
     if       = var.notification_level == local.level_info
     for_each = param.items
     notifier = param.notifier
-    text     = "Detected Storage Account ${each.value.title} not using private link."
+    text     = "Detected Storage Account ${each.value.title} without private link."
   }
 }

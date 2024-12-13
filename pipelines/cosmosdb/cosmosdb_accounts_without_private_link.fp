@@ -1,5 +1,5 @@
 locals {
-  cosmosdb_accounts_not_using_private_link_query = <<-EOQ
+  cosmosdb_accounts_without_private_link_query = <<-EOQ
     with cosmosdb_private_connection as (
       select
         distinct a.id
@@ -22,7 +22,7 @@ locals {
   EOQ
 }
 
-variable "cosmosdb_accounts_not_using_private_link_trigger_enabled" {
+variable "cosmosdb_accounts_without_private_link_trigger_enabled" {
   type        = bool
   description = "If true, the trigger is enabled."
   default     = false
@@ -32,7 +32,7 @@ variable "cosmosdb_accounts_not_using_private_link_trigger_enabled" {
   }
 }
 
-variable "cosmosdb_accounts_not_using_private_link_trigger_schedule" {
+variable "cosmosdb_accounts_without_private_link_trigger_schedule" {
   type        = string
   description = "If the trigger is enabled, run it on this schedule."
   default     = "15m"
@@ -42,25 +42,25 @@ variable "cosmosdb_accounts_not_using_private_link_trigger_schedule" {
   }
 }
 
-trigger "query" "detect_and_correct_cosmosdb_accounts_not_using_private_link" {
+trigger "query" "detect_and_correct_cosmosdb_accounts_without_private_link" {
   title         = "Detect & correct Cosmos DB accounts not using private link"
   description   = "Detects Cosmos DB accounts not using private link."
   tags          = local.cosmosdb_common_tags
 
-  enabled  = var.cosmosdb_accounts_not_using_private_link_trigger_enabled
-  schedule = var.cosmosdb_accounts_not_using_private_link_trigger_schedule
+  enabled  = var.cosmosdb_accounts_without_private_link_trigger_enabled
+  schedule = var.cosmosdb_accounts_without_private_link_trigger_schedule
   database = var.database
-  sql      = local.cosmosdb_accounts_not_using_private_link_query
+  sql      = local.cosmosdb_accounts_without_private_link_query
 
   capture "insert" {
-    pipeline = pipeline.correct_cosmosdb_accounts_not_using_private_link
+    pipeline = pipeline.correct_cosmosdb_accounts_without_private_link
     args = {
       items = self.inserted_rows
     }
   }
 }
 
-pipeline "detect_and_correct_cosmosdb_accounts_not_using_private_link" {
+pipeline "detect_and_correct_cosmosdb_accounts_without_private_link" {
   title         = "Detect & correct Cosmos DB accounts not using private link"
   description   = "Detects Cosmos DB accounts not using private link."
   tags          = local.cosmosdb_common_tags
@@ -86,11 +86,11 @@ pipeline "detect_and_correct_cosmosdb_accounts_not_using_private_link" {
 
   step "query" "detect" {
     database = param.database
-    sql      = local.cosmosdb_accounts_not_using_private_link_query
+    sql      = local.cosmosdb_accounts_without_private_link_query
   }
 
   step "pipeline" "respond" {
-    pipeline = pipeline.correct_cosmosdb_accounts_not_using_private_link
+    pipeline = pipeline.correct_cosmosdb_accounts_without_private_link
     args = {
       items              = step.query.detect.rows
       notifier           = param.notifier
@@ -99,7 +99,7 @@ pipeline "detect_and_correct_cosmosdb_accounts_not_using_private_link" {
   }
 }
 
-pipeline "correct_cosmosdb_accounts_not_using_private_link" {
+pipeline "correct_cosmosdb_accounts_without_private_link" {
   title         = "Correct Cosmos DB accounts not using private link"
   description   = "Send notifications for Cosmos DB accounts not using private link."
   tags         = merge(local.cosmosdb_common_tags, { folder = "Internal" })
@@ -128,13 +128,13 @@ pipeline "correct_cosmosdb_accounts_not_using_private_link" {
   step "message" "notify_detection_count" {
     if       = var.notification_level == local.level_info
     notifier = param.notifier
-    text     = "Detected ${length(param.items)} Cosmos DB account(s) not using private link."
+    text     = "Detected ${length(param.items)} Cosmos DB account(s) without private link."
   }
 
   step "message" "notify_items" {
     if       = var.notification_level == local.level_info
     for_each = param.items
     notifier = param.notifier
-    text     = "Detected Cosmos DB account ${each.value.title} not using private link."
+    text     = "Detected Cosmos DB account ${each.value.title} without private link."
   }
 }

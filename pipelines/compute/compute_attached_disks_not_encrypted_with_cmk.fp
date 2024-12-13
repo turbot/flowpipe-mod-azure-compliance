@@ -1,18 +1,20 @@
 locals {
-  compute_vms_not_utilizing_managed_disk_query = <<-EOQ
+  compute_attached_disks_not_encrypted_with_cmk_query = <<-EOQ
     select
       concat(id, ' [', subscription_id, '/', resource_group, ']') as title,
-      vm_id as id,
+		  name,
+      resource_group,
       subscription_id,
       _ctx ->> 'connection_name' as conn
     from
-      azure_compute_virtual_machine
+      azure_compute_disk
     where
-      managed_disk_id is null;
+      disk_state = 'Attached'
+      and encryption_type <> 'EncryptionAtRestWithCustomerKey';
   EOQ
 }
 
-variable "compute_vms_not_utilizing_managed_disk_trigger_enabled" {
+variable "compute_attached_disks_not_encrypted_with_cmk_trigger_enabled" {
   type        = bool
   description = "If true, the trigger is enabled."
   default     = false
@@ -22,7 +24,7 @@ variable "compute_vms_not_utilizing_managed_disk_trigger_enabled" {
   }
 }
 
-variable "compute_vms_not_utilizing_managed_disk_trigger_schedule" {
+variable "compute_attached_disks_not_encrypted_with_cmk_trigger_schedule" {
   type        = string
   description = "If the trigger is enabled, run it on this schedule."
   default     = "15m"
@@ -32,27 +34,27 @@ variable "compute_vms_not_utilizing_managed_disk_trigger_schedule" {
   }
 }
 
-trigger "query" "detect_and_correct_compute_vms_not_utilizing_managed_disk" {
-  title         = "Detect & correct Compute VMs not utilizing managed disk"
-  description   = "Detects Compute VMs not utilizing managed disk."
+trigger "query" "detect_and_correct_compute_attached_disks_not_encrypted_with_cmk" {
+  title         = "Detect & correct Compute disks not encrypted with CMK"
+  description   = "Detect Compute disks not encrypted with CMK then encrypt with CMK."
   tags          = local.compute_common_tags
 
-  enabled  = var.compute_vms_not_utilizing_managed_disk_trigger_enabled
-  schedule = var.compute_vms_not_utilizing_managed_disk_trigger_schedule
+  enabled  = var.compute_attached_disks_not_encrypted_with_cmk_trigger_enabled
+  schedule = var.compute_attached_disks_not_encrypted_with_cmk_trigger_schedule
   database = var.database
-  sql      = local.compute_vms_not_utilizing_managed_disk_query
+  sql      = local.compute_attached_disks_not_encrypted_with_cmk_query
 
   capture "insert" {
-    pipeline = pipeline.correct_compute_vms_not_utilizing_managed_disk
+    pipeline = pipeline.correct_compute_attached_disks_not_encrypted_with_cmk
     args = {
       items = self.inserted_rows
     }
   }
 }
 
-pipeline "detect_and_correct_compute_vms_not_utilizing_managed_disk" {
-  title         = "Detect & correct Compute VMs not utilizing managed disk"
-  description   = "Detects Compute VMs not utilizing managed disk."
+pipeline "detect_and_correct_compute_attached_disks_not_encrypted_with_cmk" {
+  title         = "Detect & correct Compute disks not encrypted with CMK"
+  description   = "Detect Compute disks not encrypted with CMK then encrypt with CMK."
   tags          = local.compute_common_tags
 
   param "database" {
@@ -76,23 +78,23 @@ pipeline "detect_and_correct_compute_vms_not_utilizing_managed_disk" {
 
   step "query" "detect" {
     database = param.database
-    sql      = local.compute_vms_not_utilizing_managed_disk_query
+    sql      = local.compute_attached_disks_not_encrypted_with_cmk_query
   }
 
   step "pipeline" "respond" {
-    pipeline = pipeline.correct_compute_vms_not_utilizing_managed_disk
+    pipeline = pipeline.correct_compute_attached_disks_not_encrypted_with_cmk
     args = {
-      items              = step.query.detect.rows
-      notifier           = param.notifier
-      notification_level = param.notification_level
+      items                   = step.query.detect.rows
+      notifier                = param.notifier
+      notification_level      = param.notification_level
     }
   }
 }
 
-pipeline "correct_compute_vms_not_utilizing_managed_disk" {
-  title         = "Correct Compute VMs not utilizing managed diskk"
-  description   = "Send notifications for Compute VMs not utilizing managed disk."
-  tags         = merge(local.compute_common_tags, { folder = "Internal" })
+pipeline "correct_compute_attached_disks_not_encrypted_with_cmk" {
+  title         = "Correct Compute disks not encrypted with CMK"
+  description   = "Encrypt Compute disks with CMK for disks not encrypted with CMK."
+  tags          = merge(local.compute_common_tags, { folder = "Internal" })
 
   param "items" {
     type = list(object({
@@ -118,13 +120,13 @@ pipeline "correct_compute_vms_not_utilizing_managed_disk" {
   step "message" "notify_detection_count" {
     if       = var.notification_level == local.level_info
     notifier = param.notifier
-    text     = "Detected ${length(param.items)} Compute VM(s) not utilizing managed disk."
+    text     = "Detected ${length(param.items)} Compute disk(s) not encrypted with CMK."
   }
 
   step "message" "notify_items" {
     if       = var.notification_level == local.level_info
     for_each = param.items
     notifier = param.notifier
-    text     = "Detected Compute VM ${each.value.title} not utilizing managed disk."
+    text     = "Detected Compute disk ${each.value.title} not encrypted with CMK."
   }
 }

@@ -1,84 +1,84 @@
 locals {
-  appservice_web_apps_not_using_latest_http_version_query = <<-EOQ
+  storage_accounts_with_public_access_enabled_query = <<-EOQ
     select
-      concat(app.id, ' [', app.subscription_id, '/', app.resource_group, ']') as title,
-      app.id as id,
-      app.name,
-      app.resource_group,
-      app.subscription_id,
-      app._ctx ->> 'connection_name' as conn
+      concat(sa.id, ' [', sa.subscription_id, '/', sa.resource_group, ']') as title,
+      sa.id as id,
+      sa.name,
+      sa.resource_group,
+      sa.subscription_id,
+      sa._ctx ->> 'connection_name' as conn
     from
-      azure_app_service_web_app as app
+      azure_storage_account as sa
     where
-      not (configuration -> 'properties' ->> 'http20Enabled') :: boolean;
+      sa.public_network_access = 'Enabled';
   EOQ
 
-  appservice_web_apps_not_using_latest_http_version_enabled_actions_enum = ["skip", "enable_latest_http_version"]
-  appservice_web_apps_not_using_latest_http_version_default_action_enum  = ["notify", "skip", "enable_latest_http_version"]
+  storage_accounts_with_public_access_enabled_enabled_actions_enum = ["skip", "disable_public_network_access"]
+  storage_accounts_with_public_access_enabled_default_action_enum = ["notify", "skip", "disable_public_network_access"]
 }
 
-variable "appservice_web_apps_not_using_latest_http_version_trigger_enabled" {
+variable "storage_accounts_with_public_access_enabled_trigger_enabled" {
   type        = bool
-  description = "If true, the trigger is enabled."
   default     = false
+  description = "If true, the trigger is enabled."
 
   tags = {
-    folder = "Advanced/AppService"
+    folder = "Advanced/Storage"
   }
 }
 
-variable "appservice_web_apps_not_using_latest_http_version_trigger_schedule" {
+variable "storage_accounts_with_public_access_enabled_trigger_schedule" {
   type        = string
-  description = "If the trigger is enabled, run it on this schedule."
   default     = "15m"
+  description = "If the trigger is enabled, run it on this schedule."
 
   tags = {
-    folder = "Advanced/AppService"
+    folder = "Advanced/Storage"
   }
 }
 
-variable "appservice_web_apps_not_using_latest_http_version_default_action" {
+variable "storage_accounts_with_public_access_enabled_default_action" {
   type        = string
   description = "The default action to use when there are no approvers."
   default     = "notify"
 
   tags = {
-    folder = "Advanced/AppService"
+    folder = "Advanced/Storage"
   }
 }
 
-variable "appservice_web_apps_not_using_latest_http_version_enabled_actions" {
+variable "storage_accounts_with_public_access_enabled_enabled_actions" {
   type        = list(string)
-  description = "The list of enabled actions approvers can select."
-  default     = ["skip", "enable_latest_http_version"]
+  description = "The list of enabled actions to provide to approvers for selection."
+  default     = ["skip", "disable_public_network_access"]
 
   tags = {
-    folder = "Advanced/AppService"
+    folder = "Advanced/Storage"
   }
 }
 
-trigger "query" "detect_and_correct_appservice_web_apps_not_using_latest_http_version" {
-  title         = "Detect & correct App Service web apps not using the latest HTTP version"
-  description   = "Detects App Services web apps not using the latest HTTP version and then enable latest HTTP version."
-  tags          = local.appservice_common_tags
+trigger "query" "detect_and_correct_storage_accounts_with_public_access_enabled" {
+  title         = "Detect & correct publicly accessible Storage Accounts"
+  description   = "Detect publicly accessible Storage Accounts and then disable public access."
+  tags          = local.storage_common_tags
 
-  enabled  = var.appservice_web_apps_not_using_latest_http_version_trigger_enabled
-  schedule = var.appservice_web_apps_not_using_latest_http_version_trigger_schedule
+  enabled  = var.storage_accounts_with_public_access_enabled_trigger_enabled
+  schedule = var.storage_accounts_with_public_access_enabled_trigger_schedule
   database = var.database
-  sql      = local.appservice_web_apps_not_using_latest_http_version_query
+  sql      = local.storage_accounts_with_public_access_enabled_query
 
   capture "insert" {
-    pipeline = pipeline.correct_appservice_web_apps_not_using_latest_http_version
+    pipeline = pipeline.correct_storage_accounts_with_public_access_enabled
     args = {
       items = self.inserted_rows
     }
   }
 }
 
-pipeline "detect_and_correct_appservice_web_apps_not_using_latest_http_version" {
-  title         = "Detect & correct App Service web apps not using the latest HTTP version"
-  description   = "Detects App Services web apps not using the latest HTTP version and then enable latest HTTP version."
-  tags          = local.appservice_common_tags
+pipeline "detect_and_correct_storage_accounts_with_public_access_enabled" {
+  title         = "Detect & correct publicly accessible Storage Accounts"
+  description   = "Detect publicly accessible Storage Accounts and then disable public access."
+  tags          = local.storage_common_tags
 
   param "database" {
     type        = connection.steampipe
@@ -108,24 +108,24 @@ pipeline "detect_and_correct_appservice_web_apps_not_using_latest_http_version" 
   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.appservice_web_apps_not_using_latest_http_version_default_action
-    enum        = local.appservice_web_apps_not_using_latest_http_version_default_action_enum
+    default     = var.storage_accounts_with_public_access_enabled_default_action
+    enum        = local.storage_accounts_with_public_access_enabled_default_action_enum
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.appservice_web_apps_not_using_latest_http_version_enabled_actions
-    enum        = local.appservice_web_apps_not_using_latest_http_version_enabled_actions_enum
+    default     = var.storage_accounts_with_public_access_enabled_enabled_actions
+    enum        = local.storage_accounts_with_public_access_enabled_enabled_actions_enum
   }
 
   step "query" "detect" {
     database = param.database
-    sql      = local.appservice_web_apps_not_using_latest_http_version_query
+    sql      = local.storage_accounts_with_public_access_enabled_query
   }
 
   step "pipeline" "respond" {
-    pipeline = pipeline.correct_appservice_web_apps_not_using_latest_http_version
+    pipeline = pipeline.correct_storage_accounts_with_public_access_enabled
     args = {
       items              = step.query.detect.rows
       notifier           = param.notifier
@@ -137,10 +137,10 @@ pipeline "detect_and_correct_appservice_web_apps_not_using_latest_http_version" 
   }
 }
 
-pipeline "correct_appservice_web_apps_not_using_latest_http_version" {
-  title         = "Correct App Services web apps not using the latest HTTP version"
-  description   = "Enable latest HTTP version for App Services web apps not using the latest HTTP version."
-  tags          = merge(local.appservice_common_tags, { folder = "Internal" })
+pipeline "correct_storage_accounts_with_public_access_enabled" {
+  title         = "Correct publicly accessible Storage Accounts"
+  description   = "Disable public access for publicly accessible Storage Accounts."
+  tags          = merge(local.storage_common_tags, { folder = "Internal" })
 
   param "items" {
     type = list(object({
@@ -176,27 +176,27 @@ pipeline "correct_appservice_web_apps_not_using_latest_http_version" {
   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.appservice_web_apps_not_using_latest_http_version_default_action
-    enum        = local.appservice_web_apps_not_using_latest_http_version_default_action_enum
+    default     = var.storage_accounts_with_public_access_enabled_default_action
+    enum        = local.storage_accounts_with_public_access_enabled_default_action_enum
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.appservice_web_apps_not_using_latest_http_version_enabled_actions
-    enum        = local.appservice_web_apps_not_using_latest_http_version_enabled_actions_enum
+    default     = var.storage_accounts_with_public_access_enabled_enabled_actions
+    enum        = local.storage_accounts_with_public_access_enabled_enabled_actions_enum
   }
 
   step "message" "notify_detection_count" {
     if       = var.notification_level == local.level_info
     notifier = param.notifier
-    text     = "Detected ${length(param.items)} App Services web app(s) not using the latest HTTP version."
+    text     = "Detected ${length(param.items)} publicly accessible Storage Account(s)."
   }
 
   step "pipeline" "correct_item" {
     for_each        = { for row in param.items : row.id => row }
     max_concurrency = var.max_concurrency
-    pipeline        = pipeline.correct_one_appservice_web_app_not_using_latest_http_version
+    pipeline        = pipeline.correct_one_storage_account_with_public_access_enabled
     args = {
       title              = each.value.title
       name               = each.value.name
@@ -212,10 +212,10 @@ pipeline "correct_appservice_web_apps_not_using_latest_http_version" {
   }
 }
 
-pipeline "correct_one_appservice_web_app_not_using_latest_http_version" {
-  title         = "Correct App Services web app not using the latest HTTP version"
-  description   = "Enable latest HTTP version for a App Services web app not using the latest HTTP version."
-  tags          = merge(local.appservice_common_tags, { folder = "Internal" })
+pipeline "correct_one_storage_account_with_public_access_enabled" {
+  title         = "Correct publicly accessible Storage Account"
+  description   = "Disable public access for a publicly accessible Storage Account."
+  tags          = merge(local.storage_common_tags, { folder = "Internal" })
 
   param "title" {
     type        = string
@@ -224,7 +224,7 @@ pipeline "correct_one_appservice_web_app_not_using_latest_http_version" {
 
   param "name" {
     type        = string
-    description = "The name of the App Service web app."
+    description = "The name of the Storage Account."
   }
 
   param "resource_group" {
@@ -261,18 +261,18 @@ pipeline "correct_one_appservice_web_app_not_using_latest_http_version" {
     default     = var.approvers
   }
 
-  param "default_action" {
+   param "default_action" {
     type        = string
     description = local.description_default_action
-    default     = var.appservice_web_apps_not_using_latest_http_version_default_action
-    enum        = local.appservice_web_apps_not_using_latest_http_version_default_action_enum
+    default     = var.storage_accounts_with_public_access_enabled_default_action
+    enum        = local.storage_accounts_with_public_access_enabled_default_action_enum
   }
 
   param "enabled_actions" {
     type        = list(string)
     description = local.description_enabled_actions
-    default     = var.appservice_web_apps_not_using_latest_http_version_enabled_actions
-    enum        = local.appservice_web_apps_not_using_latest_http_version_enabled_actions_enum
+    default     = var.storage_accounts_with_public_access_enabled_enabled_actions
+    enum        = local.storage_accounts_with_public_access_enabled_enabled_actions_enum
   }
 
   step "pipeline" "respond" {
@@ -281,7 +281,7 @@ pipeline "correct_one_appservice_web_app_not_using_latest_http_version" {
       notifier           = param.notifier
       notification_level = param.notification_level
       approvers          = param.approvers
-      detect_msg         = "Detected App Service web app ${param.title} not using the latest HTTP version."
+      detect_msg         = "Detected publicly accessible Storage Account ${param.title}."
       default_action     = param.default_action
       enabled_actions    = param.enabled_actions
       actions = {
@@ -293,28 +293,27 @@ pipeline "correct_one_appservice_web_app_not_using_latest_http_version" {
           pipeline_args = {
             notifier = param.notifier
             send     = param.notification_level == local.level_info
-            text     = "Skipped App Service web app ${param.title}."
+            text     = "Skipped Storage Account ${param.title}."
           }
           success_msg = ""
           error_msg   = ""
         },
-        "enable_latest_http_version" = {
-          label        = "Enable latest HTTP version"
-          value        = "enable_latest_http_version"
+        "disable_public_network_access" = {
+          label        = "Disable public access"
+          value        = "disable_public_network_access"
           style        = local.style_alert
-          pipeline_ref = azure.pipeline.set_config_appservice_webapp
+          pipeline_ref = azure.pipeline.update_storage_account_public_network_access
           pipeline_args = {
-            resource_group  = param.resource_group
-            subscription_id = param.subscription_id
-            app_name        = param.name
-            conn            = param.conn
-            enable_http2    = true
+            account_name           = param.name
+            resource_group         = param.resource_group
+            subscription_id        = param.subscription_id
+            conn                   = param.conn
+            public_network_access  = false
           }
-          success_msg = "Enabled latest HTTP version for App Service web app ${param.title}."
-          error_msg   = "Error enabling latest HTTP version for App Service web app ${param.title}."
+          success_msg = "Disabled public access for Storage Account ${param.title}."
+          error_msg   = "Error disabling public access for Storage Account ${param.title}."
         }
       }
     }
   }
 }
-
