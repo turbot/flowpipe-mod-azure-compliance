@@ -47,7 +47,7 @@ variable "subscriptions_without_network_bastion_host_trigger_schedule" {
 }
 
 trigger "query" "detect_and_correct_subscriptions_without_network_bastion_host" {
-  title         = "Detect & correct subscriptions without network bastion host"
+  title         = "Detect & correct Subscriptions without network bastion host"
   description   = "Detect subscriptions without network bastion host."
   tags          = local.network_common_tags
 
@@ -65,7 +65,7 @@ trigger "query" "detect_and_correct_subscriptions_without_network_bastion_host" 
 }
 
 pipeline "detect_and_correct_subscriptions_without_network_bastion_host" {
-  title         = "Detect & correct subscriptions without network bastion host"
+  title         = "Detect & correct Subscriptions without network bastion host"
   description   = "Detect subscriptions without network bastion host."
   tags          = local.network_common_tags
 
@@ -104,7 +104,7 @@ pipeline "detect_and_correct_subscriptions_without_network_bastion_host" {
 }
 
 pipeline "correct_subscriptions_without_network_bastion_host" {
-  title         = "Correct subscriptions without network bastion host"
+  title         = "Correct Subscriptions without network bastion host"
   description   = "Send notifications for subscriptions without network bastion host."
   tags          = merge(local.network_common_tags, { folder = "Internal" })
 

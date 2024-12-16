@@ -85,7 +85,7 @@ variable "subscriptions_without_activity_log_alert_for_create_update_security_so
 }
 
 trigger "query" "detect_and_correct_subscriptions_without_activity_log_alert_for_create_update_security_solution" {
-  title         = "Detect & correct subscriptions without activity log alert for create and update security solution"
+  title         = "Detect & correct Subscriptions without activity log alert for create and update security solution"
   description   = "Detect subscriptions without an activity log alert for create and update security solution."
   tags          = local.monitor_common_tags
 
@@ -103,7 +103,7 @@ trigger "query" "detect_and_correct_subscriptions_without_activity_log_alert_for
 }
 
 pipeline "detect_and_correct_subscriptions_without_activity_log_alert_for_create_update_security_solution" {
-  title         = "Detect & correct subscriptions without activity log alert for create and update security solution"
+  title         = "Detect & correct Subscriptions without activity log alert for create and update security solution"
   description   = "Detect subscriptions without an activity log alert for create and update security solution."
   tags          = local.monitor_common_tags
 
@@ -142,7 +142,7 @@ pipeline "detect_and_correct_subscriptions_without_activity_log_alert_for_create
 }
 
 pipeline "correct_subscriptions_without_activity_log_alert_for_create_update_security_solution" {
-  title         = "Correct subscriptions without activity log alert for create and update security solution"
+  title         = "Correct Subscriptions without activity log alert for create and update security solution"
   description   = "Send notifications for subscriptions without activity log alert for create and update security solution."
   tags          = merge(local.monitor_common_tags, { folder = "Internal" })
 
@@ -170,13 +170,13 @@ pipeline "correct_subscriptions_without_activity_log_alert_for_create_update_sec
   step "message" "notify_detection_count" {
     if       = var.notification_level == local.level_info
     notifier = param.notifier
-    text     = "Detected ${length(param.items)} Subscription(s) without activity log alert for create and update security solution."
+    text     = "Detected ${length(param.items)} subscription(s) without activity log alert for create and update security solution."
   }
 
   step "message" "notify_items" {
     if       = var.notification_level == local.level_info
     for_each = param.items
     notifier = param.notifier
-    text     = "Detected Subscription ${each.value.title} without activity log alert for create and update security solution."
+    text     = "Detected subscription ${each.value.title} without activity log alert for create and update security solution."
   }
 }

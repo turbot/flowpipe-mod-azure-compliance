@@ -63,7 +63,7 @@ variable "subscriptions_without_activity_log_alert_for_create_policy_assignment_
 }
 
 trigger "query" "detect_and_correct_subscriptions_without_activity_log_alert_for_create_policy_assignment" {
-  title         = "Detect & correct subscriptions without activity log alert for create policy assignment"
+  title         = "Detect & correct Subscriptions without activity log alert for create policy assignment"
   description   = "Detect subscriptions without an activity log alert for create policy assignment."
   tags          = local.monitor_common_tags
 
@@ -81,7 +81,7 @@ trigger "query" "detect_and_correct_subscriptions_without_activity_log_alert_for
 }
 
 pipeline "detect_and_correct_subscriptions_without_activity_log_alert_for_create_policy_assignment" {
-  title         = "Detect & correct subscriptions without activity log alert for create policy assignment"
+  title         = "Detect & correct Subscriptions without activity log alert for create policy assignment"
   description   = "Detect subscriptions without an activity log alert for create policy assignment."
   tags          = local.monitor_common_tags
 
@@ -120,7 +120,7 @@ pipeline "detect_and_correct_subscriptions_without_activity_log_alert_for_create
 }
 
 pipeline "correct_subscriptions_without_activity_log_alert_for_create_policy_assignment" {
-  title         = "Correct subscriptions without activity log alert for create policy assignment"
+  title         = "Correct Subscriptions without activity log alert for create policy assignment"
   description   = "Send notifications for subscriptions without a activity log alert for create policy assignment."
   tags          = merge(local.monitor_common_tags, { folder = "Internal" })
 

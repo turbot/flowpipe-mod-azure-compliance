@@ -72,7 +72,7 @@ variable "subscriptions_without_activity_log_alert_for_delete_public_ip_address_
 }
 
 trigger "query" "detect_and_correct_subscriptions_without_activity_log_alert_for_delete_public_ip_address" {
-  title         = "Detect & correct subscriptions without activity log alert for delete public IP address"
+  title         = "Detect & correct Subscriptions without activity log alert for delete public IP address"
   description   = "Detect subscriptions without an activity log alert for delete public IP address."
   tags          = local.monitor_common_tags
 
@@ -90,7 +90,7 @@ trigger "query" "detect_and_correct_subscriptions_without_activity_log_alert_for
 }
 
 pipeline "detect_and_correct_subscriptions_without_activity_log_alert_for_delete_public_ip_address" {
-  title         = "Detect & correct subscriptions without activity log alert for delete public IP address"
+  title         = "Detect & correct Subscriptions without activity log alert for delete public IP address"
   description   = "Detect subscriptions without an activity log alert for delete public IP address."
   tags          = local.monitor_common_tags
 
@@ -129,7 +129,7 @@ pipeline "detect_and_correct_subscriptions_without_activity_log_alert_for_delete
 }
 
 pipeline "correct_subscriptions_without_activity_log_alert_for_delete_public_ip_address" {
-  title         = "Correct subscriptions without activity log alert for delete public IP address"
+  title         = "Correct Subscriptions without activity log alert for delete public IP address"
   description   = "Send notifications for subscriptions without activity log alert for delete public IP address."
   tags         = merge(local.monitor_common_tags, { folder = "Internal" })
 
@@ -157,13 +157,13 @@ pipeline "correct_subscriptions_without_activity_log_alert_for_delete_public_ip_
   step "message" "notify_detection_count" {
     if       = var.notification_level == local.level_info
     notifier = param.notifier
-    text     = "Detected ${length(param.items)} Subscription(s) without activity log alert for delete public IP address."
+    text     = "Detected ${length(param.items)} subscription(s) without activity log alert for delete public IP address."
   }
 
    step "message" "notify_items" {
     if       = var.notification_level == local.level_info
     for_each = param.items
     notifier = param.notifier
-    text     = "Detected Subscription ${each.value.title} without activity log alert for delete public IP address."
+    text     = "Detected subscription ${each.value.title} without activity log alert for delete public IP address."
   }
 }

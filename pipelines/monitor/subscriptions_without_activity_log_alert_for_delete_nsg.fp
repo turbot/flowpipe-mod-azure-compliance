@@ -72,7 +72,7 @@ variable "subscriptions_without_activity_log_alert_for_delete_nsg_trigger_schedu
 }
 
 trigger "query" "detect_and_correct_subscriptions_without_activity_log_alert_for_delete_nsg" {
-  title         = "Detect & correct subscriptions without activity log alert for delete NSG"
+  title         = "Detect & correct Subscriptions without activity log alert for delete NSG"
   description   = "Detect subscriptions without an activity log alert for delete NSG."
   tags          = local.monitor_common_tags
 
@@ -90,7 +90,7 @@ trigger "query" "detect_and_correct_subscriptions_without_activity_log_alert_for
 }
 
 pipeline "detect_and_correct_subscriptions_without_activity_log_alert_for_delete_nsg" {
-  title         = "Detect & correct subscriptions without activity log alert for delete NSG"
+  title         = "Detect & correct Subscriptions without activity log alert for delete NSG"
   description   = "Detect subscriptions without an activity log alert for delete NSG."
   tags          = local.monitor_common_tags
 
@@ -129,7 +129,7 @@ pipeline "detect_and_correct_subscriptions_without_activity_log_alert_for_delete
 }
 
 pipeline "correct_subscriptions_without_activity_log_alert_for_delete_nsg" {
-  title         = "Correct subscriptions without activity log alert for delete NSG"
+  title         = "Correct Subscriptions without activity log alert for delete NSG"
   description   = "Send notifications for subscriptions without activity log alert for delete NSG."
   tags          = merge(local.monitor_common_tags, { folder = "Internal" })
 
@@ -157,13 +157,13 @@ pipeline "correct_subscriptions_without_activity_log_alert_for_delete_nsg" {
   step "message" "notify_detection_count" {
     if       = var.notification_level == local.level_info
     notifier = param.notifier
-    text     = "Detected ${length(param.items)} Subscription(s) without activity log alert for delete NSG."
+    text     = "Detected ${length(param.items)} subscription(s) without activity log alert for delete NSG."
   }
 
   step "message" "notify_items" {
     if       = var.notification_level == local.level_info
     for_each = param.items
     notifier = param.notifier
-    text     = "Detected Subscription ${each.value.title} wwithout activity log alert for delete NSG."
+    text     = "Detected subscription ${each.value.title} wwithout activity log alert for delete NSG."
   }
 }

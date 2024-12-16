@@ -72,7 +72,7 @@ variable "subscriptions_without_activity_log_alert_for_delete_sql_servers_firewa
 }
 
 trigger "query" "detect_and_correct_subscriptions_without_activity_log_alert_for_delete_sql_servers_firewall_rule" {
-  title         = "Detect & correct subscriptions without activity log alert for delete SQL servers firewall rule"
+  title         = "Detect & correct Subscriptions without activity log alert for delete SQL servers firewall rule"
   description   = "Detect subscriptions without an activity log alert for delete SQL servers firewall rule."
   tags          = local.monitor_common_tags
 
@@ -90,7 +90,7 @@ trigger "query" "detect_and_correct_subscriptions_without_activity_log_alert_for
 }
 
 pipeline "detect_and_correct_subscriptions_without_activity_log_alert_for_delete_sql_servers_firewall_rule" {
-  title         = "Detect & correct subscriptions without activity log alert for delete SQL servers firewall rule"
+  title         = "Detect & correct Subscriptions without activity log alert for delete SQL servers firewall rule"
   description   = "Detect subscriptions without an activity log alert for delete SQL servers firewall rule."
   tags          = local.monitor_common_tags
 
@@ -129,7 +129,7 @@ pipeline "detect_and_correct_subscriptions_without_activity_log_alert_for_delete
 }
 
 pipeline "correct_subscriptions_without_activity_log_alert_for_delete_sql_servers_firewall_rule" {
-  title         = "Correct subscriptions without activity log alert for delete SQL servers firewall rule"
+  title         = "Correct Subscriptions without activity log alert for delete SQL servers firewall rule"
   description   = "Send notifications for subscriptions without activity log alert for delete SQL servers firewall rule."
   tags          = merge(local.monitor_common_tags, { folder = "Internal" })
 
@@ -157,13 +157,13 @@ pipeline "correct_subscriptions_without_activity_log_alert_for_delete_sql_server
   step "message" "notify_detection_count" {
     if       = var.notification_level == local.level_info
     notifier = param.notifier
-    text     = "Detected ${length(param.items)} Subscription(s) without activity log alert for delete SQL servers firewall rule."
+    text     = "Detected ${length(param.items)} subscription(s) without activity log alert for delete SQL servers firewall rule."
   }
 
   step "message" "notify_items" {
     if       = var.notification_level == local.level_info
     for_each = param.items
     notifier = param.notifier
-    text     = "Detected Subscription ${each.value.title} without activity log alert for delete SQL servers firewall rule."
+    text     = "Detected subscription ${each.value.title} without activity log alert for delete SQL servers firewall rule."
   }
 }
