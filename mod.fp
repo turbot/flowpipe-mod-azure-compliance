@@ -4,7 +4,7 @@ mod "azure_compliance" {
   color         = "#ea4335"
   documentation = file("./README.md")
   icon          = "/images/mods/turbot/azure-compliance.svg"
-  categories    = ["azure", "cost", "compliance", "public cloud"]
+  categories    = ["azure", "compliance", "public cloud", "standard"]
 
   opengraph {
     title       = "Azure Compliance Mod for Flowpipe"
@@ -13,11 +13,14 @@ mod "azure_compliance" {
   }
 
   require {
-    mod "github.com/turbot/flowpipe-mod-azure" {
-      version = "*"
+    flowpipe {
+      min_version = "1.0.0"
     }
     mod "github.com/turbot/flowpipe-mod-detect-correct" {
-      version = "*"
+      version = "^1"
+    }
+    mod "github.com/turbot/flowpipe-mod-azure" {
+      version = "^1"
     }
   }
 }
