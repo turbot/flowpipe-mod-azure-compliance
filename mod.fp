@@ -4,7 +4,7 @@ mod "azure_compliance" {
   color         = "#ea4335"
   documentation = file("./README.md")
   icon          = "/images/mods/turbot/azure-compliance.svg"
-  categories    = ["azure", "cost", "compliance", "public cloud"]
+  categories    = ["azure", "compliance", "public cloud", "standard"]
 
   opengraph {
     title       = "Azure Compliance Mod for Flowpipe"
