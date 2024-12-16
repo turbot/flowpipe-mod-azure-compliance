@@ -82,7 +82,7 @@ trigger "query" "detect_and_correct_postgresql_servers_with_log_connections_disa
 pipeline "detect_and_correct_postgresql_servers_with_log_connections_disabled" {
   title         = "Detect & correct PostgreSQL servers with logging connections disabled"
   description   = "Detect PostgreSQL servers with logging connections disabled and then enable logging connections."
-  tags          = local.postgresql_common_tags
+  tags          = merge(local.postgresql_common_tags, { recommended = "true" })
 
   param "database" {
     type        = connection.steampipe

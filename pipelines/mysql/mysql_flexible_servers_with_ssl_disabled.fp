@@ -64,7 +64,7 @@ variable "mysql_flexible_servers_with_ssl_disabled_enabled_actions" {
 trigger "query" "detect_and_correct_mysql_flexible_servers_with_ssl_disabled" {
   title       = "Detect & correct MySQL flexible servers with SSL disabled"
   description = "Detect MySQL flexible servers with SSL disabled and then enable SSL."
-  tags        = local.mysql_common_tags
+  tags        = merge(local.mysql_common_tags, { recommended = "true" })
 
   enabled  = var.mysql_flexible_servers_with_ssl_disabled_trigger_enabled
   schedule = var.mysql_flexible_servers_with_ssl_disabled_trigger_schedule

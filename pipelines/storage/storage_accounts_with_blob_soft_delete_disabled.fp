@@ -80,7 +80,7 @@ trigger "query" "detect_and_correct_storage_accounts_with_blob_soft_delete_disab
 pipeline "detect_and_correct_storage_accounts_with_blob_soft_delete_disabled" {
   title         = "Detect & correct Storage Accounts with blob soft delete disabled"
   description   = "Detect Storage Accounts with blob soft delete disabled and then enable blob soft delete."
-  tags          = local.storage_common_tags
+  tags          = merge(local.storage_common_tags, { recommended = "true" })
 
   param "database" {
     type        = connection.steampipe

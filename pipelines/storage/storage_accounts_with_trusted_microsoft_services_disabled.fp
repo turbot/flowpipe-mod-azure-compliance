@@ -80,7 +80,7 @@ trigger "query" "detect_and_correct_storage_accounts_with_trusted_microsoft_serv
 pipeline "detect_and_correct_storage_accounts_with_trusted_microsoft_services_disabled" {
   title         = "Detect & correct Storage Accounts with trusted Microsoft services access disabled"
   description   = "Detect Storage Accounts with trusted Microsoft services access disabled and then enable trusted Microsoft services."
-  tags          = local.storage_common_tags
+  tags          = merge(local.storage_common_tags, { recommended = "true" })
 
   param "database" {
     type        = connection.steampipe

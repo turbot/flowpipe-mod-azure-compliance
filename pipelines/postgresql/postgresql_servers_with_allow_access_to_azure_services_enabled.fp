@@ -91,7 +91,7 @@ trigger "query" "detect_and_correct_postgresql_servers_with_allow_access_to_azur
 pipeline "detect_and_correct_postgresql_servers_with_allow_access_to_azure_services_enabled" {
   title         = "Detect & correct PostgreSQL servers allowing access to Azure services"
   description   = "Detect PostgreSQL servers allowing access to Azure services and then disable access to Azure services."
-  tags          = local.postgresql_common_tags
+  tags          = merge(local.postgresql_common_tags, { recommended = "true" })
 
   param "database" {
     type        = connection.steampipe

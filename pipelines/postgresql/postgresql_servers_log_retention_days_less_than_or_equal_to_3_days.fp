@@ -92,7 +92,7 @@ trigger "query" "detect_and_correct_postgresql_servers_with_log_retention_less_t
 pipeline "detect_and_correct_postgresql_servers_with_log_retention_less_than_or_equal_to_3_days" {
   title         = "Detect & correct PostgreSQL servers with log retention less than 3 days"
   description   = "Detect PostgreSQL servers with log retention less than 3 and then sets log retention to 3 or more than 3 days."
-  tags          = local.postgresql_common_tags
+  tags          = merge(local.postgresql_common_tags, { recommended = "true" })
 
   param "database" {
     type        = connection.steampipe

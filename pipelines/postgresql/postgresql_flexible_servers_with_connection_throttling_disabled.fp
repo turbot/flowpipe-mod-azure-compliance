@@ -62,6 +62,7 @@ variable "postgresql_flexible_servers_with_connection_throttling_disabled_enable
 trigger "query" "detect_and_correct_postgresql_flexible_servers_with_connection_throttling_disabled" {
   title         = "Detect & correct PostgreSQL flexible servers with connection throttling disabled"
   description   = "Detect PostgreSQL flexible servers with connection throttling disabled and then enable connection throttling."
+  tags          = local.postgresql_common_tags
 
   enabled  = var.postgresql_flexible_servers_with_connection_throttling_disabled_trigger_enabled
   schedule = var.postgresql_flexible_servers_with_connection_throttling_disabled_trigger_schedule
@@ -79,6 +80,7 @@ trigger "query" "detect_and_correct_postgresql_flexible_servers_with_connection_
 pipeline "detect_and_correct_postgresql_flexible_servers_with_connection_throttling_disabled" {
   title         = "Detect & correct PostgreSQL flexible servers with connection throttling disabled"
   description   = "Detect PostgreSQL flexible servers with connection throttling disabled and then enable connection throttling"
+  tags          = merge(local.postgresql_common_tags, { recommended = "true" })
 
   param "database" {
     type        = connection.steampipe

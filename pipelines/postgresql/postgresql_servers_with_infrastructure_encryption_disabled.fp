@@ -55,7 +55,7 @@ trigger "query" "detect_and_correct_postgresql_servers_with_infrastructure_encry
 pipeline "detect_and_correct_postgresql_servers_with_infrastructure_encryption_disabled" {
   title         = "Detect & correct PostgreSQL servers with infrastructure encryption disabled"
   description   = "Detect PostgreSQL servers with infrastructure encryption disabled."
-  tags          = local.postgresql_common_tags
+  tags          = merge(local.postgresql_common_tags, { recommended = "true" })
 
   param "database" {
     type        = connection.steampipe

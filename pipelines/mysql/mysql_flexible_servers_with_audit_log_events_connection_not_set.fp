@@ -64,7 +64,7 @@ variable "mysql_flexible_servers_with_audit_log_events_connection_not_set_enable
 trigger "query" "detect_and_correct_mysql_flexible_servers_with_audit_log_events_connection_not_set" {
   title       = "Detect & correct MySQL flexible servers with audit log events not set to connection"
   description = "Detect MySQL flexible servers with audit log not set to connection and then set audit log events to connection."
-  tags        = local.mysql_common_tags
+  tags        = merge(local.mysql_common_tags, { recommended = "true" })
 
   enabled  = var.mysql_flexible_servers_with_audit_log_events_connection_not_set_trigger_enabled
   schedule = var.mysql_flexible_servers_with_audit_log_events_connection_not_set_trigger_schedule

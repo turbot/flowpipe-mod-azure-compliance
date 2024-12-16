@@ -78,7 +78,7 @@ trigger "query" "detect_and_correct_keyvault_vaults_with_rbac_disabled" {
 pipeline "detect_and_correct_keyvault_vaults_with_rbac_disabled" {
   title         = "Detect & correct Key Vaults with RBAC disabled"
   description   = "Detect Key Vaults with RBAC disabled."
-  tags          = local.keyvault_common_tags
+  tags          = merge(local.keyvault_common_tags, { recommended = "true" })
 
   param "database" {
     type        = connection.steampipe

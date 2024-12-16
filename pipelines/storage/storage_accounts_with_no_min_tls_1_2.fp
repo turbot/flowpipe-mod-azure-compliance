@@ -80,8 +80,8 @@ trigger "query" "detect_and_correct_storage_accounts_with_no_min_tls_1_2" {
 pipeline "detect_and_correct_storage_accounts_with_no_min_tls_1_2" {
   title         = "Detect & correct Storage Accounts with minimum TLS version less than 1.2"
   description   =  "Detect Storage Accounts with minimum TLS version less than 1.2 and then enable 1.2 TLS version."
-  tags          = local.storage_common_tags
-
+  tags          = merge(local.storage_common_tags, { recommended = "true" })
+  
   param "database" {
     type        = connection.steampipe
     description = local.description_database

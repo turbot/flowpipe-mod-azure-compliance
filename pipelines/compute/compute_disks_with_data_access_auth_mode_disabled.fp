@@ -77,7 +77,7 @@ trigger "query" "detect_and_correct_compute_disks_with_data_access_auth_mode_dis
 pipeline "detect_and_correct_compute_disks_with_data_access_auth_mode_disabled" {
   title         = "Detect & correct Compute disks with data access auth mode disabled"
   description   = "Detect Compute disks with data access auth mode disabled and then enable data access auth mode."
-  tags          = local.compute_common_tags
+  tags          = merge(local.compute_common_tags, { recommended = "true" })
 
   param "database" {
     type        = connection.steampipe

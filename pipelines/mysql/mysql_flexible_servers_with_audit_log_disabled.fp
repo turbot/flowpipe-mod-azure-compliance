@@ -82,7 +82,7 @@ trigger "query" "detect_and_correct_mysql_flexible_servers_with_audit_log_disabl
 pipeline "detect_and_correct_mysql_flexible_servers_with_audit_log_disabled" {
   title       = "Detect & correct MySQL flexible servers with audit log disabled"
   description = "Detect MySQL flexible servers with audit log disabled and then enable audit log."
-  tags        = local.mysql_common_tags
+  tags        = merge(local.mysql_common_tags, { recommended = "true" })
 
   param "database" {
     type        = connection.steampipe

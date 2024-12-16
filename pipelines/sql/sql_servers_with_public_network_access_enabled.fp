@@ -78,7 +78,7 @@ trigger "query" "detect_and_correct_sql_servers_with_public_network_access_enabl
 pipeline "detect_and_correct_sql_servers_with_public_network_access_enabled" {
   title         = "Detect & correct SQL servers with public network access enabled"
   description   = "Detect SQL servers with public network access enabled and then disable public network access."
-  tags          = local.sql_common_tags
+  tags          = merge(local.sql_common_tags, { recommended = "true" })
 
   param "database" {
     type        = connection.steampipe

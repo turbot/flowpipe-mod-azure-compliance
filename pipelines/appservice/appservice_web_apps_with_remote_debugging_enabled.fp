@@ -78,7 +78,7 @@ trigger "query" "detect_and_correct_appservice_web_apps_with_remote_debugging_en
 pipeline "detect_and_correct_appservice_web_apps_with_remote_debugging_enabled" {
   title         = "Detect & correct App Service web apps with remote debugging enabled"
   description   = "Detect App Service web apps with remote debugging enabled and then disable remote debugging."
-  tags          = local.appservice_common_tags
+  tags          = merge(local.appservice_common_tags, { recommended = "true" })
 
   param "database" {
     type        = connection.steampipe

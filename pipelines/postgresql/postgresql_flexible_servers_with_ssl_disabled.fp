@@ -90,7 +90,8 @@ trigger "query" "detect_and_correct_postgresql_flexible_servers_with_ssl_disable
 pipeline "detect_and_correct_postgresql_flexible_servers_with_ssl_disabled" {
   title       = "Detect & correct PostgreSQL flexible servers with SSL disabled"
   description = "Detect PostgreSQL flexible servers with SSL disabled and then enable SSL."
-  tags        = local.postgresql_common_tags
+  tags        = merge(local.postgresql_common_tags, { recommended = "true" })
+
 
   param "database" {
     type        = connection.steampipe

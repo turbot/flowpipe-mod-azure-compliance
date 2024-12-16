@@ -80,7 +80,7 @@ trigger "query" "detect_and_correct_sql_databases_with_transparent_data_encrypti
 pipeline "detect_and_correct_sql_databases_with_transparent_data_encryption_disabled" {
   title         = "Detect & correct SQL Databases with transparent data encryption disabled"
   description   = "Detect SQL Databases with transparent data encryption disabled and enable transparent data encryption."
-  tags          = local.sql_common_tags
+  tags          = merge(local.sql_common_tags, { recommended = "true" })
 
   param "database" {
     type        = connection.steampipe

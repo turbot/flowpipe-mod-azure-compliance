@@ -78,7 +78,7 @@ trigger "query" "detect_and_correct_storage_accounts_with_public_access_enabled"
 pipeline "detect_and_correct_storage_accounts_with_public_access_enabled" {
   title         = "Detect & correct Storage Accounts with public access enabled"
   description   = "Detect publicly accessible Storage Accounts and then disable public access."
-  tags          = local.storage_common_tags
+  tags          = merge(local.storage_common_tags, { recommended = "true" })
 
   param "database" {
     type        = connection.steampipe

@@ -79,8 +79,8 @@ trigger "query" "detect_and_correct_storage_accounts_with_secure_transfer_requir
 pipeline "detect_and_correct_storage_accounts_with_secure_transfer_required_disabled" {
   title         = "Detect & correct Storage Accounts with secure transfer required disabled"
   description   = "Detect Storage Accounts with secure transfer required disabled and runs your chosen action."
-  tags          = local.storage_common_tags
-
+  tags          = merge(local.storage_common_tags, { recommended = "true" })
+  
   param "database" {
     type        = connection.steampipe
     description = local.description_database

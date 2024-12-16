@@ -96,7 +96,7 @@ trigger "query" "detect_and_correct_storage_accounts_with_queue_service_logging_
 pipeline "detect_and_correct_storage_accounts_with_queue_service_logging_disabled" {
   title         = "Detect & correct Storage Accounts with queue service logging disabled"
   description   = "Detect Storage Accounts with queue service logging disabled and enable queue service logging."
-  tags          = local.storage_common_tags
+  tags          = merge(local.storage_common_tags, { recommended = "true" })
 
   param "database" {
     type        = connection.steampipe

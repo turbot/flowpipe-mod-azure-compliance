@@ -96,7 +96,7 @@ trigger "query" "detect_and_correct_storage_accounts_with_table_service_logging_
 pipeline "detect_and_correct_storage_accounts_with_table_service_logging_disabled" {
   title         = "Detect & correct Storage Accounts with table service logging disabled"
   description   = "Detect Storage Accounts with table service logging disabled and then enable table service logging."
-  tags          = local.storage_common_tags
+  tags          = merge(local.storage_common_tags, { recommended = "true" })
 
   param "database" {
     type        = connection.steampipe

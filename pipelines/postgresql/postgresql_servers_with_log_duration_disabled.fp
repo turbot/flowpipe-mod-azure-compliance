@@ -82,7 +82,7 @@ trigger "query" "detect_and_correct_postgresql_servers_with_log_duration_disable
 pipeline "detect_and_correct_postgresql_servers_with_log_duration_disabled" {
   title         = "Detect & correct PostgreSQL servers with logging duration disabled"
   description   = "Detect PostgreSQL servers with logging duration disabled and then enable logging duration."
-  tags          = local.postgresql_common_tags
+  tags          = merge(local.postgresql_common_tags, { recommended = "true" })
 
   param "database" {
     type        = connection.steampipe

@@ -78,7 +78,7 @@ trigger "query" "detect_and_correct_storage_accounts_with_blob_public_access_ena
 pipeline "detect_and_correct_storage_accounts_with_blob_public_access_enabled" {
   title         = "Detect & correct Storage Accounts with blob public access enabled"
   description   = "Detect Storage Accounts with blob public access enabled and then disable blob public access."
-  tags          = local.storage_common_tags
+  tags          = merge(local.storage_common_tags, { recommended = "true" })
 
   param "database" {
     type        = connection.steampipe

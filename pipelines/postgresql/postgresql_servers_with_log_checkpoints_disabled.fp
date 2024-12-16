@@ -82,7 +82,7 @@ trigger "query" "detect_and_correct_postgresql_servers_with_log_checkpoints_disa
 pipeline "detect_and_correct_postgresql_servers_with_log_checkpoints_disabled" {
   title         = "Detect & correct PostgreSQL servers with log checkpoints disabled"
   description   = "Detect PostgreSQL servers with log checkpoints disabled and then enable log checkpoints."
-  tags          = local.postgresql_common_tags
+  tags          = merge(local.postgresql_common_tags, { recommended = "true" })
 
   param "database" {
     type        = connection.steampipe

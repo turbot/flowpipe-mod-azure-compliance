@@ -78,7 +78,7 @@ trigger "query" "detect_and_correct_appservice_web_apps_without_https_enabled" {
 pipeline "detect_and_correct_appservice_web_apps_without_https_enabled" {
   title         = "Detect & correct App Service web apps without HTTPS enabled"
   description   = "Detect App Service web apps without HTTPS enabled and then enable HTTPS."
-  tags          = local.appservice_common_tags
+  tags          = merge(local.appservice_common_tags, { recommended = "true" })
 
   param "database" {
     type        = connection.steampipe

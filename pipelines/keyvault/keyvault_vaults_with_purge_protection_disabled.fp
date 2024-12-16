@@ -78,7 +78,7 @@ trigger "query" "detect_and_correct_keyvault_vaults_with_purge_protection_disabl
 pipeline "detect_and_correct_keyvault_vaults_with_purge_protection_disabled" {
   title         = "Detect & correct Key Vaults with purge protection disabled"
   description   = "Detect key vaults with purge protection disabled and then enable purge protection."
-  tags          = local.keyvault_common_tags
+  tags          = merge(local.keyvault_common_tags, { recommended = "true" })
 
   param "database" {
     type        = connection.steampipe

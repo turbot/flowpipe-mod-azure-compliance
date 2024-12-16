@@ -86,7 +86,7 @@ trigger "query" "detect_and_correct_sql_databases_with_public_access_enabled" {
 pipeline "detect_and_correct_sql_databases_with_public_access_enabled" {
   title         = "Detect & correct SQL Databases with public access enabled"
   description   = "Detect SQL Databases firewall rules allowing public access and then revoke the firewall rules."
-  tags          = local.sql_common_tags
+  tags          = merge(local.sql_common_tags, { recommended = "true" })
 
   param "database" {
     type        = connection.steampipe

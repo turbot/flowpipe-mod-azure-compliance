@@ -96,7 +96,7 @@ trigger "query" "detect_and_correct_storage_accounts_with_blob_service_logging_d
 pipeline "detect_and_correct_storage_accounts_with_blob_service_logging_disabled" {
   title         = "Detect & correct Storage Accounts with blob service logging disabled"
   description   = "Detect Storage Accounts with blob service logging disabled and then enable blob service logging."
-  tags          = local.storage_common_tags
+  tags          = merge(local.storage_common_tags, { recommended = "true" })
 
   param "database" {
     type        = connection.steampipe

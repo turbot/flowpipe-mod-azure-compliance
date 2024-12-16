@@ -80,7 +80,7 @@ trigger "query" "detect_and_correct_iam_subscriptions_with_custom_owner_roles" {
 pipeline "detect_and_correct_iam_subscriptions_with_custom_owner_roles" {
   title         = "Detect & correct subscriptions with custom owner roles"
   description   = "Detect subscriptions with custom owner roles and then delete custom subscriptions owner roles."
-  tags          = local.iam_common_tags
+  tags          = merge(local.iam_common_tags, { recommended = "true" })
 
   param "database" {
     type        = connection.steampipe

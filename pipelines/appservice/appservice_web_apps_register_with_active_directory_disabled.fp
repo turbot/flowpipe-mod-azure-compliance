@@ -78,7 +78,7 @@ trigger "query" "detect_and_correct_appservice_web_apps_register_with_active_dir
 pipeline "detect_and_correct_appservice_web_apps_register_with_active_directory_disabled" {
   title         = "Detect & correct App Service web apps register with active directory disabled"
   description   = "Detect App Service web apps register with active directory disabled and then register with active directory."
-  tags          = local.appservice_common_tags
+  tags          = merge(local.appservice_common_tags, { recommended = "true" })
 
   param "database" {
     type        = connection.steampipe
