@@ -80,7 +80,7 @@ trigger "query" "detect_and_correct_postgresql_flexible_servers_with_log_checkpo
 pipeline "detect_and_correct_postgresql_flexible_servers_with_log_checkpoints_disabled" {
   title         = "Detect & correct PostgreSQL flexible servers with log checkpoints disabled"
   description   = "Detect PostgreSQL flexible servers with log checkpoints disabled and then enable log checkpoints."
-  tags          = local.postgresql_common_tags
+  tags          = merge(local.postgresql_common_tags, { recommended = "true" })
 
   param "database" {
     type        = connection.steampipe
@@ -142,7 +142,7 @@ pipeline "detect_and_correct_postgresql_flexible_servers_with_log_checkpoints_di
 pipeline "correct_postgresql_flexible_servers_with_log_checkpoints_disabled" {
   title         = "Correct PostgreSQL flexible servers with log checkpoints disabled"
   description   = "Enable log checkpoints for PostgreSQL flexible servers with log checkpoints disabled."
-  tags          = merge(local.postgresql_common_tags, { recommended = "true" })
+  tags          = merge(local.postgresql_common_tags, { folder = "Internal" })
 
   param "items" {
     type = list(object({
