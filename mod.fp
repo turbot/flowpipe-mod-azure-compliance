@@ -1,7 +1,7 @@
 mod "azure_compliance" {
   title         = "Azure Compliance"
   description   = "Run pipelines to detect and correct Azure resources that are non-compliant."
-  color         = "#ea4335"
+  color         = "#0089D6"
   documentation = file("./README.md")
   icon          = "/images/mods/turbot/azure-compliance.svg"
   categories    = ["azure", "compliance", "public cloud", "standard"]
